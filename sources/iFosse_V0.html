@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#087f82">
+<meta name="description" content="iFosse V0 : organisez les fosses, les inscriptions et le covoiturage de votre club. Prototype local avec donnees fictives.">
+<meta name="robots" content="noindex,nofollow">
+<title>iFosse - Les fosses, simplement.</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20192%20192%22%3E%3Crect%20width%3D%22192%22%20height%3D%22192%22%20rx%3D%2245%22%20fill%3D%22%23087f82%22/%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%229%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M43%2095c18-17%2036-17%2054%200s36%2017%2054%200M43%20123c18-17%2036-17%2054%200s36%2017%2054%200%22/%3E%3Ccircle%20cx%3D%22113%22%20cy%3D%2259%22%20r%3D%2210%22/%3E%3Ccircle%20cx%3D%22139%22%20cy%3D%2234%22%20r%3D%224%22%20stroke-width%3D%225%22/%3E%3C/g%3E%3C/svg%3E%0A" type="image/svg+xml">
+
+<style>
+:root{--ink:#183642;--muted:#5d7380;--teal:#087f82;--teal-dark:#086267;--teal-tint:#e9f6f4;--bg:#f4f7f8;--line:#e4ebee;--white:#fff;--amber:#946518;--amber-bg:#fff5df;--red:#b54b52;--red-bg:#fff0f1;--blue:#4565a0;--blue-bg:#edf2fd;--shadow:0 4px 20px #17364105;--radius:18px;--sidebar:224px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px;color:var(--ink);background:var(--bg);font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.46}a{color:var(--teal);text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #7bd4ce;outline-offset:3px}h1,h2,h3,h4,p{margin:0}h1{font-size:31px;line-height:1.2;font-weight:680;letter-spacing:-1.05px}h2{font-size:20px;line-height:1.3;font-weight:650;letter-spacing:-.4px}h3{font-size:16px;line-height:1.4;font-weight:650}p{line-height:1.65}small{font-size:12px}svg.icon{width:19px;height:19px;flex-shrink:0;vertical-align:middle}button .icon{width:17px;height:17px}hr{border:0;border-top:1px solid var(--line);margin:20px 0}.muted{color:var(--muted)}.tiny{font-size:12px;line-height:1.5}.small{font-size:13px}.eyebrow{font-size:10px;font-weight:750;letter-spacing:1.6px;text-transform:uppercase}.strong{font-weight:650}.row{display:flex;align-items:center;gap:12px}.wrap{flex-wrap:wrap}.between{justify-content:space-between}.grow{flex:1;min-width:0}.stack{display:flex;flex-direction:column;gap:18px}.gap8{gap:8px}.gap6{gap:6px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}.mb16{margin-bottom:16px}.hide{display:none!important}.text-right{text-align:right}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.no-wrap{white-space:nowrap}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar);background:#fff;border-right:1px solid var(--line);display:flex;flex-direction:column;padding:32px 20px 20px;z-index:30}.brand{display:flex;align-items:center;gap:10px;padding:0 8px;color:var(--ink)}.brand-symbol{width:38px;height:38px;background:var(--teal);border-radius:12px;display:grid;place-items:center;color:#fff;box-shadow:0 3px 10px #087f821a}.brand-word{font-size:27px;font-weight:760;letter-spacing:-1.4px}.brand-word span{color:var(--teal)}.club-label{font-size:10px;font-weight:650;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin:12px 0 0 9px}.nav-label{margin:43px 14px 13px;color:#9baab0;font-size:10px;font-weight:700;letter-spacing:1.5px}.nav-item{width:100%;display:flex;align-items:center;gap:12px;background:none;border:0;text-align:left;color:#69808a;padding:13px 14px;border-radius:11px;font-weight:550;margin:3px 0}.nav-item:hover{background:#f7fafb}.nav-item.active{background:var(--teal-tint);color:var(--teal);font-weight:700}.nav-item.active:after{content:'';margin-left:auto;width:5px;height:5px;background:var(--teal);border-radius:50%}.sidebar-bottom{margin-top:auto}.season-mini{background:#f5f9f9;border:1px solid #e7efef;border-radius:13px;padding:16px;margin:20px 2px}.season-mini .eyebrow{color:var(--muted)}.season-mini strong{display:block;font-size:17px;margin:8px 0}.season-mini .season-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#39ab90;margin-right:5px}.sidebar-foot{font-size:11px;color:#99a8ae;padding:12px 14px 0}.shell{margin-left:var(--sidebar);min-height:100vh}.topbar{height:78px;border-bottom:1px solid var(--line);background:#ffffffd9;display:flex;align-items:center;justify-content:space-between;padding:0 38px;gap:16px}.breadcrumb{font-size:12px;color:#91a0a7;display:flex;align-items:center;gap:10px}.breadcrumb b{color:#627780;font-weight:550}.demo-pill{font-size:11px;display:flex;align-items:center;gap:6px;color:#7b6c48;background:#faf5e9;border:1px solid #efe5cf;padding:6px 9px;border-radius:7px;white-space:nowrap}.demo-pill i{width:5px;height:5px;border-radius:50%;background:#c6a44e}.persona{display:flex;align-items:center;gap:9px;border:0;background:none;border-left:1px solid var(--line);padding:0 0 0 20px;color:var(--ink);text-align:left}.persona-name{font-size:12px;font-weight:650}.persona-role{font-size:10px;color:var(--muted);margin-top:3px}.content{max-width:1450px;margin:0 auto;padding:34px 38px 48px}.page-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:26px}.page-heading p{margin-top:9px;font-size:13px;color:var(--muted)}.page-heading .eyebrow{color:var(--teal);margin-bottom:10px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-weight:600;font-size:12px;min-height:39px;padding:10px 14px;white-space:nowrap;transition:background .16s,transform .16s}.btn:not(:disabled):hover{background:#f5f9fa;transform:translateY(-1px)}.btn.primary{color:#fff;background:var(--teal);border-color:var(--teal)}.btn.primary:not(:disabled):hover{background:var(--teal-dark)}.btn.soft{background:var(--teal-tint);color:var(--teal);border-color:#dbeeea}.btn.danger{background:var(--red-bg);color:var(--red);border-color:#f6d7da}.btn.white{background:#fff;color:var(--teal-dark);border-color:#fff}.btn.ghost{background:transparent;border-color:transparent}.btn.small{min-height:32px;padding:7px 10px;font-size:11px}.icon-btn{display:inline-grid;place-items:center;min-width:34px;min-height:34px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--muted)}.icon-btn:hover{color:var(--teal);background:var(--teal-tint)}.text-btn{display:inline-flex;gap:6px;align-items:center;background:none;border:0;padding:0;color:var(--teal);font-size:12px;font-weight:650;text-align:left}.back-btn{margin-bottom:22px;color:var(--muted);font-size:12px}.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.pad{padding:24px}.card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}.card-heading h2{font-size:17px}.card-heading h3{font-size:15px}.tag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;padding:5px 8px;border-radius:6px;font-size:10px;font-weight:650;line-height:1.2;background:#f0f4f5;color:#778c95}.tag.green{background:#e6f5ee;color:#258267}.tag.teal{background:var(--teal-tint);color:var(--teal)}.tag.amber{background:var(--amber-bg);color:var(--amber)}.tag.red{background:var(--red-bg);color:var(--red)}.tag.blue{background:var(--blue-bg);color:var(--blue)}.tag.dark{background:#ffffff20;color:white;border:1px solid #ffffff25}.tag .icon{width:12px;height:12px}.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor}.avatar{height:34px;width:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:750;color:#518382;background:#e1f0ed;border:2px solid #fff}.avatar.tone1{color:#847399;background:#eee9f5}.avatar.tone2{color:#a78355;background:#f4ece0}.avatar.tone3{color:#6b84a6;background:#e7edf6}.avatar.tone4{color:#a76e7d;background:#f5e8ed}.avatar.sm{width:28px;height:28px;font-size:9px}.avatar.lg{width:55px;height:55px;font-size:17px}.avatar.xl{width:76px;height:76px;font-size:24px}.avatar-stack{display:flex;padding-left:3px}.avatar-stack .avatar{margin-left:-4px}.avatar-stack .extra{background:#f1f5f6;color:var(--muted)}
+.home-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);gap:22px}.hero{position:relative;overflow:hidden;color:#fff;background:linear-gradient(118deg,#087e80 0%,#076e76 64%,#0d5a67 100%);padding:29px 30px;border:0;min-height:274px;display:flex;flex-direction:column;justify-content:space-between}.hero-content{position:relative;z-index:2}.hero .eyebrow{font-size:10px;color:#b9e4e0;letter-spacing:1.2px}.hero h2{font-size:29px;letter-spacing:-.7px;line-height:1.25;margin:23px 0 12px;font-weight:620}.hero .meta{display:flex;gap:16px;align-items:center;flex-wrap:wrap;color:#d1eae8;font-size:12px}.hero .meta .icon{width:15px;height:15px}.hero-footer{position:relative;z-index:2;display:flex;gap:16px;align-items:center;justify-content:space-between;margin-top:29px}.hero-caption{font-size:11px;color:#b9dddf}.hero-art{position:absolute;inset:0;pointer-events:none}.hero-art .orb{position:absolute;right:-125px;top:-100px;width:380px;height:380px;border:1px solid #9de6de22;border-radius:50%}.hero-art .orb:nth-child(2){right:-80px;top:-57px;width:294px;height:294px}.hero-art .orb:nth-child(3){right:-35px;top:-13px;width:207px;height:207px}.hero-art .bubble{position:absolute;border:1px solid #a7f2e636;border-radius:50%;width:15px;height:15px;right:112px;bottom:68px}.hero-art .bubble.b2{width:8px;height:8px;right:100px;bottom:98px}.hero-art .bubble.b3{width:24px;height:24px;right:47px;bottom:144px}.participation{padding:24px;display:flex;flex-direction:column}.participation .intro{font-size:12px;color:var(--muted);margin:6px 0 19px}.rsvp-buttons{display:flex;background:#f4f7f8;padding:4px;border-radius:10px;gap:4px}.rsvp-button{flex:1;min-height:38px;border:1px solid transparent;border-radius:7px;background:transparent;color:#85949c;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;padding:5px}.rsvp-button.active.yes{color:#218269;background:#fff;box-shadow:0 1px 4px #11372b13;border-color:#e7eeec}.rsvp-button.active.maybe{background:#fff9e8;color:var(--amber)}.rsvp-button.active.no{background:#fff;color:var(--red)}.rsvp-button .icon{width:14px;height:14px}.participation-status{border-bottom:1px solid var(--line);padding:18px 0;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}.participation-bottom{display:flex;gap:8px;justify-content:space-between;align-items:center;font-size:11px;margin-top:auto}.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:23px 0 30px}.stat{padding:19px 21px;display:flex;align-items:center;gap:17px}.stat-icon{width:43px;height:43px;display:grid;place-items:center;background:var(--teal-tint);color:var(--teal);border-radius:12px;flex-shrink:0}.stat-icon.blue{background:#edf1fa;color:#7587b3}.stat-icon.sand{background:#f7f0e5;color:#b29665}.stat strong{font-size:27px;font-weight:650;letter-spacing:-1px}.stat .label{font-size:11px;color:var(--muted);margin-top:3px}.stat .unit{font-size:11px;font-weight:450;letter-spacing:0;color:var(--muted);margin-left:5px}.home-lower{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);gap:22px}.session-row{display:flex;align-items:center;gap:15px;padding:17px 0;border-top:1px solid var(--line)}.session-row:first-of-type{border-top:0}.date-tile{width:48px;height:55px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;background:#f2f7f7;color:var(--teal);flex-shrink:0;border:1px solid #e6eeed}.date-tile .month{font-size:9px;letter-spacing:1px;font-weight:700;text-transform:uppercase}.date-tile .day{font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-1px}.session-row-title{font-size:13px;font-weight:650;margin-bottom:5px}.session-row .meta{font-size:11px;color:var(--muted)}.session-row .btn{margin-left:5px}.insight{display:flex;gap:12px;padding:16px 0;border-top:1px solid var(--line)}.insight:first-of-type{border-top:0;padding-top:0}.insight-mark{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:var(--amber-bg);color:#b18b45;flex-shrink:0}.insight-mark.teal{background:var(--teal-tint);color:var(--teal)}.insight-mark.blue{background:var(--blue-bg);color:var(--blue)}.insight-mark .icon{width:15px;height:15px}.insight h4{font-size:12px;font-weight:650;margin:1px 0 5px}.insight p{font-size:11px;color:var(--muted);line-height:1.65}.season-note{background:#eaf4f3;padding:17px 18px;border-radius:12px;margin-top:8px;font-size:11px;color:#507d7c;line-height:1.75}.footer-note{margin-top:27px;text-align:center;font-size:10px;color:#9aa9af;display:flex;align-items:center;justify-content:center;gap:6px}.footer-note .icon{width:12px;height:12px}
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:23px;flex-wrap:wrap}.segmented{display:flex;background:#eaf0f2;padding:4px;border-radius:10px;gap:3px}.segmented button{border:0;background:none;color:#71858e;padding:9px 13px;border-radius:7px;font-size:12px;font-weight:550;white-space:nowrap}.segmented button.active{background:#fff;color:var(--ink);box-shadow:0 2px 4px #23414d0a}.segmented .count{font-size:10px;margin-left:5px;color:#8b9da5}.select,input,select,textarea{color:var(--ink);border:1px solid #dce6e9;border-radius:8px;padding:10px 11px;min-height:39px;background:#fff;max-width:100%;font-size:13px}input::placeholder,textarea::placeholder{color:#9cacb3}input[type=checkbox]{accent-color:var(--teal);min-height:16px;width:16px;height:16px;padding:0;margin:0}input[type=number]{min-width:0}select{cursor:pointer}textarea{resize:vertical;min-height:96px;line-height:1.6}label{font-size:12px;font-weight:600;display:block;margin-bottom:8px}.field{display:flex;flex-direction:column;min-width:0}.field small{font-size:11px;color:var(--muted);margin-top:6px;font-weight:400;line-height:1.5}.field .required{color:var(--teal)}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.span2{grid-column:1/-1}.checkbox-label{display:flex;align-items:center;gap:9px;font-weight:450;font-size:12px;line-height:1.6;cursor:pointer;margin:0}.searchbox{position:relative;min-width:200px}.searchbox .icon{position:absolute;top:11px;left:11px;width:16px;height:16px;color:#8da0a9}.searchbox input{padding-left:36px;width:100%;font-size:12px}.session-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.session-card{padding:22px;display:flex;flex-direction:column;min-width:0;transition:box-shadow .15s,border-color .15s}.session-card:hover{box-shadow:0 6px 25px #163d4610;border-color:#c9dedd}.session-card h3{font-size:16px;margin:19px 0 8px}.session-card .meta{color:var(--muted);font-size:12px;display:flex;align-items:center;gap:6px;line-height:1.6}.session-card .meta .icon{width:14px;height:14px}.session-card-bottom{border-top:1px solid var(--line);padding-top:15px;margin-top:auto}.session-card .my-status{font-size:11px;color:var(--muted);margin:14px 0 18px}.progress{height:5px;border-radius:6px;background:#edf3f3;overflow:hidden}.progress>i{display:block;height:100%;background:var(--teal);border-radius:6px}.capacity-label{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--muted);margin:20px 0 8px}.capacity-label b{color:var(--ink);font-weight:650}.empty{padding:42px 25px;text-align:center}.empty .empty-icon{width:58px;height:58px;background:var(--teal-tint);border-radius:17px;display:grid;place-items:center;color:var(--teal);margin:0 auto 16px}.empty h3{margin-bottom:8px}.empty p{color:var(--muted);max-width:430px;margin:auto;font-size:13px}.empty .btn{margin-top:18px}.banner{display:flex;align-items:flex-start;gap:10px;border:1px solid #f2e4bf;background:#fff9ec;padding:12px 15px;border-radius:10px;color:#8d7138;font-size:12px;line-height:1.6;margin-bottom:20px}.banner .icon{width:16px;height:16px;margin-top:2px}.banner.info{background:#eef7f7;border-color:#dbeeed;color:#457c7c}.banner.success{background:#ebf7ef;border-color:#d7ecdf;color:#397654}.banner.error{background:var(--red-bg);border-color:#f3d7db;color:var(--red)}.banner .btn{margin-left:auto}.banner p{line-height:1.6;font-size:12px}.session-heading{margin-bottom:22px}.session-heading h1{font-size:29px}.meta-line{display:flex;align-items:center;gap:16px;color:var(--muted);font-size:12px;margin-top:11px;flex-wrap:wrap}.meta-line span{display:inline-flex;align-items:center;gap:6px}.meta-line .icon{width:15px;height:15px}.tabs{display:flex;gap:27px;border-bottom:1px solid #dfe7eb;margin-bottom:26px;overflow-x:auto}.tab{background:none;border:0;border-bottom:2px solid transparent;padding:13px 1px 14px;font-size:12px;color:#81939c;display:flex;align-items:center;gap:7px;white-space:nowrap;font-weight:550}.tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:700}.tab .icon{width:15px;height:15px}.tab .tab-count{font-size:10px;border-radius:5px;padding:2px 5px;background:#eaf0f2;color:#81939c}.tab.active .tab-count{background:var(--teal-tint);color:var(--teal)}.detail-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);gap:22px}.info-row{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-top:1px solid var(--line)}.info-row:first-child{border-top:0;padding-top:0}.info-row .icon{color:#81a6ac;width:17px;height:17px;margin-top:2px}.info-row .label{font-size:11px;color:var(--muted);margin-bottom:5px}.info-row p{font-size:13px}.big-number{font-size:43px;letter-spacing:-1.7px;font-weight:620;line-height:1.25}.big-number span{color:#a4b3b9;font-size:23px;letter-spacing:0}.mini-stats{display:flex;gap:15px;margin:20px 0}.mini-stats>div{flex:1;border-left:1px solid var(--line);padding-left:15px}.mini-stats>div:first-child{border-left:0;padding-left:0}.mini-stats b{display:block;font-size:21px;font-weight:620;margin-bottom:5px}.mini-stats span{color:var(--muted);font-size:10px}.log-item{padding:11px 0;border-top:1px solid var(--line)}.log-item:first-child{padding-top:0;border-top:0}.log-item p{font-size:11px;line-height:1.6}.log-item small{display:block;font-size:10px;color:#96a5ab;margin-top:5px}.table-wrap{width:100%;overflow:auto;border-radius:15px}.data-table{width:100%;border-collapse:collapse;white-space:nowrap;text-align:left}.data-table th{font-size:10px;letter-spacing:.4px;font-weight:650;color:#84959f;background:#f9fbfc;padding:13px 16px;border-bottom:1px solid var(--line)}.data-table td{font-size:12px;padding:13px 16px;border-bottom:1px solid #edf1f3}.data-table tr:last-child td{border-bottom:0}.data-table tbody tr:hover{background:#fbfdfd}.data-table .person-cell{min-width:170px;display:flex;align-items:center;gap:9px}.person-name{font-weight:600;font-size:12px}.person-sub{font-size:10px;color:#8b9ca4;margin-top:4px}.data-table select{padding:7px 26px 7px 8px;min-height:32px;font-size:11px;border-radius:7px;min-width:109px}.data-table select.changed{border-color:#c9a34d;background:#fffaf0}.data-table .number-cell{font-weight:650;text-align:center;font-size:14px;color:var(--teal)}.data-table .small-cell{font-size:11px;color:var(--muted)}.table-footer{padding:14px 18px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.manage-summary{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:19px;padding:19px 22px;background:white;border:1px solid var(--line);border-radius:14px}.manage-summary .capacity{min-width:200px}.manage-summary .big-number{font-size:30px}.manage-summary .big-number span{font-size:18px}.draft-status{display:flex;align-items:center;gap:12px}.draft-status-icon{width:39px;height:39px;border-radius:11px;background:var(--blue-bg);color:#6a82af;display:grid;place-items:center}.draft-bar{position:sticky;bottom:18px;margin-top:17px;border:1px solid #cfdfdf;box-shadow:0 6px 28px #22454d12;border-radius:13px;background:#fffef8;padding:16px 19px;display:flex;align-items:center;justify-content:space-between;gap:15px;z-index:15}.draft-bar p{font-size:12px;font-weight:650}.draft-bar small{font-size:10px;color:var(--muted);display:block;margin-top:4px}.ride-tools{padding:21px 24px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}.ride-tools p{font-size:12px;color:var(--muted);margin-top:5px}.car-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.car-card{padding:21px;display:flex;flex-direction:column}.car-card .car-icon{width:36px;height:36px;background:var(--teal-tint);border-radius:10px;color:var(--teal);display:grid;place-items:center}.car-card .driver{margin:18px 0 13px;display:flex;align-items:center;gap:10px}.seat-list{margin:17px 0;display:flex;flex-direction:column;gap:9px;flex:1}.seat{display:flex;gap:9px;align-items:center;font-size:11px}.seat.empty-seat{color:#95aaa9}.seat-dot{width:27px;height:27px;border:1px dashed #cadcdb;display:grid;place-items:center;border-radius:50%}.seat-dot .icon{width:11px;height:11px}.car-card .ride-note{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:15px}.car-card .btn{width:100%;margin-top:auto}.ride-self-tag{font-size:10px;color:var(--teal);margin-left:auto}.group-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.group-card{padding:22px}.group-card .group-member{display:flex;gap:9px;align-items:center;font-size:12px;margin-top:15px}.profile-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:23px}.profile-summary{text-align:center;padding:28px 22px;height:fit-content}.profile-summary h2{font-size:19px;margin-top:14px}.profile-summary p{font-size:12px;color:var(--muted);margin-top:6px}.profile-summary .big-number{font-size:38px;color:var(--teal);margin-top:21px}.profile-summary .tag{margin-top:13px}.profile-form{padding:26px}.profile-form .form-actions{margin-top:24px;display:flex;justify-content:flex-end}.storage-banner{margin:16px 38px 0}
+.modal-backdrop{position:fixed;inset:0;background:#16333f70;backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:22px}.modal{width:100%;max-width:570px;max-height:calc(100dvh - 44px);overflow:auto;border-radius:20px;background:#fff;box-shadow:0 30px 100px #13344140;animation:modal-in .16s ease-out}.modal.wide{max-width:770px}.modal-header{padding:25px 26px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:white;z-index:2}.modal-header h2{font-size:20px}.modal-header p{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.6}.modal-body{padding:24px 26px}.modal-actions{padding:19px 26px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px;position:sticky;bottom:0;background:white;z-index:2}.modal .banner{margin-bottom:20px}.form-error{color:var(--red);font-size:12px;line-height:1.65;background:var(--red-bg);border-radius:9px;padding:12px 14px;margin-bottom:18px}.persona-option{display:flex;align-items:center;gap:13px;width:100%;padding:14px;border:1px solid var(--line);border-radius:11px;background:white;text-align:left;margin-bottom:11px}.persona-option:hover,.persona-option.active{border-color:#85c8c1;background:#f2faf8}.persona-option .role-label{font-size:11px;color:var(--muted);margin-top:5px}.persona-picker{width:100%;margin-top:7px}.explanation{font-size:12px;color:var(--muted);line-height:1.8}.feature-line{display:flex;align-items:flex-start;gap:10px;margin:14px 0;font-size:12px;line-height:1.7}.feature-line .icon{width:16px;height:16px;margin-top:2px;color:var(--teal)}.backup-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}.toast-stack{position:fixed;bottom:25px;right:25px;z-index:150;display:flex;flex-direction:column;gap:9px;max-width:420px}.toast{display:flex;align-items:flex-start;gap:10px;padding:15px 18px;border-radius:12px;background:#183e46;color:#fff;font-size:12px;line-height:1.6;box-shadow:0 5px 25px #23434c29;animation:toast-in .18s ease-out}.toast.error{background:#a24b50}.toast .icon{width:17px;height:17px;margin-top:1px}.toast button{margin-left:8px;color:inherit;border:0;background:transparent;padding:0;opacity:.6}.modal-group-table{max-height:48vh;overflow:auto}.bottom-nav{display:none}.inline-code{font-family:monospace;font-size:11px;padding:2px 5px;background:#edf3f4;border-radius:4px}
+@keyframes modal-in{from{transform:translateY(8px);opacity:.5}to{transform:translateY(0);opacity:1}}@keyframes toast-in{from{transform:translateY(8px);opacity:.5}to{transform:translateY(0);opacity:1}}
+@media(min-width:1500px){:root{--sidebar:244px}.sidebar{padding-left:26px;padding-right:26px}.content{padding-top:40px}.hero{min-height:300px}.hero h2{font-size:33px}}
+@media(max-width:1200px){:root{--sidebar:198px}.sidebar{padding:28px 13px 18px}.content{padding:28px 26px 38px}.topbar{padding:0 26px}.hero{padding:25px}.hero h2{font-size:25px}.home-grid,.home-lower{grid-template-columns:minmax(0,1.4fr) minmax(270px,1fr)}.session-grid,.car-grid,.group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.session-row .tag{display:none}.stats-grid{gap:12px}.stat{padding:17px}.stat-icon{width:37px;height:37px}.stat strong{font-size:25px}.detail-grid{grid-template-columns:minmax(0,1.2fr) minmax(260px,1fr)}}
+@media(max-width:960px){:root{--sidebar:176px}.brand-word{font-size:24px}.brand-symbol{height:33px;width:33px}.club-label{font-size:9px;letter-spacing:1px}.sidebar{padding-left:9px;padding-right:9px}.nav-item{font-size:12px;padding:12px 10px;gap:9px}.season-mini{padding:13px}.breadcrumb{display:none}.topbar{justify-content:flex-end;height:70px}.topbar .demo-pill{margin-right:auto}.content{padding:25px 22px 36px}.home-grid,.home-lower{grid-template-columns:1fr}.hero{min-height:240px}.hero h2{font-size:29px}.participation{padding:21px}.participation .intro{margin-bottom:12px}.home-grid .participation{display:grid;grid-template-columns:1fr 1fr;column-gap:25px}.home-grid .participation>h3,.home-grid .participation>.intro{grid-column:1}.home-grid .participation>.rsvp-buttons{grid-column:1}.home-grid .participation>.participation-status{grid-column:2;grid-row:1/3;margin:0 0 12px;padding:0 0 10px}.home-grid .participation>.participation-bottom{grid-column:2;grid-row:3}.home-grid .participation>.tiny{grid-column:1/-1}.stats-grid{gap:10px;margin:20px 0 24px}.stat{gap:10px;padding:15px}.stat-icon{height:32px;width:32px;border-radius:10px}.stat .label{font-size:10px}.stat .unit{display:none}.detail-grid{grid-template-columns:1fr}.profile-grid{grid-template-columns:1fr}.profile-summary{display:none}.tabs{gap:20px}.page-heading{align-items:flex-start}.page-heading h1{font-size:28px}.manage-summary{align-items:flex-start}.manage-summary .capacity{min-width:150px}}
+@media(max-width:700px){:root{--sidebar:0px}.sidebar{display:none}.shell{margin-left:0}.topbar{height:68px;padding:0 18px;gap:10px}.persona{border-left:0;padding-left:4px;gap:6px}.persona .persona-name{font-size:11px}.persona .persona-role{font-size:9px}.persona .icon{width:13px;height:13px}.persona .avatar{width:31px;height:31px}.demo-pill{font-size:10px;padding:6px 8px}.content{padding:25px 17px 108px}.page-heading{margin-bottom:23px;gap:12px}.page-heading h1{font-size:27px;letter-spacing:-.8px}.page-heading p{font-size:12px;line-height:1.7;margin-top:7px}.page-heading .eyebrow{font-size:9px}.page-heading>.btn{font-size:11px;min-height:35px;padding:9px 10px}.page-heading>.btn .icon{width:14px;height:14px}.hero{padding:24px;min-height:259px}.hero h2{font-size:28px;max-width:270px;line-height:1.3}.hero .eyebrow{font-size:9px}.hero .meta{gap:12px;font-size:11px}.hero-footer{margin-top:24px}.hero-caption{font-size:10px}.home-grid,.home-lower{gap:17px}.home-grid .participation{display:flex;padding:22px}.home-grid .participation>.participation-status{padding:16px 0;margin-bottom:14px}.participation .intro{font-size:12px}.rsvp-button{min-height:40px;font-size:12px}.stats-grid{gap:8px;margin:17px 0 25px}.stat{display:block;text-align:left;padding:14px 12px}.stat-icon{height:29px;width:29px;border-radius:9px;margin-bottom:11px}.stat-icon .icon{width:16px;height:16px}.stat strong{font-size:26px}.stat .label{font-size:10px;line-height:1.5;margin-top:5px}.pad{padding:21px}.card-heading{margin-bottom:17px}.card-heading h2{font-size:16px}.session-row{gap:11px;padding:16px 0}.session-row-title{font-size:12px}.session-row .meta{font-size:10px}.session-row .btn{min-height:31px;min-width:31px;padding:6px}.session-row .date-tile{width:43px;height:50px}.session-row .btn .desktop-label{display:none}.session-grid,.car-grid,.group-grid{grid-template-columns:1fr;gap:16px}.session-card{padding:22px}.session-card h3{font-size:18px;margin-top:13px}.toolbar{gap:12px}.toolbar .segmented{max-width:100%;overflow-x:auto}.segmented button{font-size:11px;padding:9px 10px}.toolbar select{font-size:11px}.toolbar .searchbox{width:100%;min-width:0}.toolbar .checkbox-label{font-size:11px}.toolbar .searchbox input{width:100%}.session-heading{display:block}.session-heading .header-actions{margin-top:17px}.session-heading h1{font-size:27px}.meta-line{font-size:11px;gap:11px;line-height:1.7}.tabs{margin-left:-17px;margin-right:-17px;padding-left:17px;padding-right:17px;gap:22px;scrollbar-width:none}.tab{font-size:11px}.tab .icon{display:none}.tab .tab-count{font-size:9px}.detail-grid{gap:17px}.banner{font-size:11px;padding:12px;gap:8px}.banner p{font-size:11px}.banner .btn{font-size:10px}.ride-tools{padding:21px}.ride-tools .row{width:100%;flex-wrap:wrap;gap:8px}.ride-tools .btn{font-size:11px;padding:9px 11px}.ride-tools .row>.btn{flex:1}.car-card{padding:22px}.manage-summary{padding:17px;gap:14px;flex-direction:column}.manage-summary .capacity{width:100%;display:flex;align-items:center;gap:12px}.manage-summary .capacity .progress{flex:1}.manage-summary .capacity .tiny{display:none}.manage-summary .big-number{font-size:27px}.draft-status-icon{width:34px;height:34px}.draft-status h3{font-size:13px}.draft-status .tiny{font-size:10px}.draft-bar{bottom:83px;padding:13px;align-items:flex-start;flex-direction:column;gap:12px}.draft-bar>.row{width:100%;justify-content:flex-end}.draft-bar .btn{font-size:11px}.draft-bar p{font-size:11px}.data-table th{padding:12px}.data-table td{padding:11px 12px}.data-table .person-cell{min-width:150px}.data-table .person-name{font-size:11px}.profile-form{padding:21px}.form-grid{gap:16px}.field{grid-column:1/-1}.form-grid.compact .field{grid-column:auto}.profile-form .form-actions .btn{width:100%}.bottom-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#ffffffef;backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:9px 8px max(10px,env(safe-area-inset-bottom));z-index:50;height:75px}.bottom-nav button{flex:1;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:5px;font-size:9px;font-weight:550;border:0;background:none;color:#8a9aa3}.bottom-nav button.active{color:var(--teal);font-weight:700}.bottom-nav button .icon{width:20px;height:20px}.bottom-nav button.active .icon{background:var(--teal-tint);box-shadow:0 0 0 6px var(--teal-tint);border-radius:4px}.bottom-nav button span{margin-top:3px}.footer-note{font-size:9px;margin-top:22px}.modal-backdrop{padding:12px}.modal{max-height:calc(100dvh - 24px);border-radius:16px}.modal-header{padding:21px 20px 17px}.modal-header h2{font-size:18px}.modal-body{padding:21px 20px}.modal-actions{padding:16px 20px}.modal-actions .btn{font-size:11px}.modal .form-grid.compact{gap:12px}.modal .form-grid.compact .span2{grid-column:1/-1}.toast-stack{bottom:88px;right:14px;left:14px;max-width:none}.toast{padding:13px 15px;font-size:11px}.storage-banner{margin:12px 17px 0}.form-error{font-size:11px}.modal-group-table{max-height:50vh}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media print{.sidebar,.topbar,.bottom-nav,.btn,.icon-btn,.text-btn,.tabs,.footer-note,.draft-bar,.toast-stack,.modal-backdrop{display:none!important}.shell{margin:0}.content{padding:0;max-width:none}.card{box-shadow:none;break-inside:avoid}.detail-grid,.home-grid{display:block}.data-table{white-space:normal}.table-wrap{overflow:visible}body{background:white}.hero{color:#183642;background:#edf7f6}.hero .meta,.hero .eyebrow,.hero-caption{color:#183642}}
+
+</style>
+</head>
+<body>
+<noscript>Activez JavaScript pour utiliser iFosse. Cette V0 fonctionne sans connexion Internet.</noscript>
+<div id="app"></div>
+<div id="modal-root"></div>
+<div id="toasts" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
+<input type="file" id="backup-input" accept="application/json,.json" hidden>
+<script>window.IFOSSE_STANDALONE = true;
+/* iFosse V0 - standalone domain model. No network, no production authentication. */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.IFosse = api;
+})(typeof window !== 'undefined' ? window : globalThis, function () {
+  'use strict';
+  const VERSION = 1;
+  const RSVP = ['unanswered', 'yes', 'maybe', 'no'];
+  const PAYMENTS = ['unpaid', 'paid', 'free'];
+  const ATTENDANCE = ['unknown', 'dived', 'absent', 'not-dived'];
+  const SELECTION = ['selected', 'waiting', 'declined'];
+  const clone = (v) => JSON.parse(JSON.stringify(v));
+  function fail(message) { throw new Error(message); }
+  function member(db, id) { return db.members.find(m => m.id === id) || fail('Adh\u00e9rent introuvable.'); }
+  function session(db, id) { return db.sessions.find(s => s.id === id) || fail('S\u00e9ance introuvable.'); }
+  function admin(db, id) { if (!member(db, id).admin) fail('Cette action est r\u00e9serv\u00e9e aux administrateurs.'); }
+  function editable(s) { if (s.status === 'closed') fail('Rouvrez le bilan avant de modifier cette s\u00e9ance.'); }
+  function blankResponse() { return { rsvp: 'unanswered', payment: 'unpaid', attendance: 'unknown', transportMode: 'unset', carDriverId: null, withdrew: false }; }
+  function response(s, id) { return s.responses[id] || blankResponse(); }
+  function mutableResponse(s, id) { if (!s.responses[id]) s.responses[id] = blankResponse(); return s.responses[id]; }
+  function log(s, actor, text) {
+    s.log.unshift({ at: new Date().toISOString(), actor, text });
+    s.log = s.log.slice(0, 100);
+  }
+  function seasonOf(date) { const [y, m] = date.split('-').map(Number); return m >= 9 ? y : y - 1; }
+  function seasonCount(db, id, year) {
+    return db.sessions.filter(s => seasonOf(s.date) === Number(year) && s.status === 'closed' && response(s, id).attendance === 'dived').length;
+  }
+  function selectedIds(s, draft = false) {
+    const selection = draft && s.draftSelection ? s.draftSelection : s.publishedSelection;
+    return Object.keys(selection).filter(id => selection[id] === 'selected' && response(s, id).rsvp === 'yes');
+  }
+  function selectionState(s, id, draft = false) {
+    const r = response(s, id);
+    if (r.rsvp === 'no') return r.withdrew ? 'withdrawn' : 'none';
+    if (r.rsvp === 'unanswered') return 'none';
+    const sel = draft && s.draftSelection ? s.draftSelection : s.publishedSelection;
+    return sel[id] || (s.publishedAt ? 'waiting' : 'pending');
+  }
+  function draftChanges(s) {
+    if (!s.draftSelection) return 0;
+    return Object.keys(s.responses).filter(id => (s.draftSelection[id] || 'waiting') !== (s.publishedSelection[id] || 'waiting')).length;
+  }
+  function passengers(s, driverId) {
+    return Object.keys(s.responses).filter(id => response(s, id).transportMode === 'passenger' && response(s, id).carDriverId === driverId);
+  }
+  function removeCar(s, driverId) {
+    const displaced = passengers(s, driverId);
+    displaced.forEach(id => { s.responses[id].transportMode = 'needs'; s.responses[id].carDriverId = null; });
+    s.cars = s.cars.filter(c => c.driverId !== driverId);
+    if (response(s, driverId).transportMode === 'driver') {
+      s.responses[driverId].transportMode = 'needs';
+      s.responses[driverId].carDriverId = null;
+    }
+    return displaced.length;
+  }
+  // Interpret session times in Europe/Paris, regardless of the device time zone.
+  function parisTimestamp(date, time) {
+    const [y, m, d] = date.split('-').map(Number);
+    const [h, min] = time.split(':').map(Number);
+    const target = Date.UTC(y, m - 1, d, h, min);
+    let guess = target;
+    const fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    for (let i = 0; i < 3; i++) {
+      const p = Object.fromEntries(fmt.formatToParts(new Date(guess)).map(t => [t.type, t.value]));
+      const wall = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
+      guess += target - wall;
+    }
+    return guess;
+  }
+  function isPast(s, now = Date.now()) { return parisTimestamp(s.date, s.end) <= now; }
+  function setRsvp(db, sid, actor, target, value) {
+    const s = session(db, sid); editable(s); member(db, target);
+    if (target !== actor) admin(db, actor);
+    if (!s.registrationOpen && !member(db, actor).admin && value !== 'no') fail('Les inscriptions sont ferm\u00e9es. Contactez un administrateur pour un changement.');
+    if (!RSVP.includes(value)) fail('R\u00e9ponse invalide.');
+    const r = mutableResponse(s, target);
+    const wasSelected = selectionState(s, target) === 'selected';
+    r.rsvp = value;
+    let displaced = 0;
+    if (value !== 'yes') {
+      displaced = removeCar(s, target);
+      r.transportMode = 'unset'; r.carDriverId = null;
+      if (s.publishedSelection[target] === 'selected') s.publishedSelection[target] = 'waiting';
+      if (s.draftSelection && s.draftSelection[target] === 'selected') s.draftSelection[target] = 'waiting';
+      if (wasSelected && value === 'no') r.withdrew = true;
+    } else r.withdrew = false;
+    log(s, actor, `R\u00e9ponse de ${member(db, target).firstName} : ${value === 'yes' ? 'oui' : value === 'maybe' ? 'peut-\u00eatre' : value === 'no' ? 'non' : 'sans r\u00e9ponse'}.`);
+    return displaced;
+  }
+  function canArrangeRide(s, id) {
+    editable(s);
+    if (response(s, id).rsvp !== 'yes') fail('R\u00e9pondez \u00ab Oui \u00bb avant d\u2019organiser votre trajet.');
+    if (s.publishedSelection[id] === 'declined') fail('Vous n\u2019\u00eates pas retenu pour cette s\u00e9ance. Contactez un administrateur.');
+  }
+  function offerCar(db, sid, actor, values) {
+    const s = session(db, sid); member(db, actor); canArrangeRide(s, actor);
+    const seats = Number(values.seats);
+    if (!Number.isInteger(seats) || seats < 1 || seats > 8) fail('Indiquez entre 1 et 8 places passagers, hors conducteur.');
+    if (passengers(s, actor).length > seats) fail('La voiture a d\u00e9j\u00e0 plus de passagers. Demandez-leur de changer de trajet avant de r\u00e9duire les places.');
+    const car = { driverId: actor, seats, meeting: String(values.meeting || '').trim().slice(0, 200), time: String(values.time || '').slice(0, 5), note: String(values.note || '').trim().slice(0, 300) };
+    if (car.time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(car.time)) fail('Heure de rendez-vous invalide.');
+    s.cars = s.cars.filter(c => c.driverId !== actor); s.cars.push(car);
+    const r = mutableResponse(s, actor); r.transportMode = 'driver'; r.carDriverId = null;
+    log(s, actor, `Voiture propos\u00e9e : ${seats} places passagers.`);
+  }
+  function setTransport(db, sid, actor, mode) {
+    const s = session(db, sid); member(db, actor); canArrangeRide(s, actor);
+    if (!['own', 'needs', 'unset'].includes(mode)) fail('Mode de transport invalide.');
+    const displaced = removeCar(s, actor);
+    const r = mutableResponse(s, actor); r.transportMode = mode; r.carDriverId = null;
+    log(s, actor, 'Trajet mis \u00e0 jour.');
+    return displaced;
+  }
+  function joinCar(db, sid, actor, driverId) {
+    const s = session(db, sid); canArrangeRide(s, actor); member(db, actor); member(db, driverId);
+    const car = s.cars.find(c => c.driverId === driverId);
+    if (!car || response(s, driverId).rsvp !== 'yes' || s.publishedSelection[driverId] === 'declined') fail('Cette voiture n\u2019est plus disponible.');
+    if (actor === driverId) fail('Vous \u00eates d\u00e9j\u00e0 le conducteur.');
+    if (s.cars.some(c => c.driverId === actor)) fail('Retirez d\u2019abord votre proposition de voiture.');
+    if (passengers(s, driverId).filter(id => id !== actor).length >= car.seats) fail('Cette voiture est compl\u00e8te.');
+    const r = mutableResponse(s, actor); r.transportMode = 'passenger'; r.carDriverId = driverId;
+    log(s, actor, `Covoiturage avec ${member(db, driverId).firstName}.`);
+  }
+  function setDraftSelection(db, sid, actor, target, value) {
+    admin(db, actor); member(db, target); const s = session(db, sid); editable(s);
+    if (!SELECTION.includes(value)) fail('S\u00e9lection invalide.');
+    if (value === 'selected' && response(s, target).rsvp !== 'yes') fail('Seuls les adh\u00e9rents ayant r\u00e9pondu \u00ab Oui \u00bb peuvent \u00eatre s\u00e9lectionn\u00e9s.');
+    if (!s.draftSelection) s.draftSelection = clone(s.publishedSelection);
+    const before = s.draftSelection[target]; s.draftSelection[target] = value;
+    if (selectedIds(s, true).length > s.capacity) {
+      if (before === undefined) delete s.draftSelection[target]; else s.draftSelection[target] = before;
+      fail(`La capacit\u00e9 est de ${s.capacity} places. Modifiez la s\u00e9ance pour l\u2019augmenter avant de retenir une personne de plus.`);
+    }
+  }
+  function publishSelection(db, sid, actor) {
+    admin(db, actor); const s = session(db, sid); editable(s);
+    if (!s.draftSelection) s.draftSelection = clone(s.publishedSelection);
+    if (selectedIds(s, true).length > s.capacity) fail('La capacit\u00e9 de la s\u00e9ance est d\u00e9pass\u00e9e.');
+    s.publishedSelection = clone(s.draftSelection); s.draftSelection = null;
+    s.publishedAt = new Date().toISOString(); s.publishedBy = actor;
+    let displaced = 0;
+    s.cars.slice().forEach(c => { if (s.publishedSelection[c.driverId] === 'declined') displaced += removeCar(s, c.driverId); });
+    Object.keys(s.responses).forEach(id => {
+      if (s.publishedSelection[id] === 'declined' && response(s, id).transportMode === 'passenger') {
+        s.responses[id].transportMode = 'needs'; s.responses[id].carDriverId = null;
+      }
+    });
+    log(s, actor, `S\u00e9lection publi\u00e9e : ${selectedIds(s).length} participants.${displaced ? ` ${displaced} passager(s) doivent retrouver un trajet.` : ''}`);
+    return displaced;
+  }
+  function discardDraft(db, sid, actor) { admin(db, actor); session(db, sid).draftSelection = null; }
+  function setPayment(db, sid, actor, target, value) {
+    admin(db, actor); member(db, target); const s = session(db, sid);
+    if (!PAYMENTS.includes(value)) fail('Statut de paiement invalide.');
+    mutableResponse(s, target).payment = value; log(s, actor, `Paiement de ${member(db, target).firstName} mis \u00e0 jour.`);
+  }
+  function setAttendance(db, sid, actor, target, value) {
+    admin(db, actor); member(db, target); const s = session(db, sid); editable(s);
+    if (!isPast(s)) fail('Les pr\u00e9sences se renseignent apr\u00e8s la s\u00e9ance.');
+    if (!ATTENDANCE.includes(value)) fail('Pr\u00e9sence invalide.');
+    mutableResponse(s, target).attendance = value;
+    log(s, actor, `Pr\u00e9sence de ${member(db, target).firstName} mise \u00e0 jour.`);
+  }
+  function closeSession(db, sid, actor) {
+    admin(db, actor); const s = session(db, sid); editable(s);
+    if (!isPast(s)) fail('La s\u00e9ance n\u2019est pas encore termin\u00e9e.');
+    if (selectedIds(s).some(id => response(s, id).attendance === 'unknown')) fail('Renseignez la pr\u00e9sence de chaque participant confirm\u00e9 avant de cl\u00f4turer.');
+    const dives = Object.values(s.responses).filter(r => r.attendance === 'dived').length;
+    if (dives > s.capacity) fail('Le nombre de plongeurs d\u00e9passe la capacit\u00e9. V\u00e9rifiez les pr\u00e9sences ou modifiez la capacit\u00e9.');
+    s.status = 'closed'; s.registrationOpen = false; s.draftSelection = null;
+    log(s, actor, `Bilan cl\u00f4tur\u00e9 : ${dives} fosses individuelles comptabilis\u00e9es.`);
+  }
+  function reopenSession(db, sid, actor) { admin(db, actor); const s = session(db, sid); s.status = 'open'; log(s, actor, 'Bilan rouvert : cette s\u00e9ance ne compte plus dans les compteurs jusqu\u2019\u00e0 sa nouvelle cl\u00f4ture.'); }
+  function saveSession(db, actor, sid, values) {
+    admin(db, actor);
+    const date = String(values.date), start = String(values.start), end = String(values.end), capacity = Number(values.capacity);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date) fail('Date invalide.');
+    const timeRE = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!timeRE.test(start) || !timeRE.test(end) || end <= start) fail('Indiquez une heure de fin apr\u00e8s l\u2019heure de d\u00e9but, le m\u00eame jour.');
+    if (!Number.isInteger(capacity) || capacity < 1 || capacity > 100) fail('La capacit\u00e9 doit \u00eatre comprise entre 1 et 100.');
+    const s = sid ? session(db, sid) : { id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), responses: {}, cars: [], publishedSelection: {}, draftSelection: null, publishedAt: null, publishedBy: null, groupAssignments: {}, groupsPublishedAt: null, groupSelectionAt: null, status: 'open', log: [], demoHistory: false };
+    if (Math.max(selectedIds(s).length, selectedIds(s, true).length) > capacity) fail('La capacit\u00e9 ne peut pas \u00eatre inf\u00e9rieure au nombre s\u00e9lectionn\u00e9, y compris dans le brouillon.');
+    if (Object.values(s.responses).filter(r => r.attendance === 'dived').length > capacity) fail('La capacit\u00e9 ne peut pas \u00eatre inf\u00e9rieure au nombre de personnes ayant plong\u00e9.');
+    Object.assign(s, { date, start, end, capacity, title: String(values.title || 'S\u00e9ance de fosse').trim().slice(0, 100), venue: String(values.venue || '').trim().slice(0, 150), address: String(values.address || '').trim().slice(0, 250), notes: String(values.notes || '').trim().slice(0, 1500), endEstimated: !!values.endEstimated, registrationOpen: s.status === 'closed' ? false : !!values.registrationOpen });
+    if (!sid) { db.members.forEach(m => { s.responses[m.id] = blankResponse(); }); db.sessions.push(s); }
+    log(s, actor, sid ? 'Informations de la s\u00e9ance mises \u00e0 jour.' : 'S\u00e9ance cr\u00e9\u00e9e.'); return s.id;
+  }
+  function saveGroups(db, sid, actor, assignments) {
+    admin(db, actor); const s = session(db, sid); editable(s);
+    const selected = selectedIds(s), result = {};
+    Object.entries(assignments).forEach(([id, g]) => {
+      if (!selected.includes(id)) fail('Les palanqu\u00e9es ne peuvent contenir que des participants confirm\u00e9s.');
+      if (!Number.isInteger(g.group) || g.group < 1 || g.group > 8) fail('Palanqu\u00e9e invalide.');
+      result[id] = { group: g.group, leader: !!g.leader };
+    });
+    s.groupAssignments = result; s.groupsPublishedAt = new Date().toISOString(); s.groupSelectionAt = selected.slice().sort().join(',');
+    log(s, actor, 'Organisation des palanqu\u00e9es publi\u00e9e.');
+  }
+  function saveMember(db, actor, target, values) {
+    const own = actor === target; if (!own) admin(db, actor);
+    const m = member(db, target);
+    if (!String(values.firstName || '').trim() || !String(values.lastName || '').trim()) fail('Le pr\u00e9nom et le nom sont obligatoires.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(values.email))) fail('Adresse email invalide.');
+    if (db.members.some(other => other.id !== target && other.email.toLowerCase() === String(values.email).toLowerCase())) fail('Cet email est d\u00e9j\u00e0 utilis\u00e9.');
+    const seats = Number(values.usualSeats); if (!Number.isInteger(seats) || seats < 0 || seats > 8) fail('Capacit\u00e9 habituelle invalide.');
+    ['firstName', 'lastName', 'email', 'phone', 'level', 'preparing'].forEach(k => { m[k] = String(values[k] || '').trim().slice(0, 120); });
+    m.usualSeats = seats;
+    // The V0 deliberately does not let a profile edit grant administrator access.
+  }
+  function validate(db) {
+    if (!db || db.version !== VERSION || !Array.isArray(db.members) || !Array.isArray(db.sessions)) fail('Fichier incompatible : une sauvegarde iFosse V0 est attendue.');
+    if (db.members.length < 1 || db.members.length > 500 || db.sessions.length > 1000) fail('Taille de sauvegarde invalide.');
+    const ids = new Set(); const emails = new Set();
+    for (const m of db.members) {
+      if (!/^m[a-z0-9_-]+$/.test(m.id) || ids.has(m.id)) fail('Identifiant adh\u00e9rent invalide ou en double.'); ids.add(m.id);
+      for (const k of ['firstName','lastName','email','phone','level','preparing']) if (typeof m[k] !== 'string' || m[k].length > 300) fail('Fiche adh\u00e9rent invalide.');
+      if (typeof m.admin !== 'boolean' || !Number.isInteger(m.usualSeats) || m.usualSeats < 0 || m.usualSeats > 8) fail('Droits ou voiture invalides.');
+      if (emails.has(m.email.toLowerCase())) fail('Emails en double.'); emails.add(m.email.toLowerCase());
+    }
+    if (!db.members.some(m => m.admin)) fail('Il faut au moins un administrateur de d\u00e9monstration.');
+    const sids = new Set();
+    for (const s of db.sessions) {
+      if (!/^s[a-z0-9_-]+$/.test(s.id) || sids.has(s.id)) fail('Identifiant s\u00e9ance invalide.'); sids.add(s.id);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(s.date) || !Number.isFinite(Date.parse(s.date)) || new Date(s.date).toISOString().slice(0, 10) !== s.date) fail('Date invalide.');
+      if (![s.start, s.end].every(t => typeof t === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(t)) || s.end <= s.start) fail('Horaires invalides.');
+      if (!Number.isInteger(s.capacity) || s.capacity < 1 || s.capacity > 100 || !['open','closed'].includes(s.status)) fail('Capacit\u00e9 ou \u00e9tat invalide.');
+      for (const k of ['title','venue','address','notes']) if (typeof s[k] !== 'string' || s[k].length > 2000) fail('Description de s\u00e9ance invalide.');
+      if (typeof s.registrationOpen !== 'boolean' || !s.responses || typeof s.responses !== 'object' || Array.isArray(s.responses)) fail('Inscriptions invalides.');
+      for (const [id, r] of Object.entries(s.responses)) {
+        if (!ids.has(id) || !r || !RSVP.includes(r.rsvp) || !PAYMENTS.includes(r.payment) || !ATTENDANCE.includes(r.attendance) || !['unset','needs','own','driver','passenger'].includes(r.transportMode)) fail('Participation invalide.');
+      }
+      for (const sel of [s.publishedSelection, s.draftSelection]) {
+        if (sel === null) continue;
+        if (!sel || typeof sel !== 'object' || Array.isArray(sel)) fail('S\u00e9lection invalide.');
+        for (const [id, value] of Object.entries(sel)) {
+          if (!ids.has(id) || !SELECTION.includes(value) || (value === 'selected' && response(s,id).rsvp !== 'yes')) fail('S\u00e9lection incoh\u00e9rente.');
+        }
+      }
+      if (!s.publishedSelection || Math.max(selectedIds(s).length, selectedIds(s,true).length) > s.capacity) fail('Capacit\u00e9 d\u00e9pass\u00e9e.');
+      for (const k of ['publishedAt','groupsPublishedAt']) if (s[k] !== null && !Number.isFinite(Date.parse(s[k]))) fail('Horodatage de publication invalide.');
+      if (s.publishedBy !== null && !ids.has(s.publishedBy)) fail('Auteur de publication invalide.');
+      if (s.status === 'closed' && (s.registrationOpen || Object.values(s.responses).filter(r => r.attendance === 'dived').length > s.capacity)) fail('Bilan incoh\u00e9rent.');
+
+      if (!Array.isArray(s.cars) || !Array.isArray(s.log) || !s.groupAssignments || typeof s.groupAssignments !== 'object') fail('Donn\u00e9es de s\u00e9ance invalides.');
+      const drivers = new Set();
+      for (const c of s.cars) {
+        if (!ids.has(c.driverId) || drivers.has(c.driverId) || response(s,c.driverId).rsvp !== 'yes' || response(s,c.driverId).transportMode !== 'driver' || s.publishedSelection[c.driverId] === 'declined' || !Number.isInteger(c.seats) || c.seats < 1 || c.seats > 8 || passengers(s,c.driverId).length > c.seats) fail('Covoiturage incoh\u00e9rent.');
+        drivers.add(c.driverId);
+        for (const k of ['meeting','time','note']) if (typeof c[k] !== 'string' || c[k].length > 500) fail('Voiture invalide.');
+      }
+      for (const [id,r] of Object.entries(s.responses)) {
+        if (r.transportMode === 'passenger' && (!drivers.has(r.carDriverId) || r.carDriverId === id || r.rsvp !== 'yes')) fail('Passager sans voiture valide.');
+        if (r.transportMode === 'driver' && !drivers.has(id)) fail('Conducteur sans voiture.');
+      }
+      for (const [id,g] of Object.entries(s.groupAssignments)) if (!ids.has(id) || !g || !Number.isInteger(g.group) || g.group < 1 || g.group > 8 || typeof g.leader !== 'boolean') fail('Palanqu\u00e9e invalide.');
+      if (s.log.length > 100 || s.log.some(l => !l || typeof l.text !== 'string' || l.text.length > 1000 || !ids.has(l.actor) || !Number.isFinite(Date.parse(l.at)))) fail('Historique invalide.');
+    }
+    return true;
+  }
+  function createSeed() {
+    const names = [
+      ['Camille','Bernard'],['Alex','Martin'],['Louise','Petit'],['Hugo','Dubois'],['Sarah','Moreau'],['Thomas','Laurent'],['In\u00e8s','Lefebvre'],['Julien','Michel'],['Emma','Garcia'],['Gabriel','Roux'],
+      ['L\u00e9a','Fournier'],['Nicolas','Girard'],['Chlo\u00e9','Andr\u00e9'],['Antoine','Mercier'],['Manon','Dupont'],['Louis','Lambert'],['Julie','Bonnet'],['Paul','Fran\u00e7ois'],['Alice','Legrand'],['Maxime','Garnier'],
+      ['Clara','Faure'],['Lucas','Rousseau'],['Zo\u00e9','Vincent'],['Mathieu','Muller'],['Nina','Lef\u00e8vre'],['Rapha\u00ebl','Boyer'],['Eva','Chevalier'],['Arthur','Denis'],['Lucie','Perrin'],['Baptiste','Cl\u00e9ment'],
+      ['Jade','Gauthier'],['Florian','Dumont'],['Elise','Lopez'],['Romain','Fontaine'],['Ana\u00efs','Chevallier'],['Victor','Robin'],['Marion','Masson'],['Adrien','Sanchez'],['Agathe','G\u00e9rard'],['Quentin','Nguyen'],
+      ['C\u00e9line','Henry'],['Simon','Roussel'],['Amandine','Mathieu'],['Th\u00e9o','Gautier'],['Laura','Marchand'],['Vincent','Duval'],['Sophie','Leclerc'],['Nathan','Vidal'],['M\u00e9lanie','Lemoine'],['Pierre','Renaud']
+    ];
+    const db = { version: VERSION, revision: 0, members: names.map(([firstName,lastName],i) => ({ id:'m'+String(i+1).padStart(2,'0'), firstName,lastName,email:`adherent${i+1}@example.test`,phone:'',admin:[0,2,4].includes(i),level:[0,2,4].includes(i)?'MF1':['N1','N2','N3','D\u00e9butant'][i%4],preparing:[0,2,4].includes(i)?'':['N2','N3','','N1'][i%4],usualSeats:3 })), sessions: [] };
+    const dates = [
+      ['2026-10-28','21:00','22:00',false],['2026-11-04','22:00','23:00',true],['2026-12-09','20:00','21:00',true],
+      ['2027-01-13','21:00','22:00',false],['2027-02-10','21:00','22:00',false],['2027-02-26','20:00','21:00',false],
+      ['2027-03-16','20:00','21:00',false],['2027-03-31','21:00','22:00',false],['2027-04-07','21:00','22:00',false],
+      ['2027-04-23','20:00','21:00',false],['2027-05-12','20:00','21:00',false]
+    ];
+    dates.forEach(([date,start,end,endEstimated],i) => {
+      const s = { id:'s'+(i+1),title:'S\u00e9ance de fosse',date,start,end,endEstimated,venue:'Fosse de Villeneuve',address:'',notes:'Adresse exacte et consignes pratiques \u00e0 compl\u00e9ter par le club.',capacity:20,registrationOpen:true,status:'open',responses:{},cars:[],publishedSelection:{},draftSelection:null,publishedAt:i===0?'2026-09-25T18:00:00.000Z':null,publishedBy:i===0?'m01':null,groupAssignments:{},groupsPublishedAt:null,groupSelectionAt:null,log:[],demoHistory:false };
+      db.members.forEach((m,j) => {
+        const yes = i===0 ? 23 : Math.max(3,15-i), maybe = i===0 ? 4:3;
+        s.responses[m.id] = {...blankResponse(),rsvp:j<yes?'yes':j<yes+maybe?'maybe':j<yes+maybe+8?'no':'unanswered',payment:j<3?'free':i===0&&j<11?'paid':'unpaid'};
+        if (i===0 && j<18) s.publishedSelection[m.id]='selected';
+      });
+      if(i===0) {
+        const specs=[['m01',3,['m02','m05','m20']],['m03',3,['m06','m09']],['m07',2,['m08','m19']]];
+        specs.forEach(([driverId,seats,ps])=>{
+          s.cars.push({driverId,seats,meeting:'Rendez-vous \u00e0 pr\u00e9ciser',time:'',note:''}); s.responses[driverId].transportMode='driver';
+          ps.forEach(id=>{s.responses[id].transportMode='passenger';s.responses[id].carDriverId=driverId;});
+        });
+        ['m04','m10','m11'].forEach(id=>s.responses[id].transportMode='own');
+        ['m12','m13','m14','m15','m16','m17','m18','m21','m22','m23'].forEach(id=>s.responses[id].transportMode='needs');
+        log(s,'m01','D\u00e9monstration : une premi\u00e8re s\u00e9lection de 18 personnes est d\u00e9j\u00e0 publi\u00e9e.');
+      }
+      db.sessions.push(s);
+    });
+    ['2026-09-09','2026-09-23'].forEach((date,i)=>{
+      const s = {id:'sh'+(i+1),title:'S\u00e9ance d\u2019exemple (fictive)',date,start:'21:00',end:'22:00',endEstimated:false,venue:'Fosse de d\u00e9monstration',address:'',notes:'S\u00e9ance invent\u00e9e uniquement pour tester l\u2019historique et les compteurs. Elle ne figure pas dans votre calendrier.',capacity:20,registrationOpen:false,status:'closed',responses:{},cars:[],publishedSelection:{},draftSelection:null,publishedAt:date+'T12:00:00.000Z',publishedBy:'m01',groupAssignments:{},groupsPublishedAt:null,groupSelectionAt:null,log:[],demoHistory:true};
+      db.members.forEach((m,j)=>{
+        const attended = j===0 || (i===0 ? (j>=2 && j<=19) : (j>=7 && j<=23));
+        s.responses[m.id]={...blankResponse(),rsvp:attended?'yes':'no',attendance:attended?'dived':'absent',payment:attended?(m.admin?'free':'paid'):'unpaid'};
+        if(attended)s.publishedSelection[m.id]='selected';
+      });
+      log(s,'m01','Bilan fictif cl\u00f4tur\u00e9 pour illustrer les compteurs de saison.'); db.sessions.push(s);
+    });
+    validate(db); return db;
+  }
+  return { VERSION, RSVP, PAYMENTS, ATTENDANCE, SELECTION, clone, member, session, response, seasonOf, seasonCount, selectedIds, selectionState, draftChanges, passengers, parisTimestamp, isPast, setRsvp, offerCar, setTransport, joinCar, setDraftSelection, publishSelection, discardDraft, setPayment, setAttendance, closeSession, reopenSession, saveSession, saveGroups, saveMember, validate, createSeed };
+});
+
+</script>
+<script>
+/* iFosse V0 - dependency-free browser UI. All personal data below is fictional. */
+(function () {
+  'use strict';
+  const M = window.IFosse;
+  const KEY = 'ifosse.v0.database';
+  const ACTOR_KEY = 'ifosse.v0.actor';
+  let db, storageIssue = '', modalReturnFocus = null, confirmCallback = null;
+  const $ = (q, root = document) => root.querySelector(q);
+  const $$ = (q, root = document) => Array.from(root.querySelectorAll(q));
+  const h = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fullName = (m) => `${m.firstName} ${m.lastName}`;
+  const paths = {
+    home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/>',
+    users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/><circle cx="9" cy="7" r="4"/>',
+    user:'<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/>',
+    car:'<path d="m5 7 2-4h10l2 4 2 4v7H3v-7l2-4Zm-2 4h18M5 18v3m14-3v3M6 14h2m8 0h2"/>',
+    check:'<path d="m5 12 4 4L19 6"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    arrow:'<path d="M4 12h16m-6-6 6 6-6 6"/>',
+    chevron:'<path d="m8 5 7 7-7 7"/>',
+    down:'<path d="m6 9 6 6 6-6"/>',
+    back:'<path d="m14 6-6 6 6 6"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    edit:'<path d="m16 3 5 5-12 12-6 1 1-6Z"/><path d="m14 5 5 5"/>',
+    download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+    publish:'<path d="m22 2-7 20-4-9-9-4 20-7ZM11 13 22 2"/>',
+    shield:'<path d="m12 3 8 3v6c0 5-8 10-8 10S4 17 4 12V6Z"/><path d="m8 12 3 3 5-6"/>',
+    mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/>',
+    alert:'<path d="m12 3 10 18H2L12 3Zm0 6v4m0 4v.1"/>',
+    search:'<circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/>',
+    help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 .5c0 2-2.5 2-2.5 4m0 3v.1"/>',
+    close:'<path d="m6 6 12 12M6 18 18 6"/>',
+    save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12l4 4v12a2 2 0 0 1-2 2Z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/>',
+    location:'<path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
+    book:'<path d="M4 3h13a2 2 0 0 1 2 2v16H6a3 3 0 0 1-3-3V5a2 2 0 0 1 1-2ZM3 17h16M8 7h6M8 11h6"/>',
+    layers:'<path d="m12 3 10 6-10 6L2 9l10-6ZM2 15l10 6 10-6M2 12l10 6 10-6"/>',
+    eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+    reset:'<path d="M3 4v6h6M3 10a9 9 0 1 1 0 5"/>',
+    lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3m-4 4v3"/>',
+    wave:'<path d="M2 10c3-3 6-3 10 0s7 3 10 0M2 16c3-3 6-3 10 0s7 3 10 0"/><circle cx="15" cy="4" r="1.5"/>',
+    upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 16v5h16v-5"/>',
+    sort:'<path d="M5 4v16m-3-3 3 3 3-3M12 5h9M12 10h6M12 15h3"/>',
+    euro:'<path d="M19 5a7 7 0 1 0 0 14M3 10h12M3 14h12"/>'
+  };
+  const icon = (name) => `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.wave}</svg>`;
+  const badge = (text, tone = '', sym = '') => `<span class="tag ${tone}">${sym ? icon(sym) : ''}${h(text)}</span>`;
+  const rsvpLabel = {yes:'Oui',maybe:'Peut-\u00eatre',no:'Non',unanswered:'Sans r\u00e9ponse'};
+  const rsvpTone = {yes:'green',maybe:'amber',no:'',unanswered:''};
+  const selectionLabel = {selected:'Confirm\u00e9',waiting:'En attente',pending:'\u00c0 confirmer',declined:'Non retenu',withdrawn:'D\u00e9sist\u00e9',none:'\u2014'};
+  const selectionTone = {selected:'green',waiting:'amber',pending:'',declined:'red',withdrawn:'',none:''};
+  const paymentLabel = {unpaid:'\u00c0 r\u00e9gler',paid:'Pay\u00e9',free:'Gratuit'};
+  const attendanceLabel = {unknown:'\u00c0 renseigner',dived:'A plong\u00e9',absent:'Absent', 'not-dived':'N\u2019a pas plong\u00e9'};
+  const seasonLabel = year => `${year}\u2013${Number(year)+1}`;
+  function fmtDate(date, opts={day:'numeric',month:'long'}) { return new Intl.DateTimeFormat('fr-FR',opts).format(new Date(date+'T12:00:00')); }
+  function fmtTime(t) { return t.replace(':','h'); }
+  function fmtStamp(value) { if(!value)return ''; return new Intl.DateTimeFormat('fr-FR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}).format(new Date(value)); }
+  function cap(v) { return v.charAt(0).toUpperCase()+v.slice(1); }
+  const options = (pairs, value) => pairs.map(([k,v])=>`<option value="${h(k)}"${String(k)===String(value)?' selected':''}>${h(v)}</option>`).join('');
+  function avatar(id, size='') {
+    const m=M.member(db,id); const initials=m.firstName.charAt(0)+m.lastName.charAt(0); const tone=parseInt(id.slice(1),10)%5||0;
+    return `<span class="avatar tone${tone} ${size}" aria-hidden="true">${h(initials)}</span>`;
+  }
+  function avatars(ids, max=5) {return `<div class="avatar-stack">${ids.slice(0,max).map(id=>avatar(id,'sm')).join('')}${ids.length>max?`<span class="avatar sm extra">+${ids.length-max}</span>`:''}</div>`;}
+  function dateTile(s) {return `<div class="date-tile" aria-hidden="true"><span class="month">${h(fmtDate(s.date,{month:'short'}).replace('.',''))}</span><span class="day">${Number(s.date.slice(8))}</span></div>`;}
+  const rsvpBadge = value => badge(rsvpLabel[value],rsvpTone[value],value==='yes'?'check':value==='maybe'?'clock':'');
+  const selectedBadge = (s,id) => {const state=M.selectionState(s,id);return badge(selectionLabel[state],selectionTone[state],state==='selected'?'check':'');};
+  const payBadge = value => badge(paymentLabel[value],value==='paid'?'green':value==='free'?'blue':'amber',value==='paid'?'check':'');
+  const counts = (s) => ({ yes:Object.values(s.responses).filter(r=>r.rsvp==='yes').length, maybe:Object.values(s.responses).filter(r=>r.rsvp==='maybe').length, selected:M.selectedIds(s).length });
+  function rideSummary(s,id) {const r=M.response(s,id); if(r.rsvp!=='yes')return '\u2014'; if(r.transportMode==='driver')return 'Conducteur'; if(r.transportMode==='passenger')return `Avec ${M.member(db,r.carDriverId).firstName}`;return {own:'Autonome',needs:'Cherche une place',unset:'\u00c0 organiser'}[r.transportMode];}
+  function readStore() {
+    try { const raw=localStorage.getItem(KEY); if(raw){const data=JSON.parse(raw);M.validate(data);return data;} }
+    catch(e){storageIssue='La sauvegarde locale ne peut pas \u00eatre lue. La d\u00e9monstration est charg\u00e9e en m\u00e9moire ; exportez vos essais avant de fermer la page.';}
+    return M.createSeed();
+  }
+  db=readStore();
+  let savedActor='m01'; try{savedActor=localStorage.getItem(ACTOR_KEY)||'m01';}catch(e){}
+  const ui={ actor:db.members.some(m=>m.id===savedActor)?savedActor:db.members[0].id, season:2026, sessionFilter:'upcoming', memberSearch:'', participantFilter:'all', participantSearch:'', manageView:'selection', adminAll:false, adminSearch:'', sortByCount:false, attendanceAll:false };
+  const me=()=>M.member(db,ui.actor), isAdmin=()=>me().admin;
+  function currentRoute(){const [page='home',sid='',tab='overview']=(location.hash.slice(1)||'home').split('/');return {page,sid,tab};}
+  function navigate(route){if(location.hash.slice(1)===route)render();else location.hash=route;window.scrollTo({top:0,behavior:'instant'});}
+  function toast(text,error=false){const node=document.createElement('div');node.className='toast'+(error?' error':'');node.innerHTML=`${icon(error?'alert':'check')}<span>${h(text)}</span><button aria-label="Fermer le message">${icon('close')}</button>`;node.querySelector('button').onclick=()=>node.remove();$('#toasts').appendChild(node);setTimeout(()=>node.remove(),error?8500:4500);}
+  function commit(fn,success,rerender=true){
+    try {
+      const next=M.clone(db),result=fn(next);M.validate(next);next.revision=(db.revision||0)+1;
+      db=next;
+      try{localStorage.setItem(KEY,JSON.stringify(db)); if(storageIssue)storageIssue='';}catch(e){storageIssue='Sauvegarde locale indisponible : vos essais restent seulement en m\u00e9moire. Exportez une sauvegarde JSON avant de fermer.';toast(storageIssue,true);}
+      if(rerender)render();if(success)toast(typeof success==='function'?success(result):success);return {ok:true,result};
+    } catch(e){toast(e.message||'Cette action n\u2019a pas pu \u00eatre effectu\u00e9e.',true);if(rerender)render();return {ok:false,error:e.message};}
+  }
+  function navItem(page,label,symbol,active){return `<button class="nav-item ${active?'active':''}" data-action="navigate" data-route="${page}" ${active?'aria-current="page"':''}>${icon(symbol)}<span>${h(label)}</span></button>`;}
+  function shell(body,page){
+    const section=page==='session'?'sessions':page, labels={home:'Tableau de bord',sessions:'Les s\u00e9ances',members:'Les adh\u00e9rents',profile:'Mon profil'};
+    const nav=[['home','Accueil','home'],['sessions','Les s\u00e9ances','calendar'],['members','Les adh\u00e9rents','users'],['profile','Mon profil','user']];
+    return `<aside class="sidebar"><a href="#home" class="brand" aria-label="iFosse, accueil"><span class="brand-symbol">${icon('wave')}</span><span class="brand-word">i<span>Fosse</span></span></a><div class="club-label">APSAP \u00b7 Club de plong\u00e9e</div><div class="nav-label">ESPACE CLUB</div><nav aria-label="Navigation principale">${nav.map(([p,l,i])=>navItem(p,l,i,p===section)).join('')}</nav><div class="sidebar-bottom"><div class="season-mini"><div class="eyebrow">Saison en cours</div><strong>${seasonLabel(ui.season)}</strong><span class="tiny muted"><span class="season-dot"></span>Septembre \u2192 ao\u00fbt</span></div><button class="nav-item" data-action="about">${icon('help')}<span>\u00c0 propos de la V0</span></button><div class="sidebar-foot">Moins de messages.<br><span style="display:block;margin-top:5px">Plus de plong\u00e9es.</span></div></div></aside><div class="shell"><header class="topbar"><div class="breadcrumb">Espace club ${icon('chevron')} <b>${h(labels[section]||'Les s\u00e9ances')}</b></div><div class="row gap8"><button class="demo-pill" data-action="about"><i></i>V0 \u00b7 D\u00e9monstration</button><button class="persona" data-action="persona" aria-label="Changer d\u2019utilisateur de d\u00e9monstration">${avatar(ui.actor)}<div><div class="persona-name">${h(fullName(me()))}</div><div class="persona-role">${isAdmin()?'Administrateur':'Adh\u00e9rent'} \u00b7 Changer de vue</div></div>${icon('down')}</button></div></header>${storageIssue?`<div class="banner error storage-banner">${icon('alert')}<span>${h(storageIssue)}</span></div>`:''}<main class="content" id="main-content">${body}<div class="footer-note">${icon('lock')}Donn\u00e9es fictives \u00b7 Sauvegarde sur cet appareil uniquement \u00b7 iFosse V0</div></main></div><nav class="bottom-nav" aria-label="Navigation mobile">${nav.map(([p,l,i])=>`<button class="${p===section?'active':''}" data-action="navigate" data-route="${p}" ${p===section?'aria-current="page"':''}>${icon(i)}<span>${h(p==='home'?'Accueil':p==='sessions'?'S\u00e9ances':p==='members'?'Adh\u00e9rents':'Mon profil')}</span></button>`).join('')}</nav>`;
+  }
+  function seasonSelect(){const years=[...new Set([2026,ui.season,...db.sessions.map(s=>M.seasonOf(s.date))])].sort((a,b)=>b-a);return `<select aria-label="Saison" data-change="season">${options(years.map(y=>[y,'Saison '+seasonLabel(y)]),ui.season)}</select>`;}
+  function getSeasonSessions(){return db.sessions.filter(s=>M.seasonOf(s.date)===Number(ui.season)).sort((a,b)=>(a.date+a.start).localeCompare(b.date+b.start));}
+  function rsvpButtons(s){const r=M.response(s,ui.actor),disabled=s.status==='closed'||(!s.registrationOpen&&!isAdmin());return `<div class="rsvp-buttons" role="group" aria-label="Ma r\u00e9ponse pour la s\u00e9ance">${['yes','maybe','no'].map(v=>`<button class="rsvp-button ${v} ${r.rsvp===v?'active':''}" data-action="rsvp" data-sid="${s.id}" data-target="${ui.actor}" data-value="${v}" aria-pressed="${r.rsvp===v}" ${disabled&&!(v==='no'&&s.status!=='closed')?'disabled':''}>${icon(v==='yes'?'check':v==='maybe'?'clock':'close')}${h(rsvpLabel[v])}</button>`).join('')}</div>`;}
+  function participationCard(s){const r=M.response(s,ui.actor);return `<section class="card participation"><h3>Ma participation</h3><p class="intro">${s.status==='closed'?'Cette s\u00e9ance est termin\u00e9e.':s.registrationOpen?'Un clic, et le club est au courant.':'Inscriptions ferm\u00e9es \u00b7 un d\u00e9sistement reste possible.'}</p>${rsvpButtons(s)}<div class="participation-status"><span class="small muted">${s.status==='closed'?'Ma pr\u00e9sence':'Ma place dans la fosse'}</span>${s.status==='closed'?badge(attendanceLabel[r.attendance],r.attendance==='dived'?'green':''):selectedBadge(s,ui.actor)}</div><div class="participation-bottom"><span class="row gap6 muted">${icon('car')}${h(rideSummary(s,ui.actor))}</span><button class="text-btn" data-action="navigate" data-route="session/${s.id}/transport">${s.status==='closed'?'Voir les trajets':'Mon trajet'} ${icon('arrow')}</button></div>${r.rsvp==='yes'&&M.selectionState(s,ui.actor)!=='selected'&&s.status!=='closed'?'<p class="tiny muted mt12">Dire oui ne garantit pas une place : un administrateur confirme les participants.</p>':''}</section>`;}
+  function home(){
+    const all=getSeasonSessions(),upcoming=all.filter(s=>!M.isPast(s)&&s.status!=='closed'),next=upcoming[0];
+    const myCount=M.seasonCount(db,ui.actor,ui.season);
+    if(!next)return `<div class="page-heading"><div><div class="eyebrow">Saison ${seasonLabel(ui.season)}</div><h1>Bonjour ${h(me().firstName)}.</h1><p>Retrouvez l\u2019historique du club ou pr\u00e9parez la prochaine saison.</p></div>${seasonSelect()}</div><div class="card empty"><div class="empty-icon">${icon('calendar')}</div><h3>Aucune fosse \u00e0 venir pour cette saison</h3><p>Les s\u00e9ances termin\u00e9es restent accessibles dans l\u2019historique.</p><button class="btn primary" data-action="navigate" data-route="sessions">Voir les s\u00e9ances</button>${isAdmin()?'<button class="btn mt12" data-action="edit-session">Cr\u00e9er une s\u00e9ance</button>':''}</div>`;
+    const c=counts(next), pending=Object.keys(next.responses).filter(id=>next.responses[id].rsvp==='yes'&&!['selected','declined'].includes(M.selectionState(next,id))).length,estimated=upcoming.filter(s=>s.endEstimated),needRide=Object.values(next.responses).filter(r=>r.rsvp==='yes'&&['needs','unset'].includes(r.transportMode)).length;
+    const days=Math.max(0,Math.ceil((M.parisTimestamp(next.date,'00:00')-Date.now())/86400000));
+    return `<div class="page-heading"><div><div class="eyebrow">Saison ${seasonLabel(ui.season)}</div><h1>Bonjour ${h(me().firstName)}.</h1><p>Votre prochaine immersion commence ici.</p></div>${isAdmin()?`<button class="btn primary" data-action="edit-session">${icon('plus')}Nouvelle s\u00e9ance</button>`:seasonSelect()}</div><div class="home-grid"><section class="card hero"><div class="hero-art" aria-hidden="true"><i class="orb"></i><i class="orb"></i><i class="orb"></i><i class="bubble"></i><i class="bubble b2"></i><i class="bubble b3"></i></div><div class="hero-content"><div class="row between"><span class="eyebrow">Prochaine fosse \u00b7 ${days?'Dans '+days+' jours':'Aujourd\u2019hui'}</span>${badge(next.registrationOpen?'Inscriptions ouvertes':'Inscriptions ferm\u00e9es','dark')}</div><h2>${h(cap(fmtDate(next.date,{weekday:'long',day:'numeric',month:'long'})))}</h2><div class="meta"><span class="row gap6">${icon('clock')}${fmtTime(next.start)} \u2014 ${fmtTime(next.end)}</span><span class="row gap6">${icon('location')}${h(next.venue)}</span></div></div><div class="hero-footer"><button class="btn white" data-action="navigate" data-route="session/${next.id}/overview">Voir la s\u00e9ance ${icon('arrow')}</button><div class="hero-caption">${c.yes} oui \u00b7 ${c.maybe} peut-\u00eatre<br><span style="display:block;margin-top:5px">${c.selected} places confirm\u00e9es / ${next.capacity}</span></div></div></section>${participationCard(next)}</div><div class="stats-grid"><div class="card stat"><div class="stat-icon">${icon('calendar')}</div><div><strong>${upcoming.length}</strong><div class="label">Fosses \u00e0 venir</div></div></div><div class="card stat"><div class="stat-icon blue">${icon('wave')}</div><div><strong>${myCount}<span class="unit">plong\u00e9e${myCount>1?'s':''}</span></strong><div class="label">Mes fosses cette saison</div></div></div><div class="card stat"><div class="stat-icon sand">${icon('users')}</div><div><strong>${db.members.length}</strong><div class="label">Adh\u00e9rents au club</div></div></div></div><div class="home-lower"><section class="card pad"><div class="card-heading"><h2>Les prochains rendez-vous</h2><button class="text-btn" data-action="navigate" data-route="sessions">Tout voir ${icon('arrow')}</button></div>${upcoming.slice(1,5).map(s=>`<div class="session-row">${dateTile(s)}<div class="grow"><div class="session-row-title">${h(cap(fmtDate(s.date,{weekday:'long',day:'numeric',month:'long'})))}</div><div class="meta">${fmtTime(s.start)} \u2014 ${fmtTime(s.end)}${s.endEstimated?' *':''} \u00b7 ${counts(s).yes} inscrits</div></div>${rsvpBadge(M.response(s,ui.actor).rsvp)}<button class="btn small" data-action="navigate" data-route="session/${s.id}/overview" aria-label="Voir la s\u00e9ance du ${h(fmtDate(s.date))}">${icon('chevron')}</button></div>`).join('')||'<p class="muted small">C\u2019est la derni\u00e8re s\u00e9ance de cette saison.</p>'}</section><section class="card pad"><div class="card-heading"><h2>\u00c0 garder en vue</h2>${icon('eye')}</div>${pending>0?`<div class="insight"><div class="insight-mark">${icon('users')}</div><div><h4>${pending} inscrit${pending>1?'s':''} \u00e0 confirmer</h4><p>${c.yes} personnes ont r\u00e9pondu oui pour ${next.capacity} places le ${h(fmtDate(next.date))}.</p><button class="text-btn mt8" data-action="navigate" data-route="session/${next.id}/${isAdmin()?'manage':'participants'}">${isAdmin()?'Pr\u00e9parer la s\u00e9lection':'Voir les participants'} ${icon('arrow')}</button></div></div>`:''}<div class="insight"><div class="insight-mark teal">${icon('car')}</div><div><h4>${needRide} trajet${needRide>1?'s':''} \u00e0 organiser</h4><p>Une place dans votre voiture peut faire la diff\u00e9rence.</p><button class="text-btn mt8" data-action="navigate" data-route="session/${next.id}/transport">Organiser le covoiturage ${icon('arrow')}</button></div></div>${estimated.length?`<div class="insight"><div class="insight-mark blue">${icon('clock')}</div><div><h4>${estimated.length} horaires de fin \u00e0 confirmer</h4><p>Le calendrier fourni est tronqu\u00e9 pour les s\u00e9ances du 4 novembre et du 9 d\u00e9cembre.</p><button class="text-btn mt8" data-action="navigate" data-route="session/${estimated[0].id}/overview">V\u00e9rifier les horaires ${icon('arrow')}</button></div></div>`:''}<div class="season-note">Une saison, de septembre \u00e0 ao\u00fbt.<br>Seules les plong\u00e9es r\u00e9ellement effectu\u00e9es et les bilans cl\u00f4tur\u00e9s alimentent les compteurs.</div></section></div>`;
+  }
+  function sessionCard(s){const c=counts(s),mine=M.response(s,ui.actor);return `<article class="card session-card"><div class="row between">${dateTile(s)}${s.demoHistory?badge('Exemple fictif','blue'):s.status==='closed'?badge('Bilan cl\u00f4tur\u00e9','green'):s.endEstimated?badge('Fin \u00e0 confirmer','amber','clock'):badge(s.registrationOpen?'Inscriptions ouvertes':'Inscriptions ferm\u00e9es',s.registrationOpen?'teal':'')}</div><h3>${h(cap(fmtDate(s.date,{weekday:'long',day:'numeric',month:'long'})))}</h3><div class="meta">${icon('clock')}${fmtTime(s.start)} \u2014 ${fmtTime(s.end)}${s.endEstimated?' *':''}</div><div class="meta mt8">${icon('location')}${h(s.venue||'Lieu \u00e0 pr\u00e9ciser')}</div><div class="capacity-label"><span><b>${c.selected} / ${s.capacity}</b> places confirm\u00e9es</span><span>${c.yes} oui</span></div><div class="progress" aria-label="${c.selected} places confirm\u00e9es sur ${s.capacity}"><i style="width:${Math.min(100,100*c.selected/s.capacity)}%"></i></div><div class="my-status row between"><span>Ma r\u00e9ponse</span>${rsvpBadge(mine.rsvp)}</div><div class="session-card-bottom row between">${avatars(M.selectedIds(s).length?M.selectedIds(s):Object.keys(s.responses).filter(id=>s.responses[id].rsvp==='yes'),4)}<button class="text-btn" data-action="navigate" data-route="session/${s.id}/overview">Voir la s\u00e9ance ${icon('arrow')}</button></div></article>`;}
+  function sessions(){const all=getSeasonSessions(),upcoming=all.filter(s=>!M.isPast(s)&&s.status!=='closed'),past=all.filter(s=>M.isPast(s)||s.status==='closed');let shown=ui.sessionFilter==='upcoming'?upcoming:ui.sessionFilter==='past'?past.slice().reverse():all;return `<div class="page-heading"><div><div class="eyebrow">Le calendrier du club</div><h1>Les s\u00e9ances</h1><p>Des rendez-vous partag\u00e9s, du premier oui au dernier plongeon.</p></div>${isAdmin()?`<button class="btn primary" data-action="edit-session">${icon('plus')}Nouvelle s\u00e9ance</button>`:''}</div><div class="toolbar"><div class="segmented" role="group" aria-label="P\u00e9riode">${[['upcoming','\u00c0 venir',upcoming.length],['past','Termin\u00e9es',past.length],['all','Toutes',all.length]].map(([v,l,n])=>`<button class="${ui.sessionFilter===v?'active':''}" data-action="session-filter" data-value="${v}" aria-pressed="${ui.sessionFilter===v}">${h(l)}<span class="count">${n}</span></button>`).join('')}</div>${seasonSelect()}</div>${shown.some(s=>s.demoHistory)?`<div class="banner info">${icon('help')}<span>Les deux s\u00e9ances de septembre sont des exemples fictifs pour tester l\u2019historique. Les 11 autres dates proviennent du calendrier fourni.</span></div>`:''}${shown.length?`<div class="session-grid">${shown.map(sessionCard).join('')}</div>`:`<div class="card empty"><div class="empty-icon">${icon('calendar')}</div><h3>Aucune s\u00e9ance ici pour le moment</h3><p>Changez de p\u00e9riode ou de saison pour retrouver les autres rendez-vous.</p></div>`}`;}
+  function sessionPage(s,tab){
+    if(tab==='manage'&&!isAdmin())tab='overview';
+    const c=counts(s),tabs=[['overview','Vue d\u2019ensemble','eye',''],['participants','Participants','users',c.yes],['transport','Covoiturage','car',s.cars.length],['groups','Palanqu\u00e9es','layers',''],...(isAdmin()?[['manage','Gestion','shield','']]:[])];
+    return `<button class="text-btn back-btn" data-action="navigate" data-route="sessions">${icon('back')}Toutes les s\u00e9ances</button><div class="page-heading session-heading"><div><div class="row gap8 mb16">${s.status==='closed'?badge('Bilan cl\u00f4tur\u00e9','green','check'):badge(s.registrationOpen?'Inscriptions ouvertes':'Inscriptions ferm\u00e9es',s.registrationOpen?'teal':'')}${s.demoHistory?badge('Exemple fictif','blue'):''}<span class="tiny muted">Saison ${seasonLabel(M.seasonOf(s.date))}</span></div><h1>Fosse du ${h(fmtDate(s.date))}</h1><div class="meta-line"><span>${icon('calendar')}${h(cap(fmtDate(s.date,{weekday:'long',year:'numeric',month:'long',day:'numeric'})))}</span><span>${icon('clock')}${fmtTime(s.start)} \u2014 ${fmtTime(s.end)}</span><span>${icon('location')}${h(s.venue||'Lieu \u00e0 pr\u00e9ciser')}</span></div></div><div class="row header-actions gap8"><button class="btn" data-action="calendar" data-sid="${s.id}">${icon('calendar')}Mon agenda</button>${isAdmin()?`<button class="btn primary" data-action="edit-session" data-sid="${s.id}">${icon('edit')}Modifier</button>`:''}</div></div>${s.endEstimated?`<div class="banner">${icon('clock')}<span><strong>Heure de fin \u00e0 confirmer.</strong> La capture fournie ne montre pas la fin de ce cr\u00e9neau. Une dur\u00e9e de 1 h est utilis\u00e9e provisoirement (${fmtTime(s.start)}\u2013${fmtTime(s.end)}).</span></div>`:''}<nav class="tabs" aria-label="Rubriques de la s\u00e9ance">${tabs.map(([key,label,sym,count])=>`<button class="tab ${tab===key?'active':''}" data-action="navigate" data-route="session/${s.id}/${key}" ${tab===key?'aria-current="page"':''}>${icon(sym)}${h(label)}${count!==''?`<span class="tab-count">${count}</span>`:''}</button>`).join('')}</nav>${tab==='participants'?participantsView(s):tab==='transport'?transportView(s):tab==='groups'?groupsView(s):tab==='manage'?manageView(s):overviewView(s)}`;
+  }
+  function overviewView(s){const c=counts(s),r=M.response(s,ui.actor),selected=M.selectedIds(s);return `<div class="detail-grid"><div class="stack">${participationCard(s)}<section class="card pad"><div class="card-heading"><h2>Informations pratiques</h2>${icon('location')}</div><div class="info-row">${icon('location')}<div><div class="label">Le rendez-vous</div><p>${h(s.venue||'Lieu \u00e0 pr\u00e9ciser')}</p><p class="muted small">${h(s.address||'Adresse exacte \u00e0 compl\u00e9ter par le club.')}</p></div></div><div class="info-row">${icon('clock')}<div><div class="label">Le cr\u00e9neau \u00b7 heure de Paris</div><p>${fmtTime(s.start)} \u2014 ${fmtTime(s.end)}${s.endEstimated?' (fin estim\u00e9e)':''}</p></div></div><div class="info-row">${icon('users')}<div><div class="label">La capacit\u00e9</div><p>${s.capacity} places, encadrants compris.</p><p class="small muted">Les r\u00e9ponses \u00ab Oui \u00bb ne sont pas limit\u00e9es. La s\u00e9lection finale l\u2019est.</p></div></div>${s.notes?`<div class="info-row">${icon('book')}<div><div class="label">Les infos du club</div><p style="white-space:pre-line">${h(s.notes)}</p></div></div>`:''}</section></div><div class="stack"><section class="card pad"><div class="card-heading"><h2>Les places dans la fosse</h2>${badge(s.publishedAt?'S\u00e9lection publi\u00e9e':'Non publi\u00e9e',s.publishedAt?'teal':'')}</div><div class="big-number">${c.selected}<span> / ${s.capacity}</span></div><p class="tiny muted mt8">participants confirm\u00e9s, encadrants inclus</p><div class="progress mt16"><i style="width:${100*c.selected/s.capacity}%"></i></div><div class="mini-stats"><div><b>${c.yes}</b><span>R\u00e9ponses oui</span></div><div><b>${c.maybe}</b><span>Peut-\u00eatre</span></div><div><b>${s.capacity-c.selected}</b><span>Places \u00e0 attribuer</span></div></div>${selected.length?avatars(selected,7):''}<p class="tiny muted mt16">${s.publishedAt?'Derni\u00e8re publication : '+h(fmtStamp(s.publishedAt))+'.':'Aucune s\u00e9lection publi\u00e9e pour le moment.'}</p>${isAdmin()&&M.draftChanges(s)?`<div class="banner mt16">${icon('edit')}<span>${M.draftChanges(s)} modification(s) en brouillon, invisibles aux adh\u00e9rents.</span></div>`:''}<button class="btn ${isAdmin()?'primary':'soft'} mt16" style="width:100%" data-action="navigate" data-route="session/${s.id}/${isAdmin()?'manage':'participants'}">${icon(isAdmin()?'users':'eye')}${isAdmin()?'Pr\u00e9parer la s\u00e9lection':'Voir tous les participants'}</button></section><section class="card pad"><div class="card-heading"><h2>Mon paiement</h2>${icon('euro')}</div><div class="row between"><span class="small muted">Statut enregistr\u00e9</span>${payBadge(r.payment)}</div><p class="tiny muted mt16">${r.payment==='unpaid'?'\u00c0 r\u00e9gler uniquement si vous participez. Aucun paiement ni engagement financier en ligne.':'Ce statut est renseign\u00e9 par les administrateurs.'} Vous seul et les administrateurs voyez cette information.</p></section>${isAdmin()?`<section class="card pad"><div class="card-heading"><h2>Fil de la s\u00e9ance</h2>${badge('Admin','blue')}</div>${s.log.slice(0,4).map(l=>`<div class="log-item"><p>${h(l.text)}</p><small>${h(M.member(db,l.actor).firstName)} \u00b7 ${h(fmtStamp(l.at))}</small></div>`).join('')||'<p class="small muted">Aucune modification pour le moment.</p>'}</section>`:''}</div></div>`;}
+  function searchBox(value,change,placeholder='Rechercher un adh\u00e9rent'){return `<div class="searchbox">${icon('search')}<input type="search" value="${h(value)}" placeholder="${h(placeholder)}" aria-label="${h(placeholder)}" data-input="${change}" id="search-${change}"></div>`;}
+  function matches(m,q){return fullName(m).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(q.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());}
+  function personCell(m,showLevel=false){return `<div class="person-cell">${avatar(m.id)}<div><div class="person-name">${h(fullName(m))}${m.id===ui.actor?' <span class="muted tiny">(moi)</span>':''}</div><div class="person-sub">${showLevel?h(m.level)+(m.preparing?' \u00b7 Pr\u00e9pa '+h(m.preparing):''):m.admin?'Administrateur':'Adh\u00e9rent'}</div></div></div>`;}
+  function participantsView(s){
+    const shown=db.members.filter(m=>(ui.participantFilter==='all'||M.response(s,m.id).rsvp===ui.participantFilter)&&matches(m,ui.participantSearch));
+    return `<div class="toolbar"><div class="segmented" role="group" aria-label="Filtrer les r\u00e9ponses">${[['all','Tous'],['yes','Oui'],['maybe','Peut-\u00eatre'],['no','Non'],['unanswered','Sans r\u00e9ponse']].map(([v,l])=>`<button data-action="participant-filter" data-value="${v}" class="${v===ui.participantFilter?'active':''}">${h(l)}</button>`).join('')}</div>${searchBox(ui.participantSearch,'participants')}</div><section class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>ADH\u00c9RENT</th><th>R\u00c9PONSE</th><th>S\u00c9LECTION PUBLI\u00c9E</th><th>FOSSES / SAISON</th><th>TRANSPORT</th>${s.status==='closed'?'<th>PR\u00c9SENCE</th>':''}</tr></thead><tbody>${shown.map(m=>`<tr><td>${personCell(m,true)}</td><td>${rsvpBadge(M.response(s,m.id).rsvp)}</td><td>${selectedBadge(s,m.id)}</td><td class="number-cell">${M.seasonCount(db,m.id,M.seasonOf(s.date))}</td><td class="small-cell">${h(rideSummary(s,m.id))}</td>${s.status==='closed'?`<td>${badge(attendanceLabel[M.response(s,m.id).attendance],M.response(s,m.id).attendance==='dived'?'green':'')}</td>`:''}</tr>`).join('')||'<tr><td colspan="6">Aucun adh\u00e9rent ne correspond \u00e0 ce filtre.</td></tr>'}</tbody></table></div><div class="table-footer">${shown.length} adh\u00e9rent${shown.length>1?'s':''} \u00b7 Les r\u00e9ponses et la s\u00e9lection publi\u00e9e sont visibles par tous. Les paiements des autres ne le sont pas.</div></section>`;
+  }
+  function transportView(s){
+    const r=M.response(s,ui.actor),allowed=r.rsvp==='yes'&&s.status!=='closed'&&s.publishedSelection[ui.actor]!=='declined',ownCar=s.cars.find(c=>c.driverId===ui.actor);
+    const free=s.cars.reduce((total,c)=>total+c.seats-M.passengers(s,c.driverId).length,0);
+    return `${!allowed?`<div class="banner info">${icon('help')}<span>${s.status==='closed'?'La s\u00e9ance est cl\u00f4tur\u00e9e. Les trajets sont consultables uniquement.':r.rsvp!=='yes'?'R\u00e9pondez \u00ab Oui \u00bb dans la vue d\u2019ensemble pour proposer une voiture ou rejoindre un trajet.':'Votre participation n\u2019a pas \u00e9t\u00e9 retenue. Contactez un administrateur.'}</span></div>`:''}<section class="card ride-tools"><div><h3>Mon trajet : ${h(rideSummary(s,ui.actor).toLowerCase())}</h3><p>${free} place${free>1?'s':''} passager${free>1?'s':''} libre${free>1?'s':''} \u00b7 ${s.cars.length} voiture${s.cars.length>1?'s':''} propos\u00e9e${s.cars.length>1?'s':''}</p></div><div class="row gap8"><button class="btn ${ownCar?'soft':'primary'}" data-action="offer-car" data-sid="${s.id}" ${!allowed?'disabled':''}>${icon('car')}${ownCar?'Ma voiture':'Proposer ma voiture'}</button><button class="btn ${r.transportMode==='own'?'soft':''}" data-action="transport-mode" data-sid="${s.id}" data-value="own" ${!allowed?'disabled':''}>Je suis autonome</button><button class="btn ${r.transportMode==='needs'?'soft':''}" data-action="transport-mode" data-sid="${s.id}" data-value="needs" ${!allowed?'disabled':''}>Je cherche une place</button></div></section><div class="banner info">${icon('help')}<span>Les places indiqu\u00e9es sont des <strong>places passagers, hors conducteur</strong>. Le covoiturage peut \u00eatre organis\u00e9 avant la s\u00e9lection, mais reste provisoire tant que les participants ne sont pas confirm\u00e9s.</span></div>${s.cars.length?`<div class="car-grid">${s.cars.map(car=>{
+      const driver=M.member(db,car.driverId),ps=M.passengers(s,car.driverId),remaining=car.seats-ps.length,mine=car.driverId===ui.actor,aboard=r.transportMode==='passenger'&&r.carDriverId===car.driverId;
+      return `<section class="card car-card"><div class="row between"><span class="car-icon">${icon('car')}</span>${badge(remaining?remaining+' place'+(remaining>1?'s':'')+' libre'+(remaining>1?'s':''):'Complet',remaining?'teal':'')}</div><div class="driver">${avatar(driver.id,'lg')}<div><h3>${h(fullName(driver))}</h3><div class="tiny muted mt8">Conducteur \u00b7 ${car.seats} places passagers</div></div></div>${M.selectionState(s,driver.id)!=='selected'?`<div class="banner" style="margin:4px 0 0">${icon('clock')}<span>Conducteur en attente de confirmation.</span></div>`:''}<div class="seat-list">${ps.map(id=>`<div class="seat">${avatar(id,'sm')}<span>${h(fullName(M.member(db,id)))}</span>${id===ui.actor?'<span class="ride-self-tag">Moi</span>':M.selectionState(s,id)!=='selected'?'<span class="ride-self-tag muted">En attente</span>':''}</div>`).join('')}${Array.from({length:remaining},()=>`<div class="seat empty-seat"><span class="seat-dot">${icon('plus')}</span>Une place pour vous ?</div>`).join('')}</div><p class="ride-note">${icon('location')} ${h(car.meeting||'Rendez-vous \u00e0 convenir')}${car.time?' \u00b7 '+fmtTime(car.time):''}${car.note?'<br>'+h(car.note):''}</p>${mine?`<button class="btn soft" data-action="offer-car" data-sid="${s.id}" ${!allowed?'disabled':''}>${icon('edit')}Modifier ma proposition</button><button class="text-btn mt12" style="justify-content:center;color:var(--muted)" data-action="remove-car" data-sid="${s.id}" ${!allowed?'disabled':''}>Retirer ma voiture</button>`:aboard?`<button class="btn soft" data-action="transport-mode" data-sid="${s.id}" data-value="needs" ${!allowed?'disabled':''}>${icon('check')}Je suis inscrit \u00b7 Quitter</button>`:`<button class="btn ${remaining?'primary':''}" data-action="join-car" data-sid="${s.id}" data-driver="${car.driverId}" ${!allowed||!remaining?'disabled':''}>${remaining?'Rejoindre ce trajet':'Voiture compl\u00e8te'} ${remaining?icon('arrow'):''}</button>`}</section>`;
+    }).join('')}</div>`:`<section class="card empty"><div class="empty-icon">${icon('car')}</div><h3>Le premier trajet attend son conducteur</h3><p>Vous venez en voiture ? Proposez vos places pour aider les autres adh\u00e9rents.</p></section>`}`;
+  }
+  function groupsView(s){
+    const selected=M.selectedIds(s),assigned=selected.filter(id=>s.groupAssignments[id]),unassigned=selected.length-assigned.length;
+    const stale=s.groupsPublishedAt&&s.groupSelectionAt!==selected.slice().sort().join(',');
+    const groupNumbers=[...new Set(assigned.map(id=>s.groupAssignments[id].group))].sort((a,b)=>a-b);
+    return `<div class="toolbar"><div><h2>Les palanqu\u00e9es</h2><p class="small muted mt8">${assigned.length} participants affect\u00e9s \u00b7 ${unassigned} \u00e0 r\u00e9partir</p></div>${isAdmin()?`<button class="btn primary" data-action="edit-groups" data-sid="${s.id}" ${!selected.length||s.status==='closed'?'disabled':''}>${icon('edit')}Organiser les palanqu\u00e9es</button>`:''}</div><div class="banner info">${icon('help')}<span><strong>Organisation simple uniquement.</strong> Aucun contr\u00f4le des qualifications, des effectifs ou des conditions de plong\u00e9e. Cette vue ne remplace pas la fiche r\u00e9glementaire ni les d\u00e9cisions du DP.</span></div>${stale?`<div class="banner">${icon('alert')}<span>La s\u00e9lection des participants a chang\u00e9 depuis la publication des palanqu\u00e9es. Un administrateur doit les v\u00e9rifier et les republier.</span></div>`:''}${groupNumbers.length?`<div class="group-grid">${groupNumbers.map(n=>{const ids=assigned.filter(id=>s.groupAssignments[id].group===n);return `<section class="card group-card"><div class="row between"><h3>Palanqu\u00e9e ${n}</h3>${badge(ids.length+' personnes','teal')}</div>${ids.map(id=>`<div class="group-member">${avatar(id)}<div><div>${h(fullName(M.member(db,id)))}</div><div class="tiny muted mt8">${h(M.member(db,id).level)}${s.groupAssignments[id].leader?' \u00b7 Encadrant':''}</div></div></div>`).join('')}</section>`;}).join('')}</div>`:`<section class="card empty"><div class="empty-icon">${icon('layers')}</div><h3>Les palanqu\u00e9es ne sont pas encore publi\u00e9es</h3><p>Un administrateur peut r\u00e9partir les participants confirm\u00e9s, puis publier cette organisation.</p></section>`}`;
+  }
+  function manageView(s){
+    if(!isAdmin())return overviewView(s);
+    return `<div class="toolbar"><div class="segmented"><button class="${ui.manageView==='selection'?'active':''}" data-action="manage-view" data-value="selection">S\u00e9lection & paiements</button><button class="${ui.manageView==='attendance'?'active':''}" data-action="manage-view" data-value="attendance">Pr\u00e9sences & bilan</button></div><button class="btn small" data-action="csv" data-sid="${s.id}">${icon('download')}Exporter le tableau</button></div>${ui.manageView==='attendance'?attendanceView(s):selectionView(s)}`;
+  }
+  function selectionView(s){
+    let members=db.members.filter(m=>(ui.adminAll||['yes','maybe'].includes(M.response(s,m.id).rsvp))&&matches(m,ui.adminSearch));
+    if(ui.sortByCount)members.sort((a,b)=>M.seasonCount(db,a.id,M.seasonOf(s.date))-M.seasonCount(db,b.id,M.seasonOf(s.date))||fullName(a).localeCompare(fullName(b),'fr'));
+    const draftCount=M.selectedIds(s,true).length,publishedCount=M.selectedIds(s).length,changes=M.draftChanges(s),closed=s.status==='closed';
+    return `<section class="manage-summary"><div class="draft-status"><div class="draft-status-icon">${icon(changes?'edit':'shield')}</div><div><h3>${closed?'S\u00e9lection de la s\u00e9ance termin\u00e9e':changes?'Une s\u00e9lection en pr\u00e9paration':'Vous gardez la main sur les places'}</h3><p class="tiny muted mt8">${publishedCount} publi\u00e9s${changes?' \u00b7 '+changes+' changement(s) visibles uniquement aux admins':' \u00b7 Modifiez, puis publiez quand vous \u00eates pr\u00eat.'}</p></div></div><div class="capacity"><div class="big-number">${draftCount}<span> / ${s.capacity}</span></div><div class="progress mt8"><i style="width:${100*draftCount/s.capacity}%"></i></div><p class="tiny muted mt8">${changes?'Places dans le brouillon':'Places s\u00e9lectionn\u00e9es'} \u00b7 encadrants inclus</p></div></section>${closed?`<div class="banner info">${icon('lock')}<span>La s\u00e9lection est fig\u00e9e. Rouvrez le bilan pour la modifier. Les paiements restent modifiables.</span></div>`:''}<div class="toolbar"><div class="row wrap"><label class="checkbox-label"><input type="checkbox" data-change="admin-all" ${ui.adminAll?'checked':''}>Afficher les ${db.members.length} adh\u00e9rents</label><button class="btn small ${ui.sortByCount?'soft':''}" data-action="sort-count" aria-pressed="${ui.sortByCount}">${icon('sort')}Moins de fosses d\u2019abord</button></div>${searchBox(ui.adminSearch,'admin')}</div><section class="card"><div class="table-wrap"><table class="data-table" id="selection-table"><thead><tr><th>ADH\u00c9RENT</th><th>FOSSES</th><th>R\u00c9PONSE</th><th>TRANSPORT</th><th>${changes?'S\u00c9LECTION (BROUILLON)':'S\u00c9LECTION'}</th><th>PAIEMENT</th></tr></thead><tbody>${members.map(m=>{
+      const r=M.response(s,m.id),value=(s.draftSelection||s.publishedSelection)[m.id]||'waiting',different=s.draftSelection&&(s.draftSelection[m.id]||'waiting')!==(s.publishedSelection[m.id]||'waiting');
+      return `<tr data-member="${m.id}"><td>${personCell(m,true)}</td><td class="number-cell">${M.seasonCount(db,m.id,M.seasonOf(s.date))}</td><td><select data-change="admin-rsvp" data-sid="${s.id}" data-target="${m.id}" aria-label="R\u00e9ponse de ${h(fullName(m))}" ${closed?'disabled':''}>${options(Object.entries(rsvpLabel),r.rsvp)}</select></td><td class="small-cell">${h(rideSummary(s,m.id))}</td><td><select class="${different?'changed':''}" data-change="selection" data-sid="${s.id}" data-target="${m.id}" aria-label="S\u00e9lection de ${h(fullName(m))}" ${closed||!['yes','maybe'].includes(r.rsvp)?'disabled':''}><option value="selected" ${value==='selected'?'selected':''} ${r.rsvp!=='yes'?'disabled':''}>Confirm\u00e9</option><option value="waiting" ${value==='waiting'?'selected':''}>En attente</option><option value="declined" ${value==='declined'?'selected':''}>Non retenu</option></select></td><td><select data-change="payment" data-sid="${s.id}" data-target="${m.id}" aria-label="Paiement de ${h(fullName(m))}">${options(Object.entries(paymentLabel),r.payment)}</select></td></tr>`;
+    }).join('')||'<tr><td colspan="6">Aucun adh\u00e9rent ne correspond \u00e0 ce filtre.</td></tr>'}</tbody></table></div><div class="table-footer">${members.length} adh\u00e9rents affich\u00e9s \u00b7 R\u00e9ponses et paiements enregistr\u00e9s imm\u00e9diatement. Seule la s\u00e9lection attend votre publication.</div></section>${!closed?`<div class="draft-bar"><div><p>${changes?`${changes} modification${changes>1?'s':''} non publi\u00e9e${changes>1?'s':''}`:s.publishedAt?'La s\u00e9lection publi\u00e9e est \u00e0 jour':'Aucune s\u00e9lection publi\u00e9e'}</p><small>${changes?'Brouillon conserv\u00e9 sur cet appareil \u00b7 les adh\u00e9rents voient toujours la derni\u00e8re publication.':'Vous pouvez ajuster la capacit\u00e9 en modifiant la s\u00e9ance.'}</small></div><div class="row gap8"><button class="btn" data-action="discard-draft" data-sid="${s.id}" ${!changes?'disabled':''}>Annuler le brouillon</button><button class="btn primary" data-action="publish" data-sid="${s.id}" ${!changes&&s.publishedAt?'disabled':''}>${icon('publish')}Publier la s\u00e9lection</button></div></div>`:''}`;
+  }
+  function attendanceView(s){
+    const selected=M.selectedIds(s),past=M.isPast(s),closed=s.status==='closed',shown=db.members.filter(m=>ui.attendanceAll||selected.includes(m.id)||M.response(s,m.id).attendance==='dived');
+    const recorded=Object.values(s.responses).filter(r=>r.attendance==='dived').length,unknown=selected.filter(id=>M.response(s,id).attendance==='unknown').length;
+    return `${!past?`<div class="banner info">${icon('clock')}<span>Les pr\u00e9sences se renseignent apr\u00e8s la fin du cr\u00e9neau. Pour tester cette partie de la V0, ouvrez l\u2019une des s\u00e9ances fictives de septembre depuis l\u2019historique.</span></div>`:''}<section class="manage-summary"><div><h3>${closed?'Bilan cl\u00f4tur\u00e9':'Le bilan de la s\u00e9ance'}</h3><p class="tiny muted mt8">${recorded} personne${recorded>1?'s':''} ayant plong\u00e9 \u00b7 ${unknown} pr\u00e9sence${unknown>1?'s':''} \u00e0 renseigner</p><p class="tiny muted mt8">${closed?'Ces plong\u00e9es alimentent les compteurs de la saison '+seasonLabel(M.seasonOf(s.date))+'.':'Les compteurs seront actualis\u00e9s apr\u00e8s la cl\u00f4ture du bilan.'}</p></div><div class="row wrap gap8">${closed?`<button class="btn" data-action="reopen" data-sid="${s.id}">${icon('edit')}Rouvrir le bilan</button>`:`<button class="btn" data-action="mark-all-dived" data-sid="${s.id}" ${!past||!selected.length?'disabled':''}>Tous les confirm\u00e9s ont plong\u00e9</button><button class="btn primary" data-action="close-session" data-sid="${s.id}" ${!past?'disabled':''}>${icon('check')}Cl\u00f4turer le bilan</button>`}</div></section><div class="toolbar"><label class="checkbox-label"><input type="checkbox" data-change="attendance-all" ${ui.attendanceAll?'checked':''}>Tous les adh\u00e9rents (pour ajouter un remplacement de derni\u00e8re minute)</label></div><section class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>ADH\u00c9RENT</th><th>S\u00c9LECTION</th><th>PR\u00c9SENCE R\u00c9ELLE</th><th>PAIEMENT</th></tr></thead><tbody>${shown.map(m=>`<tr data-member="${m.id}"><td>${personCell(m,true)}</td><td>${selectedBadge(s,m.id)}</td><td><select data-change="attendance" data-sid="${s.id}" data-target="${m.id}" aria-label="Pr\u00e9sence de ${h(fullName(m))}" ${!past||closed?'disabled':''}>${options(Object.entries(attendanceLabel),M.response(s,m.id).attendance)}</select></td><td><select data-change="payment" data-sid="${s.id}" data-target="${m.id}" aria-label="Paiement de ${h(fullName(m))}">${options(Object.entries(paymentLabel),M.response(s,m.id).payment)}</select></td></tr>`).join('')||'<tr><td colspan="4">Aucun participant confirm\u00e9 pour le moment.</td></tr>'}</tbody></table></div><div class="table-footer">\u00ab A plong\u00e9 \u00bb compte pour une fosse. \u00ab Absent \u00bb et \u00ab N\u2019a pas plong\u00e9 \u00bb ne comptent pas. Aucune facturation automatique en cas d\u2019absence.</div></section>`;
+  }
+  function membersPage(){const shown=db.members.filter(m=>matches(m,ui.memberSearch));return `<div class="page-heading"><div><div class="eyebrow">Les visages du club</div><h1>Les adh\u00e9rents</h1><p>${db.members.length} profils fictifs pour tester la vie du club.</p></div>${seasonSelect()}</div><div class="toolbar">${searchBox(ui.memberSearch,'members')}<span class="tiny muted">Les coordonn\u00e9es restent priv\u00e9es (adh\u00e9rent concern\u00e9 et admins).</span></div><section class="card"><div class="table-wrap"><table class="data-table"><thead><tr><th>ADH\u00c9RENT</th><th>NIVEAU</th><th>NIVEAU PR\u00c9PAR\u00c9</th><th>FOSSES ${seasonLabel(ui.season)}</th><th>R\u00d4LE</th>${isAdmin()?'<th>PROFIL</th>':''}</tr></thead><tbody>${shown.map(m=>`<tr><td>${personCell(m)}</td><td>${h(m.level||'\u00c0 renseigner')}</td><td class="small-cell">${h(m.preparing||'\u2014')}</td><td class="number-cell">${M.seasonCount(db,m.id,ui.season)}</td><td>${badge(m.admin?'Administrateur':'Adh\u00e9rent',m.admin?'blue':'')}</td>${isAdmin()?`<td><button class="icon-btn" data-action="edit-member" data-target="${m.id}" aria-label="Modifier le profil de ${h(fullName(m))}">${icon('edit')}</button></td>`:''}</tr>`).join('')||'<tr><td colspan="6">Aucun adh\u00e9rent trouv\u00e9.</td></tr>'}</tbody></table></div><div class="table-footer">${shown.length} profils \u00b7 Le niveau de plong\u00e9e et les droits administrateur sont distincts.</div></section>`;}
+  function memberFields(m){return `<div class="form-grid"><div class="field"><label for="firstName">Pr\u00e9nom <span class="required">*</span></label><input id="firstName" name="firstName" required maxlength="100" value="${h(m.firstName)}" autocomplete="given-name"></div><div class="field"><label for="lastName">Nom <span class="required">*</span></label><input id="lastName" name="lastName" required maxlength="100" value="${h(m.lastName)}" autocomplete="family-name"></div><div class="field"><label for="email">Adresse email <span class="required">*</span></label><input id="email" name="email" type="email" required maxlength="120" value="${h(m.email)}" autocomplete="email"><small>Une adresse de test suffit : aucun email n\u2019est envoy\u00e9.</small></div><div class="field"><label for="phone">T\u00e9l\u00e9phone</label><input id="phone" name="phone" type="tel" maxlength="30" value="${h(m.phone)}" placeholder="Facultatif" autocomplete="tel"></div><div class="field"><label for="level">Niveau actuel</label><select id="level" name="level">${options(['D\u00e9butant','N1','N2','N3','N4','E1','E2','MF1','MF2','Autre'].map(v=>[v,v]),m.level)}</select></div><div class="field"><label for="preparing">Niveau pr\u00e9par\u00e9</label><select id="preparing" name="preparing">${options([['','Aucun / non renseign\u00e9'],...['N1','N2','N3','N4','E1','E2','MF1','MF2','Autre'].map(v=>[v,v])],m.preparing)}</select></div><div class="field span2"><label for="usualSeats">Places passagers habituelles dans ma voiture</label><input type="number" id="usualSeats" name="usualSeats" min="0" max="8" step="1" value="${m.usualSeats}"><small>Hors conducteur. Une valeur par d\u00e9faut uniquement : votre voiture n\u2019est jamais propos\u00e9e automatiquement.</small></div></div>`;}
+  function profilePage(){const m=me();return `<div class="page-heading"><div><div class="eyebrow">Mon espace</div><h1>Mon profil</h1><p>Les informations utiles pour plonger ensemble.</p></div></div><div class="banner info">${icon('shield')}<span>Vous testez un profil fictif. N\u2019ajoutez pas de document de sant\u00e9, de licence ou de donn\u00e9es personnelles r\u00e9elles dans cette d\u00e9monstration.</span></div><div class="profile-grid"><aside class="card profile-summary">${avatar(m.id,'xl')}<h2>${h(fullName(m))}</h2><p>${h(m.level)}</p>${badge(m.admin?'Administrateur':'Adh\u00e9rent',m.admin?'blue':'teal')}<hr><div class="big-number">${M.seasonCount(db,m.id,ui.season)}</div><p>fosses cette saison</p><p class="tiny">Septembre ${ui.season} \u2192 ao\u00fbt ${Number(ui.season)+1}</p></aside><form class="card profile-form" id="profile-form" data-target="${m.id}"><div class="card-heading"><h2>Mes informations</h2>${icon('user')}</div><div id="profile-error"></div>${memberFields(m)}<div class="form-actions"><button type="submit" class="btn primary">${icon('save')}Enregistrer mon profil</button></div></form></div>`;}
+  function render(){
+    const route=currentRoute();let body,page=route.page;
+    if(page==='home')body=home();else if(page==='sessions')body=sessions();else if(page==='members')body=membersPage();else if(page==='profile')body=profilePage();else if(page==='session'){
+      const s=db.sessions.find(s=>s.id===route.sid);body=s?sessionPage(s,route.tab):'<div class="card empty"><h2>S\u00e9ance introuvable</h2><button class="btn mt16" data-action="navigate" data-route="sessions">Retour au calendrier</button></div>';
+    }else{page='home';body=home();}
+    $('#app').innerHTML=shell(body,page);document.title=page==='session'?'S\u00e9ance \u00b7 iFosse':'iFosse \u2014 Les fosses, simplement.';
+  }
+  function openModal(title,subtitle,body,actions='',wide=false){
+    if(!$('#modal-root').firstChild)modalReturnFocus=document.activeElement;
+    $('#modal-root').innerHTML=`<div class="modal-backdrop"><section class="modal ${wide?'wide':''}" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1"><header class="modal-header"><div><h2 id="dialog-title">${h(title)}</h2><p id="dialog-description">${h(subtitle)}</p></div><button class="icon-btn" data-action="close-modal" aria-label="Fermer la fen\u00eatre">${icon('close')}</button></header><div class="modal-body">${body}</div>${actions?`<footer class="modal-actions">${actions}</footer>`:''}</section></div>`;
+    $('#app').inert=true;document.body.style.overflow='hidden';
+    requestAnimationFrame(()=>{const body=$('.modal-body'),dialog=$('.modal');if(!body||!dialog)return;const focus=$('input:not([type=checkbox]),select,button',body)||dialog;focus.focus();});
+  }
+  function closeModal(){ $('#modal-root').innerHTML='';$('#app').inert=false;document.body.style.overflow='';confirmCallback=null;if(modalReturnFocus&&modalReturnFocus.isConnected)modalReturnFocus.focus(); }
+  function confirmDialog(title,text,fn,label='Confirmer',danger=false){
+    confirmCallback=fn;
+    openModal(title,'V\u00e9rifiez ce changement avant de continuer.',`<p class="explanation" style="white-space:pre-line">${h(text)}</p>`,`<button class="btn" data-action="close-modal">Annuler</button><button class="btn ${danger?'danger':'primary'}" data-action="confirm-yes">${h(label)}</button>`);
+  }
+  function personaDialog(){
+    const adminMember=db.members.find(m=>m.admin),regularMember=db.members.find(m=>!m.admin),shortcuts=[adminMember,...(regularMember?[regularMember]:[])];
+    openModal('Changer de point de vue','Ces profils sont fictifs. Il ne s\u2019agit pas d\u2019une vraie connexion.',`${shortcuts.map(m=>`<button class="persona-option ${ui.actor===m.id?'active':''}" data-action="switch-actor" data-target="${m.id}">${avatar(m.id,'lg')}<div><strong>${h(fullName(m))}</strong><div class="role-label">${m.admin?'Administrateur \u00b7 s\u00e9lections, paiements, bilans':'Adh\u00e9rent \u00b7 inscription, covoiturage, mon paiement'}</div></div>${icon(m.admin?'shield':'user')}</button>`).join('')}<hr><label for="persona-select">Ou tester avec un autre adh\u00e9rent</label><select id="persona-select" class="persona-picker" data-change="persona">${options(db.members.map(m=>[m.id,fullName(m)+(m.admin?' \u00b7 Admin':'')]),ui.actor)}</select><p class="explanation mt16">La V0 simule les droits dans l\u2019interface. Les donn\u00e9es et les brouillons restent stock\u00e9s dans ce navigateur. Une vraie authentification et des droits c\u00f4t\u00e9 serveur seront n\u00e9cessaires pour le club.</p>`);
+  }
+  function switchActor(target){
+    if(!db.members.some(m=>m.id===target))return;closeModal();ui.actor=target;
+    try{localStorage.setItem(ACTOR_KEY,target);}catch(e){}
+    const route=currentRoute();if(!isAdmin()&&route.page==='session'&&route.tab==='manage')navigate(`session/${route.sid}/overview`);else render();
+    toast(`Vue ${isAdmin()?'administrateur':'adh\u00e9rent'} : ${fullName(me())}.`);
+  }
+  function aboutDialog(){openModal('iFosse, premi\u00e8re immersion','V0 fonctionnelle \u00b7 prototype local \u00b7 septembre 2026',`<div class="banner info">${icon('help')}<span>Un terrain d\u2019essai pour valider le fonctionnement avant de connecter les vrais adh\u00e9rents.</span></div><div class="feature-line">${icon('users')}<span><strong>50 profils fictifs</strong>, 11 dates reprises de votre calendrier et 2 s\u00e9ances historiques invent\u00e9es pour tester les compteurs.</span></div><div class="feature-line">${icon('save')}<span><strong>Sauvegarde dans ce navigateur.</strong> Pas de synchronisation entre appareils, pas d\u2019emails ni de paiement en ligne.</span></div><div class="feature-line">${icon('shield')}<span><strong>Pas de vraie authentification.</strong> Le changement de profil permet de tester les droits d\u2019interface. Cette d\u00e9mo n\u2019est pas un espace s\u00e9curis\u00e9 pour des donn\u00e9es personnelles.</span></div><div class="feature-line">${icon('calendar')}<span><strong>Saison de septembre \u00e0 ao\u00fbt.</strong> Seules les plong\u00e9es r\u00e9alis\u00e9es avec un bilan cl\u00f4tur\u00e9 sont compt\u00e9es.</span></div><div class="feature-line">${icon('layers')}<span><strong>Palanqu\u00e9es simples.</strong> Pas de contr\u00f4le de qualification ou de conformit\u00e9, ni de document r\u00e9glementaire.</span></div>${isAdmin()?`<hr><h3>Conserver ou recommencer les essais</h3><p class="explanation mt8">Une sauvegarde JSON contient toutes les donn\u00e9es de cette d\u00e9mo, y compris les brouillons et les paiements. Gardez-la pour retrouver vos essais dans un autre navigateur.</p><div class="backup-actions"><button class="btn" data-action="export-json">${icon('download')}Exporter la sauvegarde</button><button class="btn" data-action="import-json">${icon('upload')}Importer</button><button class="btn danger" data-action="reset-demo">${icon('reset')}R\u00e9initialiser la d\u00e9mo</button></div>`:''}<p class="tiny muted mt24">Les heures de fin du 4 novembre 2026 et du 9 d\u00e9cembre 2026 sont estim\u00e9es (1 h) car elles ne sont pas visibles dans l\u2019image. L\u2019adresse exacte du lieu reste \u00e0 renseigner.</p>`,`<button class="btn primary" data-action="persona">${icon('eye')}Tester un autre profil</button>`);}
+  function sessionDialog(sid){
+    if(!isAdmin())return toast('Action r\u00e9serv\u00e9e aux administrateurs.',true);
+    const s=sid?M.session(db,sid):{title:'S\u00e9ance de fosse',date:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),start:'21:00',end:'22:00',capacity:20,venue:'Fosse de Villeneuve',address:'',notes:'',registrationOpen:true,endEstimated:false};
+    openModal(sid?'Modifier la s\u00e9ance':'Nouvelle s\u00e9ance',sid?'Les informations pratiques et la capacit\u00e9 sont visibles d\u00e8s l\u2019enregistrement.':'La s\u00e9ance sera visible par tous les adh\u00e9rents.',`<form id="session-form" data-sid="${h(sid||'')}"><div id="dialog-error"></div><div class="form-grid compact"><div class="field span2"><label for="session-date">Date de la fosse <span class="required">*</span></label><input type="date" id="session-date" name="date" value="${s.date}" required min="2020-01-01" max="2100-12-31"></div><div class="field"><label for="session-start">D\u00e9but <span class="required">*</span></label><input type="time" id="session-start" name="start" value="${s.start}" required></div><div class="field"><label for="session-end">Fin <span class="required">*</span></label><input type="time" id="session-end" name="end" value="${s.end}" required></div><div class="field span2"><label class="checkbox-label"><input type="checkbox" name="endEstimated" ${s.endEstimated?'checked':''}>L\u2019heure de fin reste \u00e0 confirmer</label></div><div class="field"><label for="session-capacity">Nombre de places <span class="required">*</span></label><input type="number" id="session-capacity" name="capacity" min="1" max="100" step="1" required value="${s.capacity}"><small>Encadrants compris. Limite de la s\u00e9lection, pas des r\u00e9ponses oui.</small></div><div class="field"><label for="session-venue">Lieu</label><input id="session-venue" name="venue" maxlength="150" value="${h(s.venue)}"></div><div class="field span2"><label for="session-address">Adresse et acc\u00e8s</label><input id="session-address" name="address" maxlength="250" value="${h(s.address)}" placeholder="Adresse exacte \u00e0 renseigner"></div><div class="field span2"><label for="session-notes">Informations pour les adh\u00e9rents</label><textarea id="session-notes" name="notes" maxlength="1500" placeholder="Acc\u00e8s, consignes, organisation du rendez-vous\u2026">${h(s.notes)}</textarea></div><div class="field span2"><label class="checkbox-label"><input type="checkbox" name="registrationOpen" ${s.registrationOpen?'checked':''} ${s.status==='closed'?'disabled':''}>Ouvrir les inscriptions</label><small>Une fermeture ne s\u00e9lectionne personne automatiquement.</small></div><input type="hidden" name="title" value="${h(s.title)}"></div></form>`,`<button class="btn" data-action="close-modal">Annuler</button><button class="btn primary" type="submit" form="session-form">${icon('save')}${sid?'Enregistrer la s\u00e9ance':'Cr\u00e9er la s\u00e9ance'}</button>`);
+  }
+  function carDialog(sid){const s=M.session(db,sid),car=s.cars.find(c=>c.driverId===ui.actor)||{seats:me().usualSeats||3,meeting:'',time:'',note:''};openModal('Ma proposition de covoiturage','Cette proposition concerne uniquement cette s\u00e9ance.',`<form id="car-form" data-sid="${sid}"><div id="dialog-error"></div><div class="form-grid compact"><div class="field span2"><label for="car-seats">Places passagers disponibles <span class="required">*</span></label><input type="number" id="car-seats" name="seats" min="1" max="8" step="1" value="${car.seats}" required><small>Sans vous compter : 3 places signifie vous + 3 passagers. Vous serez automatiquement le conducteur.</small></div><div class="field span2"><label for="car-meeting">Lieu de rendez-vous</label><input id="car-meeting" name="meeting" value="${h(car.meeting)}" maxlength="200" placeholder="\u00c0 convenir avec vos passagers"></div><div class="field span2"><label for="car-time">Heure de d\u00e9part</label><input type="time" id="car-time" name="time" value="${h(car.time)}"></div><div class="field span2"><label for="car-note">Un compl\u00e9ment utile ?</label><textarea id="car-note" name="note" maxlength="300" placeholder="Informations sur le trajet ou le rendez-vous">${h(car.note)}</textarea></div></div></form>`,`<button class="btn" data-action="close-modal">Annuler</button><button class="btn primary" type="submit" form="car-form">${icon('car')}Enregistrer ma voiture</button>`);}
+  function memberDialog(target){if(!isAdmin())return;const m=M.member(db,target);openModal('Modifier le profil',fullName(m)+' \u00b7 profil fictif de d\u00e9monstration',`<form id="member-form" data-target="${target}"><div id="dialog-error"></div>${memberFields(m)}</form>`,`<button class="btn" data-action="close-modal">Annuler</button><button class="btn primary" type="submit" form="member-form">${icon('save')}Enregistrer</button>`);}
+  function groupDialog(sid){
+    if(!isAdmin())return;const s=M.session(db,sid),selected=M.selectedIds(s);
+    openModal('Organiser les palanqu\u00e9es','Seuls les participants de la s\u00e9lection publi\u00e9e apparaissent ici.',`<div class="banner info">${icon('help')}<span>R\u00e9partition manuelle sans validation des qualifications ou de la conformit\u00e9. La mention \u00ab Encadrant \u00bb est informative.</span></div><form id="groups-form" data-sid="${sid}"><div id="dialog-error"></div><div class="modal-group-table"><table class="data-table"><thead><tr><th>PARTICIPANT</th><th>PALANQU\u00c9E</th><th>ENCADRANT</th></tr></thead><tbody>${selected.map(id=>{const g=s.groupAssignments[id]||{group:0,leader:false};return `<tr><td>${personCell(M.member(db,id),true)}</td><td><select name="group-${id}" aria-label="Palanqu\u00e9e de ${h(fullName(M.member(db,id)))}">${options([[0,'Non affect\u00e9'],...Array.from({length:8},(_,i)=>[i+1,'Palanqu\u00e9e '+(i+1)])],g.group)}</select></td><td><input type="checkbox" name="leader-${id}" ${g.leader?'checked':''} aria-label="${h(fullName(M.member(db,id)))} est encadrant"></td></tr>`;}).join('')}</tbody></table></div></form>`,`<button class="btn" data-action="close-modal">Annuler</button><button class="btn primary" type="submit" form="groups-form">${icon('publish')}Publier les palanqu\u00e9es</button>`,true);
+  }
+  function requestRsvp(sid,target,value){
+    const s=M.session(db,sid),before=M.response(s,target);if(before.rsvp===value){render();return;}
+    const apply=()=>commit(d=>M.setRsvp(d,sid,ui.actor,target,value),n=>`R\u00e9ponse enregistr\u00e9e.${n?' '+n+' passager(s) doivent retrouver un trajet.':''}`);
+    if(value!=='yes'&&(M.selectionState(s,target)==='selected'||before.transportMode==='driver'||before.transportMode==='passenger')){
+      const passengers=M.passengers(s,target).length;
+      confirmDialog('Modifier cette participation ?',`${M.selectionState(s,target)==='selected'?'La place confirm\u00e9e sera lib\u00e9r\u00e9e. Un nouvel accord administrateur sera n\u00e9cessaire pour la retrouver.\n\n':''}${before.transportMode==='driver'?'La voiture sera retir\u00e9e de cette s\u00e9ance. '+(passengers?passengers+' passager(s) resteront inscrits mais devront retrouver un trajet.':''):before.transportMode==='passenger'?'La place dans la voiture sera lib\u00e9r\u00e9e.':''}\n\nAucune p\u00e9nalit\u00e9 financi\u00e8re n\u2019est appliqu\u00e9e.`,apply,'Enregistrer le changement');
+    }else apply();
+  }
+  function requestTransport(sid,mode){const s=M.session(db,sid),n=M.passengers(s,ui.actor).length,apply=()=>commit(d=>M.setTransport(d,sid,ui.actor,mode),count=>`Trajet mis \u00e0 jour.${count?' '+count+' passager(s) doivent retrouver un trajet.':''}`);if(s.cars.some(c=>c.driverId===ui.actor))confirmDialog('Retirer votre voiture ?',`Votre voiture ne sera plus propos\u00e9e pour cette s\u00e9ance.${n?' Les '+n+' passager(s) resteront inscrits \u00e0 la fosse, mais repasseront en recherche de trajet.':''}`,apply,'Retirer la voiture');else apply();}
+  function publishDialog(sid){
+    if(!isAdmin())return;const s=M.session(db,sid),selected=M.selectedIds(s,true),changes=M.draftChanges(s),declined=(s.draftSelection||s.publishedSelection);
+    const removedCars=s.cars.filter(c=>declined[c.driverId]==='declined'),displaced=removedCars.reduce((n,c)=>n+M.passengers(s,c.driverId).length,0);
+    confirmDialog('Publier cette s\u00e9lection ?',`${selected.length} participants seront confirm\u00e9s pour ${s.capacity} places, encadrants compris.\n\n${changes} modification(s) deviendront visibles par tous les adh\u00e9rents.${removedCars.length?'\n\nAttention : '+removedCars.length+' voiture(s) seront retir\u00e9es car le conducteur n\u2019est pas retenu. '+displaced+' passager(s) devront retrouver un trajet.':''}\n\nVous pourrez modifier la s\u00e9lection et la republier ensuite. Aucun email n\u2019est envoy\u00e9 dans cette V0.`,()=>commit(d=>M.publishSelection(d,sid,ui.actor),'S\u00e9lection publi\u00e9e : elle est maintenant visible par tous.'),'Publier maintenant');
+  }
+  function downloadFile(filename,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
+  function exportJSON(){if(!isAdmin())return;downloadFile('ifosse-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(db,null,2),'application/json;charset=utf-8');toast('Sauvegarde JSON export\u00e9e.');}
+  function exportCSV(sid){
+    if(!isAdmin())return;const s=M.session(db,sid);
+    const cell=value=>{let str=String(value??'');if(/^[=+\-@\t\r]/.test(str))str="'"+str;return '"'+str.replace(/"/g,'""')+'"';};
+    const rows=[['Nom','Pr\u00e9nom','Niveau','Niveau pr\u00e9par\u00e9','R\u00e9ponse','S\u00e9lection publi\u00e9e','S\u00e9lection brouillon (admin)','Fosses saison '+seasonLabel(M.seasonOf(s.date)),'Transport','Paiement','Pr\u00e9sence'],...db.members.map(m=>[m.lastName,m.firstName,m.level,m.preparing,rsvpLabel[M.response(s,m.id).rsvp],selectionLabel[M.selectionState(s,m.id)],s.draftSelection?selectionLabel[M.selectionState(s,m.id,true)]:'',M.seasonCount(db,m.id,M.seasonOf(s.date)),rideSummary(s,m.id),paymentLabel[M.response(s,m.id).payment],attendanceLabel[M.response(s,m.id).attendance]])];
+    downloadFile(`ifosse-${s.date}.csv`,'\uFEFF'+rows.map(row=>row.map(cell).join(';')).join('\r\n'),'text/csv;charset=utf-8');toast('Les '+db.members.length+' lignes du tableau ont \u00e9t\u00e9 export\u00e9es.');
+  }
+  function exportCalendar(sid){
+    const s=M.session(db,sid),escape=v=>String(v).replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/;/g,'\\;').replace(/,/g,'\\,'),stamp=ts=>new Date(ts).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+    const description='S\u00e9ance de fosse \u00b7 '+s.capacity+' places, encadrants compris.\n'+(s.notes||'')+(s.endEstimated?'\nAttention : heure de fin estim\u00e9e (1 h), \u00e0 confirmer.':'')+'\nExport de la d\u00e9monstration iFosse V0. Ne confirme pas votre participation.';
+    const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//iFosse//V0 FR//FR','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+s.id+'@ifosse-v0.local','DTSTAMP:'+stamp(Date.now()),'DTSTART:'+stamp(M.parisTimestamp(s.date,s.start)),'DTEND:'+stamp(M.parisTimestamp(s.date,s.end)),'SUMMARY:'+escape('Fosse \u00b7 '+s.venue),'LOCATION:'+escape(s.address||s.venue),'DESCRIPTION:'+escape(description),'STATUS:'+(s.endEstimated?'TENTATIVE':'CONFIRMED'),'END:VEVENT','END:VCALENDAR'];
+    const enc=new TextEncoder(),fold=line=>{let out='',bytes=0;for(const ch of line){const n=enc.encode(ch).length;if(bytes+n>74){out+='\r\n ';bytes=1;}out+=ch;bytes+=n;}return out;};
+    downloadFile('ifosse-'+s.date+'.ics',lines.map(fold).join('\r\n')+'\r\n','text/calendar;charset=utf-8');toast('Fichier agenda export\u00e9. Ouvrez-le dans votre calendrier.');
+  }
+  function formError(message,profile=false){const el=$(profile?'#profile-error':'#dialog-error');if(el)el.innerHTML=`<div class="form-error" role="alert">${h(message)}</div>`;}
+  function dataOf(form){return Object.fromEntries(new FormData(form));}
+  function onForm(event){
+    const form=event.target;if(!['session-form','car-form','member-form','profile-form','groups-form'].includes(form.id))return;event.preventDefault();
+    const data=dataOf(form);let result;
+    if(form.id==='session-form')result=commit(d=>M.saveSession(d,ui.actor,form.dataset.sid||null,{...data,registrationOpen:!!data.registrationOpen,endEstimated:!!data.endEstimated}),null,false);
+    if(form.id==='car-form')result=commit(d=>M.offerCar(d,form.dataset.sid,ui.actor,data),null,false);
+    if(form.id==='member-form'||form.id==='profile-form')result=commit(d=>M.saveMember(d,ui.actor,form.dataset.target,data),null,false);
+    if(form.id==='groups-form'){
+      const s=M.session(db,form.dataset.sid),assignments={};M.selectedIds(s).forEach(id=>{const group=Number(data['group-'+id]);if(group)assignments[id]={group,leader:!!data['leader-'+id]};});
+      result=commit(d=>M.saveGroups(d,form.dataset.sid,ui.actor,assignments),null,false);
+    }
+    if(!result.ok){formError(result.error,form.id==='profile-form');return;}
+    const route=form.id==='session-form'?`session/${result.result}/overview`:null;
+    if(form.id!=='profile-form')closeModal();
+    if(route)navigate(route);else render();
+    toast(form.id==='groups-form'?'Palanqu\u00e9es publi\u00e9es.':form.id==='session-form'?'S\u00e9ance enregistr\u00e9e.':form.id==='car-form'?'Proposition de covoiturage enregistr\u00e9e.':'Profil enregistr\u00e9.');
+  }
+  function onAction(event){
+    const button=event.target.closest('[data-action]');if(!button||button.disabled)return;
+    const {action,sid,target,value,route,driver}=button.dataset;
+    if(action==='navigate'){navigate(route);return;}
+    if(action==='about'){aboutDialog();return;}
+    if(action==='persona'){personaDialog();return;}
+    if(action==='switch-actor'){switchActor(target);return;}
+    if(action==='close-modal'){closeModal();render();return;}
+    if(action==='confirm-yes'){const fn=confirmCallback;closeModal();if(fn)fn();return;}
+    if(action==='session-filter'){ui.sessionFilter=value;render();return;}
+    if(action==='participant-filter'){ui.participantFilter=value;render();return;}
+    if(action==='manage-view'){ui.manageView=value;render();return;}
+    if(action==='sort-count'){ui.sortByCount=!ui.sortByCount;render();return;}
+    if(action==='edit-session'){sessionDialog(sid);return;}
+    if(action==='edit-member'){memberDialog(target);return;}
+    if(action==='rsvp'){requestRsvp(sid,target,value);return;}
+    if(action==='offer-car'){carDialog(sid);return;}
+    if(action==='transport-mode'){requestTransport(sid,value);return;}
+    if(action==='remove-car'){requestTransport(sid,'needs');return;}
+    if(action==='join-car'){commit(d=>M.joinCar(d,sid,ui.actor,driver),'Vous avez rejoint ce covoiturage.');return;}
+    if(action==='publish'){publishDialog(sid);return;}
+    if(action==='discard-draft'){
+      confirmDialog('Annuler le brouillon ?', 'La derni\u00e8re s\u00e9lection publi\u00e9e sera conserv\u00e9e. Les changements non publi\u00e9s seront perdus.',()=>commit(d=>M.discardDraft(d,sid,ui.actor),'Brouillon annul\u00e9.'),'Annuler le brouillon');return;
+    }
+    if(action==='edit-groups'){groupDialog(sid);return;}
+    if(action==='mark-all-dived'){
+      const s=M.session(db,sid);confirmDialog('Valider les pr\u00e9sences des confirm\u00e9s ?', `Les ${M.selectedIds(s).length} participants confirm\u00e9s seront marqu\u00e9s \u00ab A plong\u00e9 \u00bb. Vous pourrez ensuite corriger les absences avant de cl\u00f4turer le bilan.`,()=>commit(d=>M.selectedIds(M.session(d,sid)).forEach(id=>M.setAttendance(d,sid,ui.actor,id,'dived')),'Pr\u00e9sences renseign\u00e9es. V\u00e9rifiez-les avant de cl\u00f4turer.'),'Valider ces pr\u00e9sences');return;
+    }
+    if(action==='close-session'){
+      confirmDialog('Cl\u00f4turer le bilan ?', 'Seules les personnes marqu\u00e9es \u00ab A plong\u00e9 \u00bb seront comptabilis\u00e9es dans la saison. Toutes les pr\u00e9sences des participants confirm\u00e9s doivent \u00eatre renseign\u00e9es. Les inscriptions seront ferm\u00e9es.',()=>commit(d=>M.closeSession(d,sid,ui.actor),'Bilan cl\u00f4tur\u00e9. Les compteurs de saison sont actualis\u00e9s.'),'Cl\u00f4turer');return;
+    }
+    if(action==='reopen'){
+      confirmDialog('Rouvrir ce bilan ?', 'Cette s\u00e9ance ne sera plus comptabilis\u00e9e dans les compteurs de saison tant que vous ne l\u2019aurez pas de nouveau cl\u00f4tur\u00e9e. Les pr\u00e9sences existantes seront conserv\u00e9es.',()=>commit(d=>M.reopenSession(d,sid,ui.actor),'Bilan rouvert pour correction.'),'Rouvrir le bilan');return;
+    }
+    if(action==='calendar'){exportCalendar(sid);return;}
+    if(action==='csv'){exportCSV(sid);return;}
+    if(action==='export-json'){exportJSON();return;}
+    if(action==='import-json'){if(isAdmin())$('#backup-input').click();return;}
+    if(action==='reset-demo'){
+      if(!isAdmin())return;confirmDialog('Recommencer la d\u00e9monstration ?', 'Vos modifications locales seront remplac\u00e9es par les donn\u00e9es fictives de d\u00e9part. Exportez une sauvegarde JSON auparavant pour conserver vos essais.',()=>{
+        ui.actor='m01';ui.season=2026;commit(d=>{for(const k of Object.keys(d))delete d[k];Object.assign(d,M.createSeed());},'D\u00e9monstration r\u00e9initialis\u00e9e.');navigate('home');
+      },'R\u00e9initialiser',true);return;
+    }
+  }
+  function onChange(event){
+    const el=event.target,key=el.dataset.change;if(!key)return;
+    const {sid,target}=el.dataset,value=el.value;
+    if(key==='persona'){switchActor(value);return;}
+    if(key==='season'){ui.season=Number(value);render();return;}
+    if(key==='admin-all'){ui.adminAll=el.checked;render();return;}
+    if(key==='attendance-all'){ui.attendanceAll=el.checked;render();return;}
+    if(key==='admin-rsvp'){requestRsvp(sid,target,value);return;}
+    if(key==='selection'){commit(d=>M.setDraftSelection(d,sid,ui.actor,target,value),null);return;}
+    if(key==='payment'){commit(d=>M.setPayment(d,sid,ui.actor,target,value),'Statut de paiement enregistr\u00e9.');return;}
+    if(key==='attendance'){commit(d=>M.setAttendance(d,sid,ui.actor,target,value),'Pr\u00e9sence enregistr\u00e9e.');return;}
+  }
+  function onInput(event){const el=event.target,key=el.dataset.input;if(!key)return;const map={members:'memberSearch',participants:'participantSearch',admin:'adminSearch'};if(!map[key])return;ui[map[key]]=el.value;const cursor=el.selectionStart,id=el.id;render();const replacement=document.getElementById(id);if(replacement){replacement.focus();try{replacement.setSelectionRange(cursor,cursor);}catch(e){}}}
+  async function importFile(event){
+    const file=event.target.files[0];event.target.value='';if(!file||!isAdmin())return;
+    try{
+      if(file.size>5*1024*1024)throw new Error('Cette sauvegarde est trop volumineuse (maximum 5 Mo).');
+      const candidate=JSON.parse(await file.text());M.validate(candidate);
+      confirmDialog('Importer cette sauvegarde ?', `${candidate.members.length} adh\u00e9rents et ${candidate.sessions.length} s\u00e9ances remplaceront les donn\u00e9es de cette d\u00e9monstration. L\u2019import ne les envoie sur aucun serveur.`,()=>{
+        const priorActor=ui.actor;if(!candidate.members.some(m=>m.id===ui.actor))ui.actor=candidate.members.find(m=>m.admin).id;
+        const result=commit(d=>{for(const k of Object.keys(d))delete d[k];Object.assign(d,M.clone(candidate));},'Sauvegarde import\u00e9e.');
+        if(!result.ok)ui.actor=priorActor;else{ui.season=M.seasonOf(db.sessions[0]?.date||'2026-09-01');navigate('home');}
+      },'Importer la sauvegarde');
+    }catch(e){toast(e.message||'La sauvegarde n\u2019a pas pu \u00eatre import\u00e9e.',true);}
+  }
+  document.addEventListener('click',onAction);
+  document.addEventListener('change',onChange);
+  document.addEventListener('input',onInput);
+  document.addEventListener('submit',onForm);
+  $('#backup-input').addEventListener('change',importFile);
+  $('#modal-root').addEventListener('click',e=>{if(e.target.classList.contains('modal-backdrop')){closeModal();render();}});
+  document.addEventListener('keydown',e=>{
+    if(!$('.modal'))return;
+    if(e.key==='Escape'){closeModal();render();return;}
+    if(e.key==='Tab'){
+      const nodes=$$('a[href],button:not(:disabled),input:not(:disabled):not([type=hidden]),select:not(:disabled),textarea:not(:disabled),[tabindex="0"]',$('.modal')).filter(n=>n.getClientRects().length);
+      if(!nodes.length){e.preventDefault();return;}const first=nodes[0],last=nodes[nodes.length-1];
+      if(e.shiftKey&&(document.activeElement===first||document.activeElement===$('.modal'))){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+    }
+  });
+  window.addEventListener('hashchange',()=>{closeModal();render();});
+  window.addEventListener('storage',e=>{
+    if(e.key!==KEY||!e.newValue)return;
+    try{const incoming=JSON.parse(e.newValue);M.validate(incoming);db=incoming;if(!db.members.some(m=>m.id===ui.actor))ui.actor=db.members[0].id;closeModal();render();toast('La d\u00e9monstration a \u00e9t\u00e9 mise \u00e0 jour dans un autre onglet.');}catch(err){toast('La mise \u00e0 jour d\u2019un autre onglet est invalide.',true);}
+  });
+  render();
+  if(!storageIssue){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){storageIssue='Ce navigateur refuse la sauvegarde locale. Exportez vos essais en JSON avant de fermer la page.';render();}}
+  if('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !window.IFOSSE_STANDALONE){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{/* Offline installation is optional; the UI remains fully usable. */});
+  }
+})();
+
+</script>
+</body>
+</html>
