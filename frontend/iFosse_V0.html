@@ -123,7 +123,7 @@
   function setRsvp(db, sid, actor, target, value) {
     const s = session(db, sid); editable(s); member(db, target);
     if (target !== actor) admin(db, actor);
-    if (!s.registrationOpen && !member(db, actor).admin && value !== 'no') fail('Les inscriptions sont ferm\u00e9es. Contactez un administrateur pour un changement.');
+    if (!s.registrationOpen && !isAdminMember(member(db, actor)) && value !== 'no') fail('Les inscriptions sont ferm\u00e9es. Contactez un administrateur pour un changement.');
     if (!RSVP.includes(value)) fail('R\u00e9ponse invalide.');
     const r = mutableResponse(s, target);
     const wasSelected = selectionState(s, target) === 'selected';
@@ -583,8 +583,8 @@
     openModal(title,'V\u00e9rifiez ce changement avant de continuer.',`<p class="explanation" style="white-space:pre-line">${h(text)}</p>`,`<button class="btn" data-action="close-modal">Annuler</button><button class="btn ${danger?'danger':'primary'}" data-action="confirm-yes">${h(label)}</button>`);
   }
   function personaDialog(){
-    const adminMember=db.members.find(m=>m.admin),regularMember=db.members.find(m=>!m.admin),shortcuts=[adminMember,...(regularMember?[regularMember]:[])];
-    openModal('Changer de point de vue','Ces profils sont fictifs. Il ne s\u2019agit pas d\u2019une vraie connexion.',`${shortcuts.map(m=>`<button class="persona-option ${ui.actor===m.id?'active':''}" data-action="switch-actor" data-target="${m.id}">${avatar(m.id,'lg')}<div><strong>${h(fullName(m))}</strong><div class="role-label">${m.admin?'Administrateur \u00b7 s\u00e9lections, paiements, bilans':'Adh\u00e9rent \u00b7 inscription, covoiturage, mon paiement'}</div></div>${icon(m.admin?'shield':'user')}</button>`).join('')}<hr><label for="persona-select">Ou tester avec un autre adh\u00e9rent</label><select id="persona-select" class="persona-picker" data-change="persona">${options(db.members.map(m=>[m.id,fullName(m)+(m.admin?' \u00b7 Admin':'')]),ui.actor)}</select><p class="explanation mt16">La V0 simule les droits dans l\u2019interface. Les donn\u00e9es et les brouillons restent stock\u00e9s dans ce navigateur. Une vraie authentification et des droits c\u00f4t\u00e9 serveur seront n\u00e9cessaires pour le club.</p>`);
+    const presidentMember=db.members.find(m=>M.roleOf(m)==='president'),adminMember=db.members.find(m=>M.roleOf(m)==='admin'),regularMember=db.members.find(m=>M.roleOf(m)==='member'),shortcuts=[presidentMember,adminMember,regularMember].filter(Boolean);
+    openModal('Changer de point de vue','Ces profils sont fictifs. Il ne s\u2019agit pas d\u2019une vraie connexion.',`${shortcuts.map(m=>`<button class="persona-option ${ui.actor===m.id?'active':''}" data-action="switch-actor" data-target="${m.id}">${avatar(m.id,'lg')}<div><strong>${h(fullName(m))}</strong><div class="role-label">${M.roleOf(m)==='president'?'Pr\u00e9sident \u00b7 administration + gestion des droits':M.roleOf(m)==='admin'?'Administrateur \u00b7 s\u00e9lections, paiements, bilans':'Adh\u00e9rent \u00b7 inscription, covoiturage, mon paiement'}</div></div>${icon(M.isAdminMember(m)?'shield':'user')}</button>`).join('')}<hr><label for="persona-select">Ou tester avec un autre adh\u00e9rent</label><select id="persona-select" class="persona-picker" data-change="persona">${options(db.members.map(m=>[m.id,fullName(m)+' \u00b7 '+roleLabel(m)]),ui.actor)}</select><p class="explanation mt16">La V0 simule les droits dans l\u2019interface. Les donn\u00e9es et les brouillons restent stock\u00e9s dans ce navigateur. Une vraie authentification et des droits c\u00f4t\u00e9 serveur seront n\u00e9cessaires pour le club.</p>`);
   }
   function switchActor(target){
     if(!db.members.some(m=>m.id===target))return;closeModal();ui.actor=target;
