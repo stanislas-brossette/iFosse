@@ -149,3 +149,25 @@ Regular members continue to see participant information in the context of a spec
 The regular-member home dashboard should prioritize information that is directly actionable for that member: response status, published selection status, transport, and payment. Global operational indicators belong to the administrator dashboard.
 
 **Rationale:** regular members need a simpler, more personal interface and should not be exposed to unnecessary club-wide operational information.
+
+
+---
+
+## D017 — Palanquee level summaries are informational
+
+**Decision:** the palanquee editor shows a dynamic summary of the qualifications / training levels present in the published participant selection, and a live summary for each palanquee while the administrator changes assignments.
+
+The initial summary categories are:
+
+- E3
+- E2
+- E1
+- N4
+- N3
+- PN3
+- PN2
+- PN1
+
+For the current prototype data model, MF1 is displayed as E3 in this summary. A member preparing N3 / N2 / N1 is displayed respectively as PN3 / PN2 / PN1 when no higher listed current qualification category applies.
+
+**Important:** these summaries are visual aids for the DP. They do not validate regulatory compliance, required supervision ratios, depth limits, or qualification rules.
