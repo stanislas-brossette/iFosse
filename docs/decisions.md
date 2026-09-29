@@ -136,3 +136,16 @@ A member may opt in to storing usual carpool defaults (passenger seats and meeti
 A member without a usual car in their profile may still offer a car for a specific session. After doing so, the application may explicitly offer to save those values as profile defaults.
 
 **Rationale:** session transport is the operational truth, while profile car information is only a convenience.
+
+
+---
+
+## D016 — Member dashboard is personal and member directory is admin-only
+
+**Decision:** the global member directory is visible only to administrators.
+
+Regular members continue to see participant information in the context of a specific session, where it is useful for coordination, but they do not browse the club-wide member list.
+
+The regular-member home dashboard should prioritize information that is directly actionable for that member: response status, published selection status, transport, and payment. Global operational indicators belong to the administrator dashboard.
+
+**Rationale:** regular members need a simpler, more personal interface and should not be exposed to unnecessary club-wide operational information.

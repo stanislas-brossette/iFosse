@@ -248,7 +248,11 @@ All members may see:
 - published palanquees;
 - carpool availability.
 
+The club-wide member directory is not shown to regular members. Participant identities and relevant diving information remain visible within the context of a session.
+
 A member may see their own payment status.
+
+The regular-member dashboard should emphasize the member's own next actions and statuses rather than administrator-oriented global counts.
 
 Administrators may see and edit administrative fields.
 
