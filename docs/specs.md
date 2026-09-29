@@ -153,6 +153,17 @@ Rules:
 
 Carpool choices remain editable after initial registration.
 
+Usual car information in the member profile is optional. Members without a car profile may still offer a car for a specific session.
+
+When a member has usual car defaults, they may include:
+
+- usual passenger-seat count;
+- usual meeting point.
+
+These values are used only to prefill a new session car offer. They never create an offer automatically.
+
+If a member without profile car defaults offers a car for a session, the application may explicitly ask whether to save those values to the profile. This must remain opt-in.
+
 ## 8. Payments
 
 Payment is trust-based. There is no online payment requirement in the MVP.
