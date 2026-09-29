@@ -96,6 +96,20 @@ Example:
 
 If administrators need 21 participants, they may first edit the session capacity to 21.
 
+
+### President
+
+The president is a super-admin.
+
+The president has all admin capabilities and can additionally:
+
+- promote a regular member to admin;
+- remove admin rights from an admin.
+
+Regular admins cannot change application roles.
+
+The MVP/prototype keeps exactly one president. The president role cannot be removed from the member editor.
+
 ### Publication
 
 Draft changes are not immediately public.
