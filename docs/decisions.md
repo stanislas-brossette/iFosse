@@ -171,3 +171,18 @@ The initial summary categories are:
 For the current prototype data model, MF1 is displayed as E3 in this summary. A member preparing N3 / N2 / N1 is displayed respectively as PN3 / PN2 / PN1 when no higher listed current qualification category applies.
 
 **Important:** these summaries are visual aids for the DP. They do not validate regulatory compliance, required supervision ratios, depth limits, or qualification rules.
+
+
+---
+
+## D018 — President is the super-admin role
+
+**Decision:** iFosse has three application roles:
+
+- `member` — regular member;
+- `admin` — manages sessions, selections, payments, attendance, palanquees and member information;
+- `president` — has all admin permissions and is the only role allowed to grant or revoke admin rights.
+
+The prototype keeps exactly one president. The president role itself cannot be removed from the member editor.
+
+**Rationale:** ordinary admins should not be able to escalate privileges or remove each other's rights. Governance of administrator access belongs to the president.
