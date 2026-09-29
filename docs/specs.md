@@ -190,6 +190,12 @@ The administrator can close the session bilan, and may reopen it later to correc
 
 The MVP may include simple manual grouping into palanquees.
 
+The palanquee editor should also provide a dynamic qualification summary for the published selection and update per-palanquee summaries immediately when assignments change.
+
+The first prototype uses the categories E3, E2, E1, N4, N3, PN3, PN2 and PN1. MF1 is represented as E3 in this display. PN3 / PN2 / PN1 represent members preparing N3 / N2 / N1 respectively.
+
+This summary is informational only and must not be presented as regulatory validation.
+
 These groups can be published and made visible to members.
 
 The MVP does **not** need to generate a regulatory document.
