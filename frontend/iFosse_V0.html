@@ -351,8 +351,23 @@
       ['Jade','Gauthier'],['Florian','Dumont'],['Elise','Lopez'],['Romain','Fontaine'],['Ana\u00efs','Chevallier'],['Victor','Robin'],['Marion','Masson'],['Adrien','Sanchez'],['Agathe','G\u00e9rard'],['Quentin','Nguyen'],
       ['C\u00e9line','Henry'],['Simon','Roussel'],['Amandine','Mathieu'],['Th\u00e9o','Gautier'],['Laura','Marchand'],['Vincent','Duval'],['Sophie','Leclerc'],['Nathan','Vidal'],['M\u00e9lanie','Lemoine'],['Pierre','Renaud']
     ];
-    const carOwners = new Set([0,2,6,9,15,21,28,35,44]);
-    const db = { version: VERSION, revision: 0, members: names.map(([firstName,lastName],i) => ({ id:'m'+String(i+1).padStart(2,'0'), firstName,lastName,email:`adherent${i+1}@example.test`,phone:'',role:i===0?'president':[2,4].includes(i)?'admin':'member',level:[0,2,4].includes(i)?'MF1':['N1','N2','N3','D\u00e9butant'][i%4],preparing:[0,2,4].includes(i)?'':['N2','N3','','N1'][i%4],hasUsualCar:carOwners.has(i),usualSeats:carOwners.has(i)?3:0,usualMeeting:'',caciExpiry:'' })), sessions: [] };
+    const carProfiles = {
+      0:{seats:3,meeting:'Porte d\u2019Orl\u00e9ans \u00b7 devant le m\u00e9tro'},
+      2:{seats:2,meeting:'Place d\u2019Italie \u00b7 sortie 1'},
+      6:{seats:3,meeting:'Nation \u00b7 avenue du Tr\u00f4ne'},
+      9:{seats:4,meeting:'Porte de Versailles \u00b7 arr\u00eat du tram'},
+      15:{seats:2,meeting:'Mairie d\u2019Issy \u00b7 devant la mairie'},
+      21:{seats:3,meeting:'R\u00e9publique \u00b7 c\u00f4t\u00e9 boulevard Voltaire'},
+      28:{seats:4,meeting:'Porte de Vincennes \u00b7 sortie du m\u00e9tro'},
+      35:{seats:3,meeting:'Denfert-Rochereau \u00b7 gare RER'},
+      44:{seats:2,meeting:'Biblioth\u00e8que Fran\u00e7ois-Mitterrand \u00b7 avenue de France'}
+    };
+    // Mixed demo states: valid CACI dates, a few near expiry, a few expired, and some not yet entered.
+    const caciDates=['2027-08-31','2027-03-15','2026-10-15','2026-09-20','','2027-01-10','2027-06-30','2026-12-01','2027-09-15','2026-08-31'];
+    const db = { version: VERSION, revision: 0, members: names.map(([firstName,lastName],i) => {
+      const car=carProfiles[i]||null;
+      return { id:'m'+String(i+1).padStart(2,'0'), firstName,lastName,email:`adherent${i+1}@example.test`,phone:'',role:i===0?'president':[2,4].includes(i)?'admin':'member',level:[0,2,4].includes(i)?'MF1':['N1','N2','N3','D\u00e9butant'][i%4],preparing:[0,2,4].includes(i)?'':['N2','N3','','N1'][i%4],hasUsualCar:!!car,usualSeats:car?car.seats:0,usualMeeting:car?car.meeting:'',caciExpiry:caciDates[i%caciDates.length] };
+    }), sessions: [] };
     const dates = [
       ['2026-10-28','21:00','22:00',false],['2026-11-04','22:00','23:00',true],['2026-12-09','20:00','21:00',true],
       ['2027-01-13','21:00','22:00',false],['2027-02-10','21:00','22:00',false],['2027-02-26','20:00','21:00',false],
@@ -367,9 +382,13 @@
         if (i===0 && j<18) s.publishedSelection[m.id]='selected';
       });
       if(i===0) {
-        const specs=[['m01',3,['m02','m05','m20']],['m03',3,['m06','m09']],['m07',2,['m08','m19']]];
-        specs.forEach(([driverId,seats,ps])=>{
-          s.cars.push({driverId,seats,meeting:'Rendez-vous \u00e0 pr\u00e9ciser',time:'',note:''}); s.responses[driverId].transportMode='driver';
+        const specs=[
+          ['m01',3,['m02','m05','m20'],'Porte d\u2019Orl\u00e9ans \u00b7 devant le m\u00e9tro','19:45','D\u00e9part \u00e0 l\u2019heure, coffre disponible pour le mat\u00e9riel.'],
+          ['m03',2,['m06','m09'],'Place d\u2019Italie \u00b7 sortie 1','20:00','Deux places passagers.'],
+          ['m07',3,['m08','m19'],'Nation \u00b7 avenue du Tr\u00f4ne','19:50','Rendez-vous 5 min avant le d\u00e9part.']
+        ];
+        specs.forEach(([driverId,seats,ps,meeting,time,note])=>{
+          s.cars.push({driverId,seats,meeting,time,note}); s.responses[driverId].transportMode='driver';
           ps.forEach(id=>{s.responses[id].transportMode='passenger';s.responses[id].carDriverId=driverId;});
         });
         ['m04','m10','m11'].forEach(id=>s.responses[id].transportMode='own');
