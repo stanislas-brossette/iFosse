@@ -186,3 +186,23 @@ For the current prototype data model, MF1 is displayed as E3 in this summary. A 
 The prototype keeps exactly one president. The president role itself cannot be removed from the member editor.
 
 **Rationale:** ordinary admins should not be able to escalate privileges or remove each other's rights. Governance of administrator access belongs to the president.
+
+
+---
+
+## D019 — CACI expiry warnings are advisory
+
+**Decision:** iFosse compares a member's CACI end date with both the current date and the date of a future fosse.
+
+The interface distinguishes:
+
+- valid;
+- expires soon (within 60 days);
+- expired;
+- not entered.
+
+If a member answers Yes to a future fosse where their CACI will be expired, or where no CACI date is entered, the application warns them before saving the response but does not block registration.
+
+Admins see the CACI status for the member list and specifically "on the day" in the session-selection view.
+
+**Rationale:** the member may renew their CACI before the session, so an advisory warning supports follow-up without prematurely blocking registration.
