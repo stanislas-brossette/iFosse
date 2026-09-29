@@ -299,3 +299,21 @@ It intentionally uses:
 - no shared backend.
 
 It must not be treated as secure or production-ready.
+
+
+## CACI expiry warnings
+
+The member record stores only a CACI validity end date.
+
+The UI should display one of four CACI states:
+
+- Valid;
+- Expires soon: validity ends within 60 days of the reference date;
+- Expired;
+- Not entered.
+
+The club-wide member view uses today's date as the reference.
+
+The session-management view uses the session date as the reference and should show whether each participant's CACI is valid "on the day".
+
+When a regular member answers Yes to a session for which their CACI will be expired, or when no CACI date is available, iFosse shows a warning before saving the response. Registration remains possible after explicit confirmation.
