@@ -123,3 +123,16 @@ The MVP should not expand into licence/CACI/document management, pedagogical tra
 **Decision:** `frontend/iFosse_V0.html` is the functional reference for the current flows.
 
 Its single-file/local-storage implementation is not a constraint on the architecture of the production application.
+
+
+---
+
+## D015 — Car profile defaults are optional
+
+**Decision:** members do not have a car by default in their profile.
+
+A member may opt in to storing usual carpool defaults (passenger seats and meeting point). These values only prefill future session car offers and never create an offer automatically.
+
+A member without a usual car in their profile may still offer a car for a specific session. After doing so, the application may explicitly offer to save those values as profile defaults.
+
+**Rationale:** session transport is the operational truth, while profile car information is only a convenience.
