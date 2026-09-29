@@ -96,6 +96,20 @@ Example:
 
 If administrators need 21 participants, they may first edit the session capacity to 21.
 
+
+### President
+
+The president is a super-admin.
+
+The president has all admin capabilities and can additionally:
+
+- promote a regular member to admin;
+- remove admin rights from an admin.
+
+Regular admins cannot change application roles.
+
+The MVP/prototype keeps exactly one president. The president role cannot be removed from the member editor.
+
 ### Publication
 
 Draft changes are not immediately public.
@@ -285,3 +299,21 @@ It intentionally uses:
 - no shared backend.
 
 It must not be treated as secure or production-ready.
+
+
+## CACI expiry warnings
+
+The member record stores only a CACI validity end date.
+
+The UI should display one of four CACI states:
+
+- Valid;
+- Expires soon: validity ends within 60 days of the reference date;
+- Expired;
+- Not entered.
+
+The club-wide member view uses today's date as the reference.
+
+The session-management view uses the session date as the reference and should show whether each participant's CACI is valid "on the day".
+
+When a regular member answers Yes to a session for which their CACI will be expired, or when no CACI date is available, iFosse shows a warning before saving the response. Registration remains possible after explicit confirmation.
