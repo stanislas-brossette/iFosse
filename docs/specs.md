@@ -33,6 +33,8 @@ An instructor/encadrant occupies one of the available places.
 
 ## 3. Roles
 
+iFosse uses three application roles: member, administrator and president.
+
 ### Member
 
 A member can:
@@ -77,7 +79,7 @@ The response can be changed at any time.
 
 The number of **Yes** responses is **not limited** by session capacity.
 
-All members can see who answered Yes / Maybe / No, similarly to the current Framadate workflow.
+Within a session, the Participants tab shows only members who answered Yes or Maybe. The administrative management view can still expose the broader member population when needed for corrections.
 
 ## 5. Final participant selection
 
@@ -232,12 +234,12 @@ Useful fields include:
 - level being prepared;
 - application role / rights;
 - optional address;
-- optional usual car information.
+- optional usual car information;
+- CACI validity end date, maintained by an administrator and visible read-only to the member.
 
 The following are explicitly considered future club-management extensions rather than MVP requirements:
 
 - licence tracking;
-- CACI;
 - insurance card;
 - uploaded qualification documents;
 - emergency contact management;
@@ -281,7 +283,7 @@ Administrators may see and edit administrative fields.
 - online payment;
 - full accounting;
 - regulatory palanquee document generation;
-- complete licence/CACI/document management;
+- complete licence/document management and uploaded medical documents;
 - pedagogical skill tracking;
 - native Android/iOS applications;
 - full ERP-style club management.
@@ -317,3 +319,25 @@ The club-wide member view uses today's date as the reference.
 The session-management view uses the session date as the reference and should show whether each participant's CACI is valid "on the day".
 
 When a regular member answers Yes to a session for which their CACI will be expired, or when no CACI date is available, iFosse shows a warning before saving the response. Registration remains possible after explicit confirmation.
+
+
+## 16. Session readiness summary
+
+The administrator selection view includes a compact readiness summary for each displayed member.
+
+The first prototype tracks four operational points:
+
+- selection;
+- CACI validity on the session date;
+- resolved transport;
+- payment status.
+
+This is an operational checklist, not a regulatory fitness assessment.
+
+## 17. School holidays
+
+A session may be marked by an administrator as taking place during school holidays.
+
+When marked, the session displays a visible "Vacances scolaires" badge.
+
+The prototype stores this as an explicit session flag rather than attempting to infer school-holiday dates automatically.
