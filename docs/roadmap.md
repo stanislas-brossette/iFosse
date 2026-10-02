@@ -53,21 +53,22 @@ The organizers agree that the workflow is understandable and reflects how they a
 
 ## V0.2 — Product freeze for MVP
 
-Goals:
+**Status:** architecture frozen; ready to implement.
 
-- incorporate organizer feedback into `docs/specs.md`;
-- record all decisions in `docs/decisions.md`;
-- define the smallest production feature set;
-- choose the technical stack;
-- define the initial data model;
-- define authentication and deployment strategy.
+Deliverables:
 
-Likely deliverables:
+- consolidated product scope in `docs/specs.md`;
+- explicit product decisions in `docs/decisions.md`;
+- production architecture in `docs/architecture.md`;
+- initial relational model in `docs/data-model.md`;
+- implementation slices and acceptance criteria in `docs/mvp-backlog.md`.
 
-- architecture note;
-- database schema;
-- production backlog;
-- acceptance criteria.
+Frozen technical direction:
+
+- React + TypeScript + Vite;
+- Supabase PostgreSQL/Auth/RLS in an EU region;
+- passwordless email magic-link login with long-lived refreshable sessions;
+- Netlify frontend hosting and preview deployments.
 
 ## V0.3 — Shared technical foundation
 
