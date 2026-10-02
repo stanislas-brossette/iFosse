@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import type { Page } from '@playwright/test'
+import type { Database } from '../../src/lib/database.types.js'
 
 type LocalStatus = {
   API_URL: string
@@ -39,14 +40,14 @@ export const browserLaunchOptions = process.env.GOOGLE_CHROME_PATH ? { executabl
 
 export function anonymousClient() {
   const config = status()
-  return createClient(config.API_URL, config.PUBLISHABLE_KEY || config.ANON_KEY, {
+  return createClient<Database>(config.API_URL, config.PUBLISHABLE_KEY || config.ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   })
 }
 
 export function serviceClient() {
   const config = status()
-  return createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
+  return createClient<Database>(config.API_URL, config.SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   })
 }
@@ -160,4 +161,15 @@ export function makeFixtureAdmin(fixture: MemberFixture) {
   if (![fixture.authUserId, fixture.memberId].every(id => /^[0-9a-f-]{36}$/i.test(id))) throw new Error('Invalid local fixture identity.')
   const sql = `update public.members set role='admin' where id='${fixture.memberId}' and auth_user_id='${fixture.authUserId}' and email like 'ifosse-e2e-%@example.test';`
   execFileSync('docker', ['exec', 'supabase_db_ifosse', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', sql], { stdio: ['ignore', 'pipe', 'pipe'] })
+}
+
+// Trusted fixture setup only. User-facing login remains covered with real mail
+// delivery and explicit confirmation in the browser authentication tests.
+export async function fixtureClient(fixture: MemberFixture) {
+  const { data, error } = await serviceClient().auth.admin.generateLink({ type: 'magiclink', email: fixture.email })
+  if (error || !data.properties?.hashed_token) throw new Error('Local fixture sign-in setup failed.')
+  const client = anonymousClient()
+  const result = await client.auth.verifyOtp({ token_hash: data.properties.hashed_token, type: 'email' })
+  if (result.error) throw new Error('Local fixture authentication failed.')
+  return client
 }

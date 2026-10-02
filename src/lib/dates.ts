@@ -11,3 +11,13 @@ export function caciStatus(expiry: string | null, reference = todayParis()): Cac
   if (!Number.isFinite(days)) return 'missing'
   return days < 0 ? 'expired' : days <= 60 ? 'soon' : 'valid'
 }
+export function seasonOf(date: string): number {
+  const year = Number(date.slice(0, 4))
+  return Number(date.slice(5, 7)) >= 9 ? year : year - 1
+}
+export function seasonBounds(year: number) {
+  return { start: `${year}-09-01`, end: `${year + 1}-09-01` }
+}
+export function formatDate(date: string): string {
+  return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`))
+}

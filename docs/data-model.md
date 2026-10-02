@@ -261,3 +261,9 @@ Database-level constraints/functions must guarantee:
 - no palanquee assignment outside the published selected population;
 - attendance is the only source used for season completion counts;
 - admin-only and president-only writes are protected independently from the UI.
+
+## Implemented session boundary
+
+Session mutations and RSVP changes lock the session row. The `session_participations` table is private to self/admin because it also contains payment and attendance. `get_session_responses(session_id)` is the member-visible projection, restricted to that session's recorded responses and names/levels only. It never exposes directory email, phone, CACI or payment columns. No/unanswered responses are excluded from the regular Participants UI, while administrators can correct all members' responses.
+
+`rsvp_revision` changes only when a response changes. Later immutable selection snapshots can use it to prevent a withdrawn member from regaining a previously published place merely by answering Yes again. Session deletion cascades its operational rows; append-only audit events keep the original deleted UUID in their minimal payload.
