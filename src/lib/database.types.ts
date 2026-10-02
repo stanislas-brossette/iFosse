@@ -296,6 +296,11 @@ isOneToOne: false
 "ensure_selection_draft":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
+"get_admin_readiness":
+{ Args: { "p_session_id": string }; Returns: {
+              "caci_ready": boolean,"caci_status": string,"member_id": string,"payment_ready": boolean,"payment_status": Database["public"]['Enums']["payment_state"],"selection_ready": boolean,"selection_state": string,"transport_mode": Database["public"]['Enums']["transport_state"],"transport_ready": boolean
+            }[]
+                           },
 "get_car_offers":
 { Args: { "p_session_id": string }; Returns: {
               "departure_time": string,"driver_member_id": string,"first_name": string,"id": string,"last_name": string,"meeting_point": string,"note": string,"occupied": number,"passenger_capacity": number
@@ -354,6 +359,9 @@ isOneToOne: false
                            },
 "set_own_transport":
 { Args: { "p_mode": Database["public"]['Enums']["transport_state"],"p_session_id": string }; Returns: undefined
+                           },
+"set_payment_status":
+{ Args: { "p_member_id": string,"p_session_id": string,"p_status": Database["public"]['Enums']["payment_state"] }; Returns: undefined
                            },
 "set_session_rsvp":
 { Args: { "p_confirm_caci_warning"?: boolean,"p_member_id"?: string,"p_rsvp": Database["public"]['Enums']["rsvp_state"],"p_session_id": string }; Returns: undefined
