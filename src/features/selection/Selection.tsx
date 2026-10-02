@@ -5,12 +5,15 @@ import type { Member } from '../auth/AuthGate'
 import type { Session } from '../sessions/SessionEditor'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
 export type CurrentSelection = Database['public']['Functions']['get_current_selection']['Returns'][number]
-export const selectionLabels: Record<string, string> = { pending: 'En attente de publication', waiting: 'En attente', selected: 'Confirmé', declined: 'Non retenu', withdrawn: 'Désisté', none: 'Sans participation' }
+import { selectionLabels } from '../../lib/labels'
+import { PaymentSummary } from '../payments/Payments'
+import type { Readiness } from '../payments/Payments'
 export function Selection({ client, member, session, manage }: { client: SupabaseClient<Database>; member: Member; session: Session; manage: boolean }) {
   const [current, setCurrent] = useState<CurrentSelection[]>([])
   const [publication, setPublication] = useState<number | null>(null)
   const [draft, setDraft] = useState<Tables<'selection_draft'>[]>([])
   const [hasDraft, setHasDraft] = useState(false)
+  const [readiness, setReadiness] = useState<Readiness[]>([])
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirm, setConfirm] = useState(false)
@@ -30,12 +33,15 @@ export function Selection({ client, member, session, manage }: { client: Supabas
     // empty population there is no state to mix, so the header is a fallback.
     setPublication(rows.length ? rows[0].publication_version || null : publicationResult.data?.version ?? null)
     if (admin) {
-      const [draftResult, headerResult] = await Promise.all([
+      const [draftResult, headerResult, readinessResult] = await Promise.all([
         client.from('selection_draft').select('*').eq('session_id', session.id),
         client.from('selection_drafts').select('session_id').eq('session_id', session.id).maybeSingle(),
+        client.rpc('get_admin_readiness', { p_session_id: session.id }),
       ])
       if (request !== sequence.current) return
-      if (draftResult.error || headerResult.error) setMessage('Brouillon indisponible. Vérifiez vos droits.')
+      if (readinessResult.error) setReadiness([])
+      else setReadiness(readinessResult.data ?? [])
+      if (draftResult.error || headerResult.error || readinessResult.error) setMessage('Brouillon indisponible. Vérifiez vos droits.')
       else { setDraft(draftResult.data ?? []); setHasDraft(!!headerResult.data) }
     }
   }, [client, session.id, admin])
@@ -71,8 +77,8 @@ export function Selection({ client, member, session, manage }: { client: Supabas
     <p>{selected.length} participants confirmés / {session.capacity} places.</p>
     {!publication && <p>Aucune sélection publiée pour le moment.</p>}
     {publication && <ul className="member-list">{current.filter(person => !['none', 'pending'].includes(person.state)).map(person => <li key={person.member_id}><span>{person.first_name} {person.last_name} · {person.current_level}</span><strong>{selectionLabels[person.state]}</strong></li>)}</ul>}
-    {manage && admin && <div className="mt"><h3>Sélection de travail · {draftCount} / {session.capacity}</h3><p>{hasDraft ? 'Brouillon privé en cours.' : 'La sélection publiée sert de point de départ.'} Les adhérents voient uniquement la dernière publication.</p>
-      {(['selected', 'waiting', 'declined'] as const).map(state => <div key={state}><h4>{selectionLabels[state]} · {editable.filter(person => draftState(person) === state).length}</h4><ul className="member-list">{editable.filter(person => draftState(person) === state).map(person => <li key={person.member_id}><span>{person.first_name} {person.last_name} · {person.rsvp === 'yes' ? 'Oui' : 'Peut-être'}</span><label>Sélection de {person.first_name} {person.last_name}<select value={state} disabled={busy || session.status === 'closed'} onChange={event => void change(person.member_id, event.target.value as 'selected' | 'waiting' | 'declined')}>{(['selected', 'waiting', 'declined'] as const).map(value => <option key={value} value={value} disabled={value === 'selected' && person.rsvp !== 'yes'}>{selectionLabels[value]}</option>)}</select></label></li>)}</ul></div>)}
+    {manage && admin && <div className="mt"><h3>Sélection de travail · {draftCount} / {session.capacity}</h3><p>{hasDraft ? 'Brouillon privé en cours.' : 'La sélection publiée sert de point de départ.'} Les adhérents voient uniquement la dernière publication.</p><p>Préparation opérationnelle uniquement : ce récapitulatif ne valide ni l’aptitude médicale ni la conformité réglementaire.</p>
+      {(['selected', 'waiting', 'declined'] as const).map(state => <div key={state}><h4>{selectionLabels[state]} · {editable.filter(person => draftState(person) === state).length}</h4><ul className="member-list">{editable.filter(person => draftState(person) === state).map(person => <li key={person.member_id}><div><strong>{person.first_name} {person.last_name} · {person.rsvp === 'yes' ? 'Oui' : 'Peut-être'}</strong><PaymentSummary readiness={readiness.find(row => row.member_id === person.member_id)} client={client} sessionId={session.id} firstName={person.first_name} lastName={person.last_name} onSaved={load} /></div><label>Sélection de {person.first_name} {person.last_name}<select value={state} disabled={busy || session.status === 'closed'} onChange={event => void change(person.member_id, event.target.value as 'selected' | 'waiting' | 'declined')}>{(['selected', 'waiting', 'declined'] as const).map(value => <option key={value} value={value} disabled={value === 'selected' && person.rsvp !== 'yes'}>{selectionLabels[value]}</option>)}</select></label></li>)}</ul></div>)}
       <div className="actions"><button disabled={busy || session.status === 'closed'} onClick={() => setConfirm(true)}>Publier la sélection</button>{hasDraft && <button disabled={busy || session.status === 'closed'} onClick={() => void discard()}>Abandonner le brouillon</button>}</div>
       {confirm && <div className="mt"><p>Publier cette sélection de {draftCount} personnes ? Elle remplacera la version visible aux adhérents.</p><div className="actions"><button disabled={busy} onClick={() => void publish()}>Confirmer la publication</button><button onClick={() => setConfirm(false)}>Continuer le brouillon</button></div></div>}
     </div>}

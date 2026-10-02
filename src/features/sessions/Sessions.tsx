@@ -8,6 +8,7 @@ import type { Session } from './SessionEditor'
 import { Selection } from '../selection/Selection'
 import { Carpooling } from '../carpooling/Carpooling'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
+import { paymentLabels } from '../../lib/labels'
 export type Response = Database['public']['Functions']['get_session_responses']['Returns'][number]
 export const rsvpLabels = { unanswered: 'Sans réponse', yes: 'Oui', maybe: 'Peut-être', no: 'Non' } as const
 export function SessionDetail({ client, member, session, onEdit, onBack }: { client: SupabaseClient<Database>; member: Member; session: Session; onEdit: () => void; onBack: () => void }) {
@@ -53,6 +54,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack }: { cli
     <nav className="actions" aria-label="Rubriques de la séance">{([['overview', 'Ma participation'], ['participants', 'Participants'], ['transport', 'Covoiturage'], ...(admin ? [['manage', 'Gestion']] : [])] as [typeof tab, string][]).map(([key, label]) => <button key={key} aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}>{label}</button>)}</nav>
     {tab === 'overview' && <div className="mt"><h3>Ma réponse : {rsvpLabels[own?.rsvp ?? 'unanswered']}</h3><p>{session.capacity} places pour la sélection finale. Dire Oui ne garantit pas une place.</p>
       <div className="actions" role="group" aria-label="Ma réponse pour la séance">{(['yes', 'maybe', 'no'] as const).map(value => <button key={value} aria-pressed={own?.rsvp === value} disabled={busy || session.status === 'closed' || (!session.registration_open && !admin && value !== 'no')} onClick={() => { setWarning(false); void respond(value) }}>{rsvpLabels[value]}</button>)}</div>
+      <p>Mon paiement : <strong>{paymentLabels[own?.payment_status ?? 'unpaid']}</strong></p>
       <p>Mon CACI au jour de la fosse : {caciLabels[caci]}.</p>
       {warning && <div role="alert" className="mt"><p>Votre CACI sera expiré ou n’est pas renseigné pour cette fosse. Vous pourrez le renouveler avant la séance. Confirmer votre réponse Oui ?</p><div className="actions"><button disabled={busy} onClick={() => void respond('yes', true)}>Confirmer Oui malgré l’avertissement</button><button onClick={() => setWarning(false)}>Annuler la réponse</button></div></div>}
     </div>}

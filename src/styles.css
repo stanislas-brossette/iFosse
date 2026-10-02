@@ -26,3 +26,5 @@ label { display: block; margin-bottom: 16px; }
 .badge { display: inline-block; background: #fff1d6; color: #784800; border-radius: 20px; padding: 4px 12px; }
 .preserve-lines { white-space: pre-wrap; }
 button[aria-pressed=true], button[aria-current=page] { background: #12495b; box-shadow: inset 0 0 0 2px #a3dce8; }
+.readiness-points { list-style: none; padding: 0; }
+.member-list .readiness-points li { display: block; padding: 0; border: 0; }

@@ -7,7 +7,7 @@ import type { Session } from '../sessions/SessionEditor'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
 type Car = Database['public']['Functions']['get_car_offers']['Returns'][number]
 type Transport = Database['public']['Functions']['get_session_transport']['Returns'][number]
-export const transportLabels = { unset: 'Trajet à préciser', needs: 'Je cherche un trajet', own: 'Par mes propres moyens', driver: 'Conducteur', passenger: 'Passager' } as const
+import { transportLabels } from '../../lib/labels'
 function OfferForm({ member, car, disabled, save }: { member: Member; car?: Car; disabled: boolean; save: (seats: number, meeting: string, time: string, note: string) => Promise<void> }) {
   const [seats, setSeats] = useState(car?.passenger_capacity ?? (member.has_usual_car ? member.usual_passenger_seats : 3))
   const [meeting, setMeeting] = useState(car?.meeting_point ?? (member.has_usual_car ? member.usual_meeting_point : ''))
