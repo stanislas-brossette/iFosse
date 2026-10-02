@@ -9,4 +9,4 @@ if [[ $(docker network inspect -f '{{index .Options "com.docker.network.bridge.h
   echo 'The existing ifosse-local network must bind ports to 127.0.0.1.' >&2
   exit 1
 fi
-supabase start --network-id ifosse-local
+supabase --network-id ifosse-local start
