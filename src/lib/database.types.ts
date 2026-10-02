@@ -28,6 +28,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "members"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "audit_session_fk"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
     }
                   ]
                 },"members": {
@@ -42,6 +48,50 @@ isOneToOne: false
                   }
                   Relationships: [
 
+                  ]
+                },"session_participations": {
+                  Row: {
+                    "attendance_status": Database["public"]['Enums']["attendance_state"],"member_id": string,"payment_status": Database["public"]['Enums']["payment_state"],"rsvp": Database["public"]['Enums']["rsvp_state"],"rsvp_revision": number,"session_id": string,"transport_mode": Database["public"]['Enums']["transport_state"],"updated_at": string
+                  }
+                  Insert: {
+                    "attendance_status"?: Database["public"]['Enums']["attendance_state"],"member_id": string,"payment_status"?: Database["public"]['Enums']["payment_state"],"rsvp"?: Database["public"]['Enums']["rsvp_state"],"rsvp_revision"?: number,"session_id": string,"transport_mode"?: Database["public"]['Enums']["transport_state"],"updated_at"?: string
+                  }
+                  Update: {
+                    "attendance_status"?: Database["public"]['Enums']["attendance_state"],"member_id"?: string,"payment_status"?: Database["public"]['Enums']["payment_state"],"rsvp"?: Database["public"]['Enums']["rsvp_state"],"rsvp_revision"?: number,"session_id"?: string,"transport_mode"?: Database["public"]['Enums']["transport_state"],"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "session_participations_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "session_participations_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"sessions": {
+                  Row: {
+                    "address": string,"capacity": number,"created_at": string,"created_by": string | null,"date": string,"end_time": string,"end_time_estimated": boolean,"id": string,"notes": string,"registration_open": boolean,"school_holiday": boolean,"start_time": string,"status": Database["public"]['Enums']["session_status"],"title": string,"updated_at": string,"venue": string
+                  }
+                  Insert: {
+                    "address"?: string,"capacity"?: number,"created_at"?: string,"created_by"?: string | null,"date": string,"end_time": string,"end_time_estimated"?: boolean,"id"?: string,"notes"?: string,"registration_open"?: boolean,"school_holiday"?: boolean,"start_time": string,"status"?: Database["public"]['Enums']["session_status"],"title"?: string,"updated_at"?: string,"venue"?: string
+                  }
+                  Update: {
+                    "address"?: string,"capacity"?: number,"created_at"?: string,"created_by"?: string | null,"date"?: string,"end_time"?: string,"end_time_estimated"?: boolean,"id"?: string,"notes"?: string,"registration_open"?: boolean,"school_holiday"?: boolean,"start_time"?: string,"status"?: Database["public"]['Enums']["session_status"],"title"?: string,"updated_at"?: string,"venue"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "sessions_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
                   ]
                 }
           }
@@ -58,6 +108,14 @@ isOneToOne: false
 "current_member_role":
 { Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["member_role"]
                            },
+"delete_session":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
+"get_session_responses":
+{ Args: { "p_session_id": string }; Returns: {
+              "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"rsvp": Database["public"]['Enums']["rsvp_state"]
+            }[]
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -70,11 +128,17 @@ isOneToOne: false
 "recover_president":
 { Args: { "p_member_id": string,"p_reason": string }; Returns: undefined
                            },
+"save_session":
+{ Args: { "p_address": string,"p_capacity": number,"p_date": string,"p_end_time": string,"p_end_time_estimated": boolean,"p_id"?: string,"p_notes": string,"p_registration_open": boolean,"p_school_holiday": boolean,"p_start_time": string,"p_title": string,"p_venue": string }; Returns: string
+                           },
 "set_member_caci":
 { Args: { "p_expiry_date"?: string,"p_member_id": string }; Returns: undefined
                            },
 "set_member_role":
 { Args: { "p_member_id": string,"p_role": Database["public"]['Enums']["member_role"] }; Returns: undefined
+                           },
+"set_session_rsvp":
+{ Args: { "p_confirm_caci_warning"?: boolean,"p_member_id"?: string,"p_rsvp": Database["public"]['Enums']["rsvp_state"],"p_session_id": string }; Returns: undefined
                            },
 "transfer_presidency":
 { Args: { "p_member_id": string }; Returns: undefined
@@ -84,7 +148,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "member_role": "member"|"admin"|"president"
+            "attendance_state": "unknown"|"dived"|"absent"|"not_dived","member_role": "member"|"admin"|"president","payment_state": "unpaid"|"paid"|"free","rsvp_state": "unanswered"|"yes"|"maybe"|"no","session_status": "open"|"closed","transport_state": "unset"|"needs"|"own"|"driver"|"passenger"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -200,7 +264,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "member_role": ["member", "admin", "president"]
+            "attendance_state": ["unknown", "dived", "absent", "not_dived"],"member_role": ["member", "admin", "president"],"payment_state": ["unpaid", "paid", "free"],"rsvp_state": ["unanswered", "yes", "maybe", "no"],"session_status": ["open", "closed"],"transport_state": ["unset", "needs", "own", "driver", "passenger"]
           }
         }
 } as const

@@ -21,3 +21,9 @@ Members edit names, phone, current/preparing levels and optional car defaults. T
 ## #18 — Launch gate
 
 Real member import, hosted authentication delivery, organizer pilot, production deployment and privacy/retention sign-off require the actual project environments and organizer involvement. Do not close #18 merely because configuration and operator procedures are committed. The handoff requires a tested restore and a validated trial session before completion.
+
+## #12 — Sessions and registrations
+
+The shared season calendar uses September–August bounds. Admins create, edit and explicitly confirm deletion of sessions, mark holidays manually, set capacity and open/close registration. Members change Yes/Maybe/No responses; Yes is never capacity-limited. Closing registration still permits withdrawal; a closed attendance bilan requires reopening before changing responses, matching the reference.
+
+CACI warnings compare with the session date and require explicit confirmation, including when the date changes between page load and save. They remain advisory. The regular Participants tab filters to Yes/Maybe. A scoped response RPC exposes only participant names, levels and response; the mixed operational participation table remains readable only by self/admin. Shared calendar/detail views refresh every five seconds while visible and on focus, without exposing a private operational table through Realtime.

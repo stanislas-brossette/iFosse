@@ -134,3 +134,5 @@ Recommended flow:
 5. Merge after validation.
 
 For coding-agent guidance, see [AGENTS.md](AGENTS.md).
+
+The calendar groups sessions by September–August season. Administrators manage session details and responses; members can answer without a capacity cap. A missing/expired-on-session-day CACI asks for confirmation rather than blocking registration. Active pages refresh shared data every five seconds and when focused. PostgreSQL policies and RPCs enforce permissions independently of the interface.
