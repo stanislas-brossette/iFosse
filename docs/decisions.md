@@ -18,13 +18,13 @@ This file records explicit product decisions so that they do not get lost betwee
 
 ---
 
-## D003 — Two practical permission levels for the MVP
+## D003 — Application roles remain intentionally small
 
-**Decision:** use a simple distinction between member and administrator for the MVP.
+**Decision:** iFosse uses three application roles: member, administrator and president.
 
-Administrators cover the current DP / organizer capabilities used by Xavier and TitO.
+Administrators cover the operational DP / organizer capabilities used by Xavier and TitO. The president is the super-admin described in D018.
 
-More detailed federation or instructor role hierarchies can be added later only if a concrete need appears.
+Federation or instructor qualification hierarchies remain separate from application permissions and should only be added if a concrete product need appears.
 
 ---
 
@@ -60,9 +60,11 @@ Administrators may later modify and publish again.
 
 ---
 
-## D007 — Responses are visible to everyone
+## D007 — Session participant view focuses on registered members
 
-**Decision:** all members can see who answered Yes / Maybe / No, as in the existing Framadate workflow.
+**Decision:** the session Participants tab shows members who answered Yes or Maybe.
+
+No and unanswered members are not displayed in that regular session view. Administrators can still access the broader member population from management tools when they need to correct or enter a response.
 
 ---
 
@@ -206,3 +208,30 @@ If a member answers Yes to a future fosse where their CACI will be expired, or w
 Admins see the CACI status for the member list and specifically "on the day" in the session-selection view.
 
 **Rationale:** the member may renew their CACI before the session, so an advisory warning supports follow-up without prematurely blocking registration.
+
+
+---
+
+## D020 — Readiness summary is operational
+
+**Decision:** the administrator selection view summarizes four operational points per member: selection, CACI validity on the session date, transport and payment.
+
+**Rationale:** organizers should be able to spot unresolved preparation items without switching between several views.
+
+This summary is not a regulatory or medical fitness decision.
+
+---
+
+## D021 — Members can see their own CACI validity
+
+**Decision:** members may see their own CACI end date and status in Mon profil.
+
+The date remains maintained by an administrator in the prototype.
+
+---
+
+## D022 — School-holiday marking is explicit
+
+**Decision:** an administrator may mark a session as taking place during school holidays.
+
+The prototype displays a "Vacances scolaires" badge and does not automatically derive the holiday calendar.

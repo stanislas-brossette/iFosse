@@ -142,7 +142,7 @@ Only after V1 proves useful:
 
 - regulatory palanquee document generation and retention;
 - notifications/reminders;
-- licence/CACI/insurance tracking;
+- richer licence/insurance tracking and uploaded documents;
 - emergency contacts;
 - qualification documents;
 - training feedback and skill validation;
