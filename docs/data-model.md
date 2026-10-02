@@ -32,6 +32,8 @@ Rules:
 - admins/president can edit CACI dates, including their own;
 - no CACI document is stored.
 
+Production profile writes use a self-only ordinary-field RPC and a separate admin-only CACI RPC. Sign-in email is managed with the provisioned Auth identity, not changed by the ordinary profile form. Profile car defaults never create a session car offer.
+
 ## 2. sessions
 
 One row per fosse session.

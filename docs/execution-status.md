@@ -14,6 +14,10 @@ Known-member provisioning defaults to offline validation and sends no invitation
 
 Hosted SMTP deliverability and real organizer accounts are rollout gates rather than claims made by local Auth/browser/database tests.
 
+## #11 — Profiles and CACI
+
+Members edit names, phone, current/preparing levels and optional car defaults. They see their own CACI date/status without a date-edit control. Administrators/president edit CACI for self and others, with an audit event; the global directory remains own/admin RLS-protected. CACI status uses the Paris calendar day and an inclusive 60-day warning window. Sign-in email remains an operator-managed identity field; the V0's ordinary email edit is not carried into an uncoordinated Auth/profile write.
+
 ## #18 — Launch gate
 
 Real member import, hosted authentication delivery, organizer pilot, production deployment and privacy/retention sign-off require the actual project environments and organizer involvement. Do not close #18 merely because configuration and operator procedures are committed. The handoff requires a tested restore and a validated trial session before completion.

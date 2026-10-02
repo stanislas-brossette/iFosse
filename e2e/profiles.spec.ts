@@ -1,0 +1,50 @@
+import { expect, test } from '@playwright/test'
+import { createMemberFixture, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
+test('member updates ordinary fields and optional defaults without directory or CACI edit access', async ({ page }) => {
+  const fixture=await createMemberFixture()
+  try {
+    const link=await requestMagicLink(page,fixture)
+    await openConfirmation(page,link)
+    await page.getByRole('button',{name:'Se connecter',exact:true}).click()
+    await expect(page.getByRole('heading',{name:'Mon profil'})).toBeVisible()
+    await expect(page.getByRole('heading',{name:'Annuaire des adhérents'})).toHaveCount(0)
+    await expect(page.getByLabel('Fin de validité CACI')).toHaveCount(0)
+    await page.getByLabel('Téléphone').fill('0612345678')
+    await page.getByLabel('Niveau actuel').fill('N2')
+    await page.getByLabel('Mémoriser mes habitudes de covoiturage').check()
+    await page.getByLabel('Places passagers habituelles').fill('3')
+    await page.getByLabel('Point de rendez-vous habituel').fill('Parking du club')
+    await page.getByRole('button',{name:'Enregistrer mon profil'}).click()
+    await expect(page.getByRole('status')).toHaveText('Profil enregistré.')
+    await page.reload()
+    await expect(page.getByLabel('Téléphone')).toHaveValue('0612345678')
+    await expect(page.getByLabel('Niveau actuel')).toHaveValue('N2')
+    await expect(page.getByLabel('Places passagers habituelles')).toHaveValue('3')
+    await page.setViewportSize({width:390,height:844})
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false)
+    await page.screenshot({path:'test-results/profile-mobile.png',fullPage:true})
+  } finally { await removeMemberFixture(fixture) }
+})
+
+test('administrator maintains CACI for self and another member in the private directory', async ({ page }) => {
+  const admin=await createMemberFixture()
+  const other=await createMemberFixture()
+  try {
+    makeFixtureAdmin(admin)
+    await openConfirmation(page,await requestMagicLink(page,admin))
+    await page.getByRole('button',{name:'Se connecter',exact:true}).click()
+    const profile=page.locator('section').filter({has:page.getByRole('heading',{name:'Mon profil',exact:true})})
+    await profile.getByLabel('Fin de validité CACI').fill('2027-12-31')
+    await profile.getByRole('button',{name:'Enregistrer le CACI'}).click()
+    await expect(profile.getByText('Date CACI enregistrée.')).toBeVisible()
+    const directory=page.locator('section').filter({has:page.getByRole('heading',{name:'Annuaire des adhérents',exact:true})})
+    await directory.getByRole('button',{name:`Modifier le CACI de ${other.firstName} Fictif`}).click()
+    await directory.getByLabel('Fin de validité CACI').fill('2027-11-30')
+    await directory.getByRole('button',{name:'Enregistrer le CACI'}).click()
+    await expect(directory.getByText('Date CACI enregistrée.')).toBeVisible()
+    await page.reload()
+    await expect(profile.getByLabel('Fin de validité CACI')).toHaveValue('2027-12-31')
+    await directory.getByRole('button',{name:`Modifier le CACI de ${other.firstName} Fictif`}).click()
+    await expect(directory.getByLabel('Fin de validité CACI')).toHaveValue('2027-11-30')
+  } finally { await removeMemberFixture(other); await removeMemberFixture(admin) }
+})

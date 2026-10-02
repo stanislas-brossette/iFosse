@@ -154,3 +154,10 @@ export function expireMagicLink(fixture: MemberFixture) {
     })
   } catch { throw new Error('The local Auth token could not be expired for its regression test.') }
 }
+
+export function makeFixtureAdmin(fixture: MemberFixture) {
+  status() // Reject any non-local test environment before privileged SQL.
+  if (![fixture.authUserId, fixture.memberId].every(id => /^[0-9a-f-]{36}$/i.test(id))) throw new Error('Invalid local fixture identity.')
+  const sql = `update public.members set role='admin' where id='${fixture.memberId}' and auth_user_id='${fixture.authUserId}' and email like 'ifosse-e2e-%@example.test';`
+  execFileSync('docker', ['exec', 'supabase_db_ifosse', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', sql], { stdio: ['ignore', 'pipe', 'pipe'] })
+}
