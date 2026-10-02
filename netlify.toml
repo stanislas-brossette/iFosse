@@ -1,0 +1,35 @@
+[build]
+command = "npm run typecheck && npm run lint && npm test && npm run build"
+publish = "dist"
+
+[build.environment]
+NODE_VERSION = "22"
+
+# Configure the public Supabase URL/key with explicit deployment contexts in the
+# Netlify dashboard. Preview/branch contexts must use non-production projects.
+# Never store service-role keys in Netlify's frontend build environment.
+[context.production.environment]
+VITE_APP_ENV = "production"
+
+[context.deploy-preview.environment]
+VITE_APP_ENV = "preview"
+
+[context.branch-deploy.environment]
+VITE_APP_ENV = "preview"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[[headers]]
+for = "/*"
+[headers.values]
+X-Content-Type-Options = "nosniff"
+X-Frame-Options = "DENY"
+Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+for = "/assets/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
