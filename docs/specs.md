@@ -251,14 +251,17 @@ The following are explicitly considered future club-management extensions rather
 
 The original requirements mention email/password and possible biometrics.
 
-For the production MVP, authentication should be simple for non-technical users. Exact implementation remains an architectural decision.
+For the production MVP, authentication uses email magic links.
 
-Whatever mechanism is chosen:
+Rules:
 
-- every real member has their own account;
-- administrator permissions must be enforced server-side;
-- long-lived authenticated sessions on personal devices are desirable;
-- password recovery / account support should be minimal.
+- every real member has their own account linked to a known club email address;
+- arbitrary public sign-up is not required;
+- no password creation or password-reset flow is required;
+- authenticated sessions should persist across browser restarts on personal devices;
+- explicit logout ends the local session;
+- administrator permissions must be enforced server-side / at the database boundary;
+- account support should remain minimal.
 
 ## 13. Visibility
 
