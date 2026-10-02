@@ -34,7 +34,7 @@ select is((select first_name from public.members where id = (select member_id fr
   'Adhérent', 'Provisioning trims names');
 select is((select role::text from public.members where id = (select member_id from identity_fixtures where name = 'member')),
   'member', 'Auth metadata cannot provision a privileged role');
-select is((select count(*) from public.audit_events where event_type = 'member_provisioned'),
+select is((select count(*) from public.audit_events where event_type = 'member_provisioned' and target_member_id in (select member_id from identity_fixtures)),
   5::bigint, 'Every initial provisioning is audited');
 
 set local role service_role;

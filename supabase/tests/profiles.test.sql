@@ -36,7 +36,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002'
 select lives_ok($$select public.set_member_caci(public.current_member_id(),date '2027-10-02')$$,'Admin can edit own CACI');
 select lives_ok($$select public.set_member_caci((select id from profile_fixture where email='profiles.member@example.test'),date '2027-12-02')$$,'Admin can edit another member CACI');
 select is((select count(*) from public.members),3::bigint,'Admin can read the directory');
-select is((select count(*) from public.audit_events where event_type='caci_date_changed'),2::bigint,'CACI mutations are audited');
+select is((select count(*) from public.audit_events where event_type='caci_date_changed' and target_member_id in (select id from profile_fixture)),2::bigint,'CACI mutations are audited');
 select lives_ok($$select public.set_member_caci((select id from profile_fixture where email='profiles.member@example.test'))$$,'Admin can clear a missing CACI date');
 select throws_ok($$select public.set_member_caci(public.current_member_id(),'infinity'::date)$$,'23514',null,'CACI cannot be infinite');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
