@@ -82,7 +82,7 @@ select is((select count(*) from public.audit_events), 0::bigint, 'A member canno
 select throws_ok($$update public.members set role = 'admin' where id = public.current_member_id()$$,
   '42501', null, 'Direct table self-promotion is denied');
 select throws_ok($$update public.members set first_name = 'Écrasé' where id = public.current_member_id()$$,
-  '42501', null, 'Profile writes await the protected profile RPC');
+  '42501', null, 'Profile table writes require a protected RPC');
 select throws_ok($$select public.set_member_role(public.current_member_id(), 'admin')$$,
   '42501', null, 'A member cannot self-promote via RPC');
 select throws_ok($$select public.provision_member('00000000-0000-4000-8000-000000000006', 'Inconnu', 'Test')$$,

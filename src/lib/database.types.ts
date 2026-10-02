@@ -70,11 +70,17 @@ isOneToOne: false
 "recover_president":
 { Args: { "p_member_id": string,"p_reason": string }; Returns: undefined
                            },
+"set_member_caci":
+{ Args: { "p_expiry_date"?: string,"p_member_id": string }; Returns: undefined
+                           },
 "set_member_role":
 { Args: { "p_member_id": string,"p_role": Database["public"]['Enums']["member_role"] }; Returns: undefined
                            },
 "transfer_presidency":
 { Args: { "p_member_id": string }; Returns: undefined
+                           },
+"update_own_profile":
+{ Args: { "p_current_level": string,"p_first_name": string,"p_has_usual_car": boolean,"p_last_name": string,"p_phone": string,"p_preparing_level": string,"p_usual_meeting_point": string,"p_usual_passenger_seats": number }; Returns: undefined
                            }
           }
           Enums: {
