@@ -6,33 +6,38 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
+    "lint": "oxlint --deny-warnings",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
     "db:start": "bash scripts/start-db.sh",
     "db:stop": "supabase stop",
-    "db:reset": "supabase db reset",
-    "db:test": "supabase test db",
-    "db:types": "bash scripts/generate-db-types.sh"
+    "db:reset": "supabase --network-id ifosse-local db reset",
+    "db:test": "supabase --network-id ifosse-local test db",
+    "db:types": "bash scripts/generate-db-types.sh",
+    "test:e2e": "playwright test",
+    "members:import": "node scripts/provision-members.mjs",
+    "president:manage": "node scripts/manage-president.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.117.2",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@testing-library/react": "16.3.3",
     "@types/node": "24.19.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
+    "jsdom": "30.1.1",
     "oxlint": "1.86.0",
+    "supabase": "2.119.0",
     "typescript": "6.0.3",
     "vite": "8.3.2",
-    "vitest": "5.0.3",
-    "@testing-library/react": "16.3.3",
-    "jsdom": "30.1.1",
-    "supabase": "2.119.0"
+    "vitest": "5.0.3"
   },
   "engines": {
     "node": ">=22.12.0"

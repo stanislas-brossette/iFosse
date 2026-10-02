@@ -5,16 +5,80 @@ export type Database = {
 
   "public": {
           Tables: {
-            [_ in never]: never
+            "audit_events": {
+                  Row: {
+                    "actor_member_id": string | null,"created_at": string,"event_type": string,"id": string,"payload": NonNullable<Json>,"session_id": string | null,"target_member_id": string | null
+                  }
+                  Insert: {
+                    "actor_member_id"?: string | null,"created_at"?: string,"event_type": string,"id"?: string,"payload"?: NonNullable<Json>,"session_id"?: string | null,"target_member_id"?: string | null
+                  }
+                  Update: {
+                    "actor_member_id"?: string | null,"created_at"?: string,"event_type"?: string,"id"?: string,"payload"?: NonNullable<Json>,"session_id"?: string | null,"target_member_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "audit_events_actor_member_id_fkey"
+      columns: ["actor_member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "audit_events_target_member_id_fkey"
+      columns: ["target_member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"members": {
+                  Row: {
+                    "auth_user_id": string | null,"caci_expiry_date": string | null,"created_at": string,"current_level": string,"email": string,"first_name": string,"has_usual_car": boolean,"id": string,"last_name": string,"phone": string | null,"preparing_level": string | null,"role": Database["public"]['Enums']["member_role"],"updated_at": string,"usual_meeting_point": string,"usual_passenger_seats": number
+                  }
+                  Insert: {
+                    "auth_user_id"?: string | null,"caci_expiry_date"?: string | null,"created_at"?: string,"current_level"?: string,"email": string,"first_name": string,"has_usual_car"?: boolean,"id"?: string,"last_name": string,"phone"?: string | null,"preparing_level"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"updated_at"?: string,"usual_meeting_point"?: string,"usual_passenger_seats"?: number
+                  }
+                  Update: {
+                    "auth_user_id"?: string | null,"caci_expiry_date"?: string | null,"created_at"?: string,"current_level"?: string,"email"?: string,"first_name"?: string,"has_usual_car"?: boolean,"id"?: string,"last_name"?: string,"phone"?: string | null,"preparing_level"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"updated_at"?: string,"usual_meeting_point"?: string,"usual_passenger_seats"?: number
+                  }
+                  Relationships: [
+
+                  ]
+                }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "bootstrap_president":
+{ Args: { "p_member_id": string }; Returns: undefined
+                           },
+"current_member_id":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"current_member_role":
+{ Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["member_role"]
+                           },
+"is_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"is_president":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"provision_member":
+{ Args: { "p_auth_user_id": string,"p_first_name": string,"p_last_name": string }; Returns: string
+                           },
+"recover_president":
+{ Args: { "p_member_id": string,"p_reason": string }; Returns: undefined
+                           },
+"set_member_role":
+{ Args: { "p_member_id": string,"p_role": Database["public"]['Enums']["member_role"] }; Returns: undefined
+                           },
+"transfer_presidency":
+{ Args: { "p_member_id": string }; Returns: undefined
+                           }
           }
           Enums: {
-            [_ in never]: never
+            "member_role": "member"|"admin"|"president"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -130,7 +194,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-
+            "member_role": ["member", "admin", "president"]
           }
         }
 } as const

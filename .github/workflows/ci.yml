@@ -44,5 +44,12 @@ jobs:
       - run: npm run db:reset
       - run: npm run db:test
       - run: npm run db:types -- --check
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-results
+          path: test-results/
       - if: always()
         run: npm run db:stop

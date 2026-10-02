@@ -82,6 +82,8 @@ npm run dev
 
 Open `http://localhost:5173`. The foundation shell can also run without `.env.local`; later authentication requires the completed configuration. Local email is captured at `http://127.0.0.1:54324`. Signup is disabled, and no real members or sessions are seeded. The database, Studio and mail ports bind to localhost through a dedicated Docker network.
 
+Known-member provisioning, magic-link configuration, administrator rights and account recovery are documented in [authentication](docs/authentication.md). No invitations are sent by the import tool.
+
 ```sh
 npm run typecheck
 npm run lint
@@ -89,6 +91,8 @@ npm test
 npm run build
 npm run db:test
 npm run db:types -- --check
+npx playwright install chromium
+npm run test:e2e
 ```
 
 Database migrations live in `supabase/migrations`. After changing them, reset the local database, run database tests and regenerate the committed types with `npm run db:types`. Reset deletes local development data. `npm run db:stop` stops the stack while preserving local volumes.
