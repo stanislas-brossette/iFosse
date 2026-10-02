@@ -6,7 +6,7 @@ The project started as a replacement for the current Framadate + WhatsApp workfl
 
 ## Current status
 
-The repository contains a **V0 functional prototype** and a frozen architecture for the shared production MVP.
+The repository contains the **V0 functional prototype** and a separate React + TypeScript production application under `src/`. The shared MVP is being implemented in the order listed in [the backlog](docs/mvp-backlog.md).
 
 The V0 lives in:
 
@@ -62,6 +62,51 @@ Download or clone the repository and open:
 directly in a browser.
 
 No installation is required.
+
+## Run the shared application locally
+
+Requirements: Node.js 22.12+ (22 LTS recommended), npm, and a running Docker engine accessible to your user. No hosted Supabase credentials are required for local development.
+
+```sh
+npm ci
+npm run db:start
+npm run db:reset
+cp .env.example .env.local
+```
+
+Open local Supabase Studio at `http://127.0.0.1:54323` and copy the **publishable/anon** key into `VITE_SUPABASE_PUBLISHABLE_KEY` in `.env.local`. Never use a service-role/secret key. Then:
+
+```sh
+npm run dev
+```
+
+Open `http://localhost:5173`. The foundation shell can also run without `.env.local`; later authentication requires the completed configuration. Local email is captured at `http://127.0.0.1:54324`. Signup is disabled, and no real members or sessions are seeded. The database, Studio and mail ports bind to localhost through a dedicated Docker network.
+
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run build
+npm run db:test
+npm run db:types -- --check
+```
+
+Database migrations live in `supabase/migrations`. After changing them, reset the local database, run database tests and regenerate the committed types with `npm run db:types`. Reset deletes local development data. `npm run db:stop` stops the stack while preserving local volumes.
+
+## Deployment environments
+
+Netlify builds `dist/` using `netlify.toml`; pull requests use the deploy-preview context. Linking the GitHub repository to an existing Netlify site is an external setup step, tracked in [execution status](docs/execution-status.md).
+
+Set public frontend variables separately for each Netlify build context:
+
+| Variable | Local | Deploy preview / branch | Production |
+| --- | --- | --- | --- |
+| `VITE_APP_ENV` | `local` | `preview` (in TOML) | `production` (in TOML) |
+| `VITE_SUPABASE_PROJECT_ENV` | `local` | `preview` | `production` |
+| `VITE_SUPABASE_URL` | local API URL | staging EU project URL | production EU project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | local public key | staging public key | production public key |
+
+Hosted builds fail if configuration is missing, privileged, insecure, or mismatched with the application environment. Do not set the Supabase variables in Netlify's shared/all-context scope: use explicit contexts and separate projects. Preview databases contain only fictitious test data. Frontend builds do not apply migrations; apply reviewed migrations separately to the intended Supabase project. `.env.local`, local Netlify state, generated bundles and database runtime files are ignored by Git.
 
 ## Product principles
 
