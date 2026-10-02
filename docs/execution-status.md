@@ -33,3 +33,9 @@ CACI warnings compare with the session date and require explicit confirmation, i
 The admin management tab groups Confirmed / Waiting / Not selected, initializes from the publication, and supports abandoning a draft or explicitly confirming publication. Members keep seeing the latest successful published version while admins work. A locked transaction creates an immutable version with its audit event. Capacity reduction respects both draft and effective published selection, including instructors; concurrent changes cannot overbook.
 
 Withdrawal preserves historical snapshots and releases the current place. Re-registering does not resurrect a prior confirmation. Tests cover private draft RLS, immutable content, publication rollback after an injected audit failure, republishing, session deletion, parallel final-place selection, a parallel capacity reduction/selection and parallel publication.
+
+## #14 — Transactional carpooling
+
+The Covoiturage tab supports explicit offers with 1–8 passenger seats, profile defaults as prefill, editing/removal, taking/changing/leaving a seat, and manual transport preferences. A member without defaults can still offer a car. Removing an occupied car explains passenger displacement before confirmation. Shared views expose offered rendezvous details and participant names, without private profile fields.
+
+Database tests cover seat limits, driver exclusion, failed-switch preservation, one car per passenger/session, cross-session rejection, closed bilan, driver withdrawal, private versus published selection exclusion and default-only profiles. Concurrent HTTP tests exercise the last seat and withdrawal versus join; passengers remain registered and can choose another transport.

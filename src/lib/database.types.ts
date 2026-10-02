@@ -36,6 +36,74 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"car_offers": {
+                  Row: {
+                    "created_at": string,"departure_time": string | null,"driver_member_id": string,"id": string,"meeting_point": string,"note": string,"passenger_capacity": number,"session_id": string,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"departure_time"?: string | null,"driver_member_id": string,"id"?: string,"meeting_point"?: string,"note"?: string,"passenger_capacity": number,"session_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"departure_time"?: string | null,"driver_member_id"?: string,"id"?: string,"meeting_point"?: string,"note"?: string,"passenger_capacity"?: number,"session_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "car_offers_driver_member_id_fkey"
+      columns: ["driver_member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "car_offers_session_id_driver_member_id_fkey"
+      columns: ["session_id","driver_member_id"]
+isOneToOne: true
+      referencedRelation: "session_participations"
+      referencedColumns: ["session_id","member_id"]
+    },{
+      foreignKeyName: "car_offers_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"car_passengers": {
+                  Row: {
+                    "car_offer_id": string,"joined_at": string,"member_id": string,"session_id": string
+                  }
+                  Insert: {
+                    "car_offer_id": string,"joined_at"?: string,"member_id": string,"session_id": string
+                  }
+                  Update: {
+                    "car_offer_id"?: string,"joined_at"?: string,"member_id"?: string,"session_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "car_passengers_car_offer_id_session_id_fkey"
+      columns: ["car_offer_id","session_id"]
+isOneToOne: false
+      referencedRelation: "car_offers"
+      referencedColumns: ["id","session_id"]
+    },{
+      foreignKeyName: "car_passengers_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "car_passengers_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "car_passengers_session_id_member_id_fkey"
+      columns: ["session_id","member_id"]
+isOneToOne: true
+      referencedRelation: "session_participations"
+      referencedColumns: ["session_id","member_id"]
+    }
+                  ]
                 },"members": {
                   Row: {
                     "auth_user_id": string | null,"caci_expiry_date": string | null,"created_at": string,"current_level": string,"email": string,"first_name": string,"has_usual_car": boolean,"id": string,"last_name": string,"phone": string | null,"preparing_level": string | null,"role": Database["public"]['Enums']["member_role"],"updated_at": string,"usual_meeting_point": string,"usual_passenger_seats": number
@@ -228,6 +296,11 @@ isOneToOne: false
 "ensure_selection_draft":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
+"get_car_offers":
+{ Args: { "p_session_id": string }; Returns: {
+              "departure_time": string,"driver_member_id": string,"first_name": string,"id": string,"last_name": string,"meeting_point": string,"note": string,"occupied": number,"passenger_capacity": number
+            }[]
+                           },
 "get_current_selection":
 { Args: { "p_session_id": string }; Returns: {
               "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"publication_id": string,"publication_version": number,"rsvp": Database["public"]['Enums']["rsvp_state"],"state": string
@@ -238,11 +311,25 @@ isOneToOne: false
               "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"rsvp": Database["public"]['Enums']["rsvp_state"]
             }[]
                            },
+"get_session_transport":
+{ Args: { "p_session_id": string }; Returns: {
+              "car_offer_id": string,"first_name": string,"last_name": string,"member_id": string,"mode": Database["public"]['Enums']["transport_state"]
+            }[]
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "is_president":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"join_car":
+{ Args: { "p_car_offer_id": string,"p_session_id": string }; Returns: undefined
+                           },
+"lock_transport_session":
+{ Args: { "p_session_id": string }; Returns: string
+                           },
+"offer_car":
+{ Args: { "p_departure_time"?: string,"p_meeting_point": string,"p_note": string,"p_passenger_capacity": number,"p_session_id": string }; Returns: string
                            },
 "provision_member":
 { Args: { "p_auth_user_id": string,"p_first_name": string,"p_last_name": string }; Returns: string
@@ -265,11 +352,17 @@ isOneToOne: false
 "set_member_role":
 { Args: { "p_member_id": string,"p_role": Database["public"]['Enums']["member_role"] }; Returns: undefined
                            },
+"set_own_transport":
+{ Args: { "p_mode": Database["public"]['Enums']["transport_state"],"p_session_id": string }; Returns: undefined
+                           },
 "set_session_rsvp":
 { Args: { "p_confirm_caci_warning"?: boolean,"p_member_id"?: string,"p_rsvp": Database["public"]['Enums']["rsvp_state"],"p_session_id": string }; Returns: undefined
                            },
 "transfer_presidency":
 { Args: { "p_member_id": string }; Returns: undefined
+                           },
+"transport_eligible":
+{ Args: { "p_member_id": string,"p_session_id": string }; Returns: boolean
                            },
 "update_own_profile":
 { Args: { "p_current_level": string,"p_first_name": string,"p_has_usual_car": boolean,"p_last_name": string,"p_phone": string,"p_preparing_level": string,"p_usual_meeting_point": string,"p_usual_passenger_seats": number }; Returns: undefined
