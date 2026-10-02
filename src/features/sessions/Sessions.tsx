@@ -1,23 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '../../lib/database.types'
 import type { Member } from '../auth/AuthGate'
 import { caciLabels, caciStatus, formatDate, seasonBounds, seasonOf, todayParis } from '../../lib/dates'
 import { SessionEditor } from './SessionEditor'
 import type { Session } from './SessionEditor'
+import { Selection } from '../selection/Selection'
+import { useSharedRefresh } from '../../lib/useSharedRefresh'
 export type Response = Database['public']['Functions']['get_session_responses']['Returns'][number]
 export const rsvpLabels = { unanswered: 'Sans réponse', yes: 'Oui', maybe: 'Peut-être', no: 'Non' } as const
-// Small club: bounded polling plus focus refresh provides shared state without
-// adding a public Realtime feed for tables containing private operational data.
-function useSharedRefresh(load: () => Promise<void>) {
-  useEffect(() => {
-    void load()
-    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') void load() }, 5000)
-    const focus = () => void load()
-    window.addEventListener('focus', focus)
-    return () => { window.clearInterval(timer); window.removeEventListener('focus', focus) }
-  }, [load])
-}
 export function SessionDetail({ client, member, session, onEdit, onBack }: { client: SupabaseClient<Database>; member: Member; session: Session; onEdit: () => void; onBack: () => void }) {
   const [responses, setResponses] = useState<Response[]>([])
   const [own, setOwn] = useState<Tables<'session_participations'> | null>(null)
@@ -66,6 +57,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack }: { cli
     </div>}
     {tab === 'participants' && <div className="mt"><h3>Participants · Oui et Peut-être</h3>{!participants.length && <p>Aucune réponse Oui ou Peut-être.</p>}<ul className="member-list">{participants.map(response => <li key={response.member_id}><span>{response.first_name} {response.last_name} · {response.current_level}{response.preparing_level && ` · prépare ${response.preparing_level}`}</span><strong>{rsvpLabels[response.rsvp]}</strong></li>)}</ul></div>}
     {tab === 'manage' && admin && <div className="mt"><h3>Corriger une réponse</h3><ul className="member-list">{directory.map(person => <li key={person.id}><span>{person.first_name} {person.last_name}</span><label>Réponse de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed'} value={responses.find(response => response.member_id === person.id)?.rsvp ?? 'unanswered'} onChange={event => void respond(event.target.value as 'yes' | 'maybe' | 'no', false, person.id)}><option value="unanswered" disabled>Sans réponse</option>{(['yes', 'maybe', 'no'] as const).map(value => <option key={value} value={value}>{rsvpLabels[value]}</option>)}</select></label></li>)}</ul></div>}
+    <Selection client={client} member={member} session={session} manage={tab === 'manage'} />
     {message && <p role="status">{message}</p>}
   </section>
 }
