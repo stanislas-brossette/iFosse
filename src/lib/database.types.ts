@@ -49,6 +49,112 @@ isOneToOne: false
                   Relationships: [
 
                   ]
+                },"selection_draft": {
+                  Row: {
+                    "member_id": string,"session_id": string,"state": Database["public"]['Enums']["selection_state"],"updated_at": string,"updated_by": string | null
+                  }
+                  Insert: {
+                    "member_id": string,"session_id": string,"state"?: Database["public"]['Enums']["selection_state"],"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "member_id"?: string,"session_id"?: string,"state"?: Database["public"]['Enums']["selection_state"],"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "selection_draft_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "selection_draft_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "selection_drafts"
+      referencedColumns: ["session_id"]
+    },{
+      foreignKeyName: "selection_draft_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"selection_drafts": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"session_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"session_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"session_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "selection_drafts_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "selection_drafts_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: true
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"selection_publication_members": {
+                  Row: {
+                    "member_id": string,"publication_id": string,"rsvp_revision": number,"state": Database["public"]['Enums']["selection_state"]
+                  }
+                  Insert: {
+                    "member_id": string,"publication_id": string,"rsvp_revision": number,"state": Database["public"]['Enums']["selection_state"]
+                  }
+                  Update: {
+                    "member_id"?: string,"publication_id"?: string,"rsvp_revision"?: number,"state"?: Database["public"]['Enums']["selection_state"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "selection_publication_members_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "selection_publication_members_publication_id_fkey"
+      columns: ["publication_id"]
+isOneToOne: false
+      referencedRelation: "selection_publications"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"selection_publications": {
+                  Row: {
+                    "id": string,"published_at": string,"published_by": string | null,"session_id": string,"version": number
+                  }
+                  Insert: {
+                    "id"?: string,"published_at"?: string,"published_by"?: string | null,"session_id": string,"version": number
+                  }
+                  Update: {
+                    "id"?: string,"published_at"?: string,"published_by"?: string | null,"session_id"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "selection_publications_published_by_fkey"
+      columns: ["published_by"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "selection_publications_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"session_participations": {
                   Row: {
                     "attendance_status": Database["public"]['Enums']["attendance_state"],"member_id": string,"payment_status": Database["public"]['Enums']["payment_state"],"rsvp": Database["public"]['Enums']["rsvp_state"],"rsvp_revision": number,"session_id": string,"transport_mode": Database["public"]['Enums']["transport_state"],"updated_at": string
@@ -108,8 +214,24 @@ isOneToOne: false
 "current_member_role":
 { Args: Record<PropertyKey, never>; Returns: Database["public"]['Enums']["member_role"]
                            },
+"current_selected_ids":
+{ Args: { "p_session_id": string }; Returns: {
+              "member_id": string
+            }[]
+                           },
 "delete_session":
 { Args: { "p_session_id": string }; Returns: undefined
+                           },
+"discard_selection_draft":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
+"ensure_selection_draft":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
+"get_current_selection":
+{ Args: { "p_session_id": string }; Returns: {
+              "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"publication_id": string,"publication_version": number,"rsvp": Database["public"]['Enums']["rsvp_state"],"state": string
+            }[]
                            },
 "get_session_responses":
 { Args: { "p_session_id": string }; Returns: {
@@ -125,11 +247,17 @@ isOneToOne: false
 "provision_member":
 { Args: { "p_auth_user_id": string,"p_first_name": string,"p_last_name": string }; Returns: string
                            },
+"publish_selection":
+{ Args: { "p_session_id": string }; Returns: string
+                           },
 "recover_president":
 { Args: { "p_member_id": string,"p_reason": string }; Returns: undefined
                            },
 "save_session":
 { Args: { "p_address": string,"p_capacity": number,"p_date": string,"p_end_time": string,"p_end_time_estimated": boolean,"p_id"?: string,"p_notes": string,"p_registration_open": boolean,"p_school_holiday": boolean,"p_start_time": string,"p_title": string,"p_venue": string }; Returns: string
+                           },
+"set_draft_selection":
+{ Args: { "p_member_id": string,"p_session_id": string,"p_state": Database["public"]['Enums']["selection_state"] }; Returns: undefined
                            },
 "set_member_caci":
 { Args: { "p_expiry_date"?: string,"p_member_id": string }; Returns: undefined
@@ -148,7 +276,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "attendance_state": "unknown"|"dived"|"absent"|"not_dived","member_role": "member"|"admin"|"president","payment_state": "unpaid"|"paid"|"free","rsvp_state": "unanswered"|"yes"|"maybe"|"no","session_status": "open"|"closed","transport_state": "unset"|"needs"|"own"|"driver"|"passenger"
+            "attendance_state": "unknown"|"dived"|"absent"|"not_dived","member_role": "member"|"admin"|"president","payment_state": "unpaid"|"paid"|"free","rsvp_state": "unanswered"|"yes"|"maybe"|"no","selection_state": "waiting"|"selected"|"declined","session_status": "open"|"closed","transport_state": "unset"|"needs"|"own"|"driver"|"passenger"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -264,7 +392,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "attendance_state": ["unknown", "dived", "absent", "not_dived"],"member_role": ["member", "admin", "president"],"payment_state": ["unpaid", "paid", "free"],"rsvp_state": ["unanswered", "yes", "maybe", "no"],"session_status": ["open", "closed"],"transport_state": ["unset", "needs", "own", "driver", "passenger"]
+            "attendance_state": ["unknown", "dived", "absent", "not_dived"],"member_role": ["member", "admin", "president"],"payment_state": ["unpaid", "paid", "free"],"rsvp_state": ["unanswered", "yes", "maybe", "no"],"selection_state": ["waiting", "selected", "declined"],"session_status": ["open", "closed"],"transport_state": ["unset", "needs", "own", "driver", "passenger"]
           }
         }
 } as const

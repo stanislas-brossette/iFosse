@@ -27,3 +27,9 @@ Real member import, hosted authentication delivery, organizer pilot, production 
 The shared season calendar uses September–August bounds. Admins create, edit and explicitly confirm deletion of sessions, mark holidays manually, set capacity and open/close registration. Members change Yes/Maybe/No responses; Yes is never capacity-limited. Closing registration still permits withdrawal; a closed attendance bilan requires reopening before changing responses, matching the reference.
 
 CACI warnings compare with the session date and require explicit confirmation, including when the date changes between page load and save. They remain advisory. The regular Participants tab filters to Yes/Maybe. A scoped response RPC exposes only participant names, levels and response; the mixed operational participation table remains readable only by self/admin. Shared calendar/detail views refresh every five seconds while visible and on focus, without exposing a private operational table through Realtime.
+
+## #13 — Draft selection and publication
+
+The admin management tab groups Confirmed / Waiting / Not selected, initializes from the publication, and supports abandoning a draft or explicitly confirming publication. Members keep seeing the latest successful published version while admins work. A locked transaction creates an immutable version with its audit event. Capacity reduction respects both draft and effective published selection, including instructors; concurrent changes cannot overbook.
+
+Withdrawal preserves historical snapshots and releases the current place. Re-registering does not resurrect a prior confirmation. Tests cover private draft RLS, immutable content, publication rollback after an injected audit failure, republishing, session deletion, parallel final-place selection, a parallel capacity reduction/selection and parallel publication.
