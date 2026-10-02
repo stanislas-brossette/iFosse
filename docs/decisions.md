@@ -235,3 +235,36 @@ The date remains maintained by an administrator in the prototype.
 **Decision:** an administrator may mark a session as taking place during school holidays.
 
 The prototype displays a "Vacances scolaires" badge and does not automatically derive the holiday calendar.
+
+
+---
+
+## D023 — Production authentication uses email magic links
+
+**Decision:** the production MVP uses passwordless email magic-link authentication.
+
+Members authenticate with a known club email address. Successful login creates a refreshable long-lived browser session intended to survive normal browser restarts until explicit logout, revocation or provider expiry.
+
+There is no password creation or password reset flow in the MVP.
+
+**Rationale:** the club has a small known population and the priority is minimizing login/support friction for non-technical users.
+
+---
+
+## D024 — Production stack is React + Supabase + Netlify
+
+**Decision:** the production MVP uses React + TypeScript + Vite for the frontend, Supabase (EU region) for PostgreSQL/Auth/RLS, and Netlify for frontend hosting and preview deployments.
+
+A separate custom API server is not required initially. Atomic business operations are implemented with PostgreSQL constraints/functions/transactions where needed.
+
+**Rationale:** this keeps the architecture small and managed while providing real authentication, shared durable state, server-side authorization and transactional database behavior.
+
+---
+
+## D025 — Published selections and palanquees are versioned snapshots
+
+**Decision:** production publication creates immutable versioned snapshots rather than mutating the previously published state in place.
+
+The latest successful publication is the member-visible state. A new draft does not alter the current publication.
+
+**Rationale:** this matches the validated draft/publication UX and provides a straightforward audit/recovery path.

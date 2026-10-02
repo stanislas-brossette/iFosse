@@ -6,7 +6,9 @@ The project started as a replacement for the current Framadate + WhatsApp workfl
 
 ## Current status
 
-The repository currently contains a **V0 functional prototype** in:
+The repository contains a **V0 functional prototype** and a frozen architecture for the shared production MVP.
+
+The V0 lives in:
 
 `frontend/iFosse_V0.html`
 
@@ -18,7 +20,13 @@ The V0 is a standalone HTML application intended for functional validation only:
 - demo users and demo data;
 - local browser persistence only.
 
-It is useful for validating workflows with club organizers before implementing the real multi-user version.
+It remains the functional/UX reference while the real multi-user version is implemented.
+
+The production direction is documented in:
+
+- [MVP architecture](docs/architecture.md)
+- [Production data model](docs/data-model.md)
+- [MVP implementation backlog](docs/mvp-backlog.md)
 
 ## Main functional scope
 
