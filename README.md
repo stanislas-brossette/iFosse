@@ -91,6 +91,7 @@ npm test
 npm run build
 npm run db:test
 npm run db:types -- --check
+npm run db:restore-check
 npx playwright install chromium
 npm run test:e2e
 ```
@@ -109,8 +110,10 @@ Set public frontend variables separately for each Netlify build context:
 | `VITE_SUPABASE_PROJECT_ENV` | `local` | `preview` | `production` |
 | `VITE_SUPABASE_URL` | local API URL | staging EU project URL | production EU project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | local public key | staging public key | production public key |
+| `VITE_PREVIEW_SUPABASE_URL` | unset | pinned staging URL | pinned staging URL |
+| `VITE_PRODUCTION_SUPABASE_URL` | unset | pinned production URL | pinned production URL |
 
-Hosted builds fail if configuration is missing, privileged, insecure, or mismatched with the application environment. Do not set the Supabase variables in Netlify's shared/all-context scope: use explicit contexts and separate projects. Preview databases contain only fictitious test data. Frontend builds do not apply migrations; apply reviewed migrations separately to the intended Supabase project. `.env.local`, local Netlify state, generated bundles and database runtime files are ignored by Git.
+Hosted builds require two distinct pinned project URLs and fail if the selected URL does not match the context, even when its environment marker is mislabeled. Unexpected `VITE_*` variables fail validation; browser code refers only to the approved variables. Do not set the Supabase variables in Netlify's shared/all-context scope: use explicit contexts and separate projects. Preview databases contain only fictitious test data. Frontend builds do not apply migrations; apply reviewed migrations separately to the intended Supabase project. `.env.local`, local Netlify state, generated bundles and database runtime files are ignored by Git.
 
 ## Product principles
 
@@ -136,3 +139,5 @@ Recommended flow:
 For coding-agent guidance, see [AGENTS.md](AGENTS.md).
 
 The calendar groups sessions by September–August season. Administrators manage session details and responses; members can answer without a capacity cap. A missing/expired-on-session-day CACI asks for confirmation rather than blocking registration. Active pages refresh shared data every five seconds and when focused. PostgreSQL policies and RPCs enforce permissions independently of the interface.
+
+Rollout procedures: [operator guide](docs/operator-guide.md), [tested recovery](docs/recovery.md), [privacy review](docs/privacy-review.md), and [real organizer pilot](docs/pilot-checklist.md). The real calendar import defaults to offline validation and never imports V0 demo registrations/history.

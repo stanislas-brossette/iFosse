@@ -362,13 +362,13 @@ isOneToOne: false
                   ]
                 },"sessions": {
                   Row: {
-                    "address": string,"capacity": number,"created_at": string,"created_by": string | null,"date": string,"end_time": string,"end_time_estimated": boolean,"id": string,"notes": string,"registration_open": boolean,"school_holiday": boolean,"start_time": string,"status": Database["public"]['Enums']["session_status"],"title": string,"updated_at": string,"venue": string
+                    "address": string,"capacity": number,"created_at": string,"created_by": string | null,"date": string,"end_time": string,"end_time_estimated": boolean,"id": string,"import_source_hash": string | null,"import_source_key": string | null,"notes": string,"registration_open": boolean,"school_holiday": boolean,"start_time": string,"status": Database["public"]['Enums']["session_status"],"title": string,"updated_at": string,"venue": string
                   }
                   Insert: {
-                    "address"?: string,"capacity"?: number,"created_at"?: string,"created_by"?: string | null,"date": string,"end_time": string,"end_time_estimated"?: boolean,"id"?: string,"notes"?: string,"registration_open"?: boolean,"school_holiday"?: boolean,"start_time": string,"status"?: Database["public"]['Enums']["session_status"],"title"?: string,"updated_at"?: string,"venue"?: string
+                    "address"?: string,"capacity"?: number,"created_at"?: string,"created_by"?: string | null,"date": string,"end_time": string,"end_time_estimated"?: boolean,"id"?: string,"import_source_hash"?: string | null,"import_source_key"?: string | null,"notes"?: string,"registration_open"?: boolean,"school_holiday"?: boolean,"start_time": string,"status"?: Database["public"]['Enums']["session_status"],"title"?: string,"updated_at"?: string,"venue"?: string
                   }
                   Update: {
-                    "address"?: string,"capacity"?: number,"created_at"?: string,"created_by"?: string | null,"date"?: string,"end_time"?: string,"end_time_estimated"?: boolean,"id"?: string,"notes"?: string,"registration_open"?: boolean,"school_holiday"?: boolean,"start_time"?: string,"status"?: Database["public"]['Enums']["session_status"],"title"?: string,"updated_at"?: string,"venue"?: string
+                    "address"?: string,"capacity"?: number,"created_at"?: string,"created_by"?: string | null,"date"?: string,"end_time"?: string,"end_time_estimated"?: boolean,"id"?: string,"import_source_hash"?: string | null,"import_source_key"?: string | null,"notes"?: string,"registration_open"?: boolean,"school_holiday"?: boolean,"start_time"?: string,"status"?: Database["public"]['Enums']["session_status"],"title"?: string,"updated_at"?: string,"venue"?: string
                   }
                   Relationships: [
                     {
@@ -465,6 +465,11 @@ isOneToOne: false
 "get_session_transport":
 { Args: { "p_session_id": string }; Returns: {
               "car_offer_id": string,"first_name": string,"last_name": string,"member_id": string,"mode": Database["public"]['Enums']["transport_state"]
+            }[]
+                           },
+"import_season_calendar":
+{ Args: { "p_sessions": Json }; Returns: {
+              "created": boolean,"session_id": string,"source_key": string
             }[]
                            },
 "is_admin":

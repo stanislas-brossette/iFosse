@@ -52,6 +52,9 @@ select lives_ok($$select public.set_draft_selection((select id from sessions_fix
 reset role;
 select throws_ok($$update public.selection_publication_members set state='waiting'$$,'23514',null,'Snapshot content cannot be mutated even by a direct SQL update');
 select throws_ok($$update public.selection_publications set version=99$$,'23514',null,'Published version headers are immutable');
+select throws_ok($$update public.selection_publications set id=gen_random_uuid()$$,'23514',null,'Published identity cannot be replaced by trusted SQL');
+select throws_ok($$update public.selection_publications set published_by=null$$,'23514',null,'Publisher cannot be anonymized while the member still exists');
+select throws_ok($$update public.selection_publications set published_at=now()+interval '1 day'$$,'23514',null,'Published timestamp cannot be rewritten');
 select throws_ok($$delete from public.selection_publication_members$$,'23514',null,'Snapshot content cannot be independently deleted');
 create function pg_temp.reject_selection_audit() returns trigger language plpgsql as $$begin if new.event_type='selection_published' then raise exception 'Injected audit failure'; end if; return new; end;$$;
 create trigger inject_publication_failure before insert on public.audit_events for each row execute function pg_temp.reject_selection_audit();

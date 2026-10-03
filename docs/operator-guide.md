@@ -1,0 +1,50 @@
+# Guide court d’exploitation iFosse
+
+## Préparer les environnements
+
+Créer/configurer deux projets Supabase EU distincts : production privée pour le club, staging avec données fictives pour previews et essais. Appliquer les migrations revues séparément au bon projet; le build Netlify ne migre pas la base. Lier le dépôt au site Netlify et configurer les contextes explicitement. Les URL fixées `VITE_PREVIEW_SUPABASE_URL` et `VITE_PRODUCTION_SUPABASE_URL` doivent être différentes; `VITE_SUPABASE_URL` doit correspondre au contexte. Seules les six variables publiques décrites dans le README sont autorisées. Aucun secret/service-role ne reçoit un préfixe `VITE_` ou une place dans le build frontend.
+
+Suivre [l’authentification](authentication.md) pour désactiver signup public/anonymous, garder le fournisseur email actif, fixer `/auth/confirm`, installer le template, SMTP et expiry. N’autoriser les URL de preview que sur staging. Tester réception, scanner d’email, lien expiré/réutilisé, autre navigateur et déconnexion avec les organisateurs. Vérifier [la reprise](recovery.md) et signer [la revue de confidentialité](privacy-review.md).
+
+## Importer sans démo ni invitations
+
+L’opérateur conserve le roster réel hors dépôt et utilise le schéma JSON strict `{ email, first_name, last_name }`. Les permissions et la présidence sont gérées séparément. Aucun roster réel n’a été fourni ici.
+
+```sh
+npm run members:import -- /CHEMIN_PRIVE/roster.json
+npm run members:import -- /CHEMIN_PRIVE/roster.json --apply
+```
+
+Le premier passage est une validation offline; le second utilise `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` dans un environnement opérateur privé. Il ne crée ni password ni invitation. Un échec de liaison se reprend avec le même fichier; ne pas recréer les identités au hasard. Provisionner puis faire vérifier la connexion du président selon le guide d’authentification.
+
+Le calendrier [2026–2027](../data/calendar-2026-2027.json) reprend les 11 dates de l’image source. Les fins du 4 novembre et du 9 décembre sont estimées; l’adresse reste vide. Les trois flags de vacances sont repris explicitement de la référence V0, sans calcul automatique. Faire confirmer lieu, horaires estimés, adresse et flags par les organisateurs avant usage réel. Les inscriptions/compteurs/sélections fictifs de la V0 et les séances inventées des 9/23 septembre sont exclus.
+
+```sh
+npm run calendar:import -- data/calendar-2026-2027.json
+npm run calendar:import -- data/calendar-2026-2027.json --apply --target-url https://PROJET.supabase.co
+```
+
+L’URL explicite doit correspondre à `SUPABASE_URL`. Un seul RPC transactionnel importe le fichier : source stable par date, fingerprint et audit. Réessayer le même fichier ne duplique rien et n’écrase pas les corrections ultérieures d’un organisateur. Une source modifiée ou une séance créée manuellement à la même date/heure bloque l’import pour revue. Ne pas supprimer une séance utilisée pour contourner ce contrôle; retrouver l’origine, conserver les données, puis corriger via l’interface ou une opération d’association de source revue par l’opérateur.
+
+## Faire une fosse depuis un téléphone
+
+Utiliser la navigation **Séances / Mon profil / Administration**. L’annuaire et les droits ne sont pas montrés aux membres ordinaires. Un changement de vue conserve le travail de séance; une modification enregistrée en base se retrouve sur un autre appareil.
+
+1. **Séances → Nouvelle séance** : date, horaires Paris, lieu, capacité (20 par défaut), inscriptions et vacances explicites. Dire Oui reste possible au-delà de la capacité.
+2. Les membres répondent **Oui / Peut-être / Non**. Le CACI manquant/expiré au jour de la séance produit un avertissement à confirmer. Administration permet de renseigner le CACI; Mon profil permet à chacun de consulter le sien.
+3. **Gestion** : travailler la sélection, utiliser les compteurs et le checklist CACI/transport/paiement, puis **Publier la sélection → Confirmer**. Le brouillon reste privé. La correction de réponse d’un adhérent reste accessible après la sélection. Les encadrants comptent dans la capacité.
+4. **Covoiturage** : proposition explicite, places passagers hors conducteur, rendez-vous et inscriptions. Après retrait d’une voiture, ses passagers restent inscrits mais doivent reprendre un trajet.
+5. **Gestion** : indiquer À régler/Payé/Gratuit. Le membre voit seulement son paiement. Le récapitulatif est opérationnel, sans validation médicale/réglementaire.
+6. **Palanquées** : affecter uniquement les confirmés publiés; drapeau Encadrant informatif. Publier explicitement. Si la sélection change, vérifier puis republier; abandonner un brouillon périmé. Les profils non classés restent dans le total.
+7. Après l’heure de fin Paris, **Bilan** : renseigner les présences réelles, y compris les remplacements avec « Afficher tous les adhérents », puis clôturer après vérification. Tous les confirmés doivent avoir une présence renseignée; le nombre de plongeurs respecte la capacité. Seuls les A plongé d’un bilan clôturé comptent de septembre à août.
+8. Pour corriger : **Rouvrir → Confirmer**, modifier puis clôturer de nouveau. La réouverture retire temporairement la séance du compteur et conserve les présences; elle ne rouvre pas les inscriptions. Les paiements restent corrigeables même après clôture.
+
+## Incidents courants
+
+Un lien expiré/réutilisé se remplace par une nouvelle demande. Pour un email inconnu, vérifier le roster et le lien Auth/profil avec l’opérateur, sans révéler l’existence d’autres comptes. La correction d’email doit être coordonnée avec Supabase Auth puis le profil lié; ne pas modifier uniquement la colonne email. Ne pas demander un service-role dans le chat ou à un organisateur de le copier dans le navigateur.
+
+Pour un appareil perdu, révoquer les sessions côté Auth et, si le blocage club doit être immédiat, bannir le compte concerné; un simple logout sur un autre téléphone ne révoque pas le jeton d’accès perdu. Pour retirer les droits admin, le président utilise le transfert/gestion de droits; les RPC relisent les rôles immédiatement. La récupération de présidence suit la procédure opérateur auditable du guide d’authentification, pas une auto-promotion.
+
+Après une erreur de sélection, abandonner un brouillon ou préparer/publier une nouvelle version; ne pas éditer un ancien snapshot. Pour un conflit de capacité/voiture, actualiser et vérifier les effectifs avant une nouvelle tentative. Éviter de dupliquer des séances pour masquer un conflit.
+
+Les événements importants sont dans `audit_events`, lisibles par admin/opérateur et non modifiables via le navigateur. Inspecter acteur, cible, séance, type, date et payload minimal. Publications, CACI, paiements, présences, bilan, rôles et import sont audités. Pour une perte de données, appliquer le [runbook de reprise](recovery.md), sans supprimer les protections pour faire passer la restauration.

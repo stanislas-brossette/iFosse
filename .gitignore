@@ -9,3 +9,7 @@ test-results/
 supabase/.temp/
 supabase/.branches/
 *.tsbuildinfo
+backups/
+.private/
+*.dump
+*.backup

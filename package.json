@@ -18,7 +18,9 @@
     "db:types": "bash scripts/generate-db-types.sh",
     "test:e2e": "playwright test",
     "members:import": "node scripts/provision-members.mjs",
-    "president:manage": "node scripts/manage-president.mjs"
+    "president:manage": "node scripts/manage-president.mjs",
+    "db:restore-check": "node scripts/check-restore.mjs",
+    "calendar:import": "node scripts/import-calendar.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
