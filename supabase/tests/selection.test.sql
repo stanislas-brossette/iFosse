@@ -39,7 +39,7 @@ select lives_ok($$select public.set_draft_selection((select id from sessions_fix
 select is((select count(*) from public.get_current_selection((select id from sessions_fixture)) where state='selected'),2::bigint,'Previous publication remains selected while draft changes');
 select throws_ok($$select public.save_session('2030-10-01','21:00','22:00','Sélection','','','',1,true,false,false,(select id from sessions_fixture))$$,'22023',null,'Capacity reduction must respect current publication as well as draft');
 select set_config('request.jwt.claim.sub','30000000-0000-4000-8000-000000000001',true);
-select lives_ok($$select public.set_session_rsvp((select id from sessions_fixture),'no')$$,'Selected member withdraws without editing history');
+select lives_ok($$select public.set_session_rsvp((select id from sessions_fixture),'no',null,false,true)$$,'Selected member withdraws without editing history');
 select is((select state from public.get_current_selection((select id from sessions_fixture)) where member_id=public.current_member_id()),'withdrawn','Published projection marks the withdrawal');
 select is((select state::text from public.selection_publication_members where member_id=public.current_member_id()),'selected','Historical snapshot retains selected state');
 select lives_ok($$select public.set_session_rsvp((select id from sessions_fixture),'yes',null,true)$$,'Withdrawn member may register Yes again');

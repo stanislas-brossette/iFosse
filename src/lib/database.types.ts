@@ -388,6 +388,9 @@ isOneToOne: false
             "bootstrap_president":
 { Args: { "p_member_id": string }; Returns: undefined
                            },
+"can_read_session_participant":
+{ Args: { "p_member_id": string,"p_session_id": string }; Returns: boolean
+                           },
 "close_session_bilan":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
@@ -422,6 +425,11 @@ isOneToOne: false
               "caci_ready": boolean,"caci_status": string,"member_id": string,"payment_ready": boolean,"payment_status": Database["public"]['Enums']["payment_state"],"selection_ready": boolean,"selection_state": string,"transport_mode": Database["public"]['Enums']["transport_state"],"transport_ready": boolean
             }[]
                            },
+"get_admin_session_responses":
+{ Args: { "p_session_id": string }; Returns: {
+              "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"rsvp": Database["public"]['Enums']["rsvp_state"]
+            }[]
+                           },
 "get_bilan_state":
 { Args: { "p_session_id": string }; Returns: {
               "dived_count": number,"session_ended": boolean,"unknown_selected_count": number
@@ -445,6 +453,11 @@ isOneToOne: false
 "get_palanquee_state":
 { Args: { "p_session_id": string }; Returns: {
               "needs_review": boolean,"publication_id": string,"publication_version": number,"selection_publication_id": string,"selection_version": number
+            }[]
+                           },
+"get_rsvp_change_consequences":
+{ Args: { "p_member_id"?: string,"p_session_id": string }; Returns: {
+              "passengers": number,"selected": boolean
             }[]
                            },
 "get_season_counts":
@@ -530,7 +543,7 @@ isOneToOne: false
 { Args: { "p_member_id": string,"p_session_id": string,"p_status": Database["public"]['Enums']["payment_state"] }; Returns: undefined
                            },
 "set_session_rsvp":
-{ Args: { "p_confirm_caci_warning"?: boolean,"p_member_id"?: string,"p_rsvp": Database["public"]['Enums']["rsvp_state"],"p_session_id": string }; Returns: undefined
+{ Args: { "p_confirm_caci_warning"?: boolean,"p_confirm_withdrawal"?: boolean,"p_member_id"?: string,"p_rsvp": Database["public"]['Enums']["rsvp_state"],"p_session_id": string }; Returns: undefined
                            },
 "transfer_presidency":
 { Args: { "p_member_id": string }; Returns: undefined

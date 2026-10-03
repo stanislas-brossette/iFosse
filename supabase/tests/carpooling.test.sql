@@ -69,7 +69,7 @@ select is((select mode::text from public.get_session_transport((select id from s
 select set_config('request.jwt.claim.sub','40000000-0000-4000-8000-000000000004',true);
 select public.join_car((select id from sessions_fixture),(select id from cars_fixture where name='B'));
 select set_config('request.jwt.claim.sub','40000000-0000-4000-8000-000000000002',true);
-select lives_ok($$select public.set_session_rsvp((select id from sessions_fixture),'no')$$,'Driver withdraws from session');
+select lives_ok($$select public.set_session_rsvp((select id from sessions_fixture),'no',null,false,true)$$,'Driver withdraws from session');
 select set_config('request.jwt.claim.sub','40000000-0000-4000-8000-000000000004',true);
 select is((select rsvp::text from public.session_participations),'yes','Displaced passenger stays registered');
 select is((select mode::text from public.get_session_transport((select id from sessions_fixture)) where member_id=public.current_member_id()),'needs','Displaced passenger needs reassignment');

@@ -303,3 +303,7 @@ Publication atomically appends an immutable version/header, assignments and mini
 ## Implemented rollout import provenance
 
 Imported real calendar sessions carry a unique stable `import_source_key` and SHA-256 `import_source_hash` as a nullable pair. The service-only `import_season_calendar` validates the approved 2026–2027 date set, serializes imports, creates no participants/publications and audits each new session. Equal-source retries retain the existing session, including subsequent administrator edits; changed fingerprints or manual date/time conflicts require operator review. A failure anywhere rolls back the whole RPC. Browser/anonymous callers cannot invoke it. Selection header immutability now includes the ID and actor provenance, with the same trusted-erasure exception as palanquées.
+
+## Implemented session review safeguards
+
+The session-review migration adds own/admin-only RSVP consequence inspection and an explicit withdrawal-confirmation argument, rechecked under the existing session lock. Regular response projections contain only Yes/Maybe; a separate admin-only projection retains corrections for No/unanswered. Effective selection and direct publication-member RLS follow D026, preserving own withdrawal/history access and immutable storage. Attendance and validated-bilan visibility are unchanged.

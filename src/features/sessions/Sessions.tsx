@@ -19,6 +19,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
   const [directory, setDirectory] = useState<Pick<Member, 'id' | 'first_name' | 'last_name'>[]>([])
   const [tab, setTab] = useState<'overview' | 'participants' | 'transport' | 'manage' | 'bilan' | 'groups'>('overview')
   const [warning, setWarning] = useState(false)
+  const [pendingResponse, setPendingResponse] = useState<{ rsvp: 'maybe' | 'no'; target: string; name: string; selected: boolean; passengers: number } | null>(null)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const admin = member.role !== 'member'
@@ -26,7 +27,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
   const load = useCallback(async () => {
     const request = ++loadSequence.current
     const [publicResult, ownResult] = await Promise.all([
-      client.rpc('get_session_responses', { p_session_id: session.id }),
+      client.rpc(admin ? 'get_admin_session_responses' : 'get_session_responses', { p_session_id: session.id }),
       client.from('session_participations').select('*').eq('session_id', session.id).eq('member_id', member.id).maybeSingle(),
     ])
     if (request !== loadSequence.current) return
@@ -39,16 +40,32 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
   }, [client, member.id, admin, session.id])
   useSharedRefresh(load)
   const caci = caciStatus(member.caci_expiry_date, session.date)
-  async function respond(rsvp: 'yes' | 'maybe' | 'no', confirmed = false, target = member.id) {
+  async function respond(rsvp: 'yes' | 'maybe' | 'no', confirmed = false, target = member.id, withdrawalConfirmed = false) {
     if (target === member.id && !admin && rsvp === 'yes' && !confirmed && (caci === 'missing' || caci === 'expired')) { setWarning(true); return }
     setBusy(true); setMessage('')
-    const { error } = await client.rpc('set_session_rsvp', { p_session_id: session.id, p_member_id: target, p_rsvp: rsvp, p_confirm_caci_warning: confirmed })
+    const person = target === member.id ? member : directory.find(row => row.id === target)
+    const name = person ? `${person.first_name} ${person.last_name}` : 'l’adhérent concerné'
+    async function consequences() {
+      const result = await client.rpc('get_rsvp_change_consequences', { p_session_id: session.id, p_member_id: target })
+      const impact = result.data?.[0]
+      if (result.error || !impact) { setMessage('Vérification de la réponse impossible. Réessayez.'); return null }
+      return impact
+    }
+    if (rsvp !== 'yes' && !withdrawalConfirmed) {
+      const impact = await consequences()
+      if (!impact) { setBusy(false); return }
+      if (impact.selected || impact.passengers > 0) { setPendingResponse({ rsvp, target, name, selected: impact.selected, passengers: impact.passengers }); setBusy(false); return }
+    }
+    const { error } = await client.rpc('set_session_rsvp', { p_session_id: session.id, p_member_id: target, p_rsvp: rsvp, p_confirm_caci_warning: confirmed, p_confirm_withdrawal: withdrawalConfirmed })
     if (error?.message === 'CACI_WARNING') setWarning(true)
+    else if (error?.message === 'RSVP_WITHDRAWAL_WARNING' && rsvp !== 'yes') {
+      const impact = await consequences()
+      if (impact) setPendingResponse({ rsvp, target, name, selected: impact.selected, passengers: impact.passengers })
+    }
     else if (error) setMessage('Réponse refusée. Actualisez la séance et vérifiez si les inscriptions sont ouvertes.')
-    else { setWarning(false); setMessage('Réponse enregistrée.'); await load() }
+    else { setPendingResponse(null); setWarning(false); setMessage('Réponse enregistrée.'); await load() }
     setBusy(false)
   }
-  const participants = responses.filter(response => response.rsvp === 'yes' || response.rsvp === 'maybe')
   return <section className="card"><div className="toolbar"><button onClick={onBack}>Toutes les séances</button>{admin && <button onClick={onEdit}>Modifier la séance</button>}</div>
     <h2>{session.title} · {formatDate(session.date)}</h2><p>{session.start_time.slice(0, 5)} — {session.end_time.slice(0, 5)} · {session.venue || 'Lieu à préciser'}</p>
     {session.school_holiday && <p className="badge">Vacances scolaires</p>}{session.end_time_estimated && <p>Heure de fin à confirmer.</p>}
@@ -61,8 +78,8 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
       <p>Mon CACI au jour de la fosse : {caciLabels[caci]}.</p>
       {warning && <div role="alert" className="mt"><p>Votre CACI sera expiré ou n’est pas renseigné pour cette fosse. Vous pourrez le renouveler avant la séance. Confirmer votre réponse Oui ?</p><div className="actions"><button disabled={busy} onClick={() => void respond('yes', true)}>Confirmer Oui malgré l’avertissement</button><button onClick={() => setWarning(false)}>Annuler la réponse</button></div></div>}
     </div>}
-    {tab === 'participants' && <div className="mt"><h3>Participants · Oui et Peut-être</h3>{!participants.length && <p>Aucune réponse Oui ou Peut-être.</p>}<ul className="member-list">{participants.map(response => <li key={response.member_id}><span>{response.first_name} {response.last_name} · {response.current_level}{response.preparing_level && ` · prépare ${response.preparing_level}`}</span><strong>{rsvpLabels[response.rsvp]}</strong></li>)}</ul></div>}
-    <Selection client={client} member={member} session={session} manage={tab === 'manage'} />
+    {pendingResponse && <div role="alert" className="mt"><p>Changer la réponse de {pendingResponse.name} en {rsvpLabels[pendingResponse.rsvp]} ?</p>{pendingResponse.selected && <p>La place confirmée sera libérée. Un nouveau Oui nécessitera une nouvelle sélection publiée.</p>}{pendingResponse.passengers > 0 && <p>La voiture sera retirée. Ses passagers restent inscrits, mais devront retrouver un trajet.</p>}<div className="actions"><button disabled={busy} onClick={() => void respond(pendingResponse.rsvp, false, pendingResponse.target, true)}>Confirmer le changement de réponse</button><button disabled={busy} onClick={() => setPendingResponse(null)}>Conserver la réponse</button></div></div>}
+    <Selection client={client} member={member} session={session} manage={tab === 'manage'} participants={tab === 'participants'} />
     {tab === 'manage' && admin && <div className="mt"><h3>Corriger une réponse</h3><ul className="member-list">{directory.map(person => <li key={person.id}><span>{person.first_name} {person.last_name}</span><label>Réponse de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed'} value={responses.find(response => response.member_id === person.id)?.rsvp ?? 'unanswered'} onChange={event => void respond(event.target.value as 'yes' | 'maybe' | 'no', false, person.id)}><option value="unanswered" disabled>Sans réponse</option>{(['yes', 'maybe', 'no'] as const).map(value => <option key={value} value={value}>{rsvpLabels[value]}</option>)}</select></label></li>)}</ul></div>}
     {tab === 'transport' && <Carpooling client={client} member={member} session={session} />}
     {tab === 'groups' && <Palanquees client={client} member={member} session={session} />}

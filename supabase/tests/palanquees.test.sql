@@ -64,7 +64,7 @@ select is((select group_number from public.palanquee_publication_members pm join
 select set_config('request.jwt.claim.sub','70000000-0000-4000-8000-000000000001',true);
 select public.update_own_profile('Membre','Groupe','', 'MF1','',false,0,'');
 select is((select current_level from public.get_current_palanquees((select id from group_sessions where label='main')) where member_id=public.current_member_id()),'MF1','Published summary reads live profile levels');
-select public.set_session_rsvp((select id from group_sessions where label='main'),'no');
+select public.set_session_rsvp((select id from group_sessions where label='main'),'no',null,false,true);
 select is((select count(*) from public.get_current_palanquees((select id from group_sessions where label='main'))),1::bigint,'Withdrawal removes current assignment without editing history');
 select is((select needs_review from public.get_palanquee_state((select id from group_sessions where label='main'))),true,'Withdrawal marks groups for review');
 select is((select count(*) from public.palanquee_publication_members),4::bigint,'Withdrawn historical snapshots remain');
