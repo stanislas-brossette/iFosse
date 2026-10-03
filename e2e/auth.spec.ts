@@ -75,6 +75,36 @@ test('a real browser restart retains the refreshable member session', async () =
   }
 })
 
+test('real token refresh preserves unsaved profile and logout clears account state', async ({ page }) => {
+  const next = await createMemberFixture()
+  try {
+    await openConfirmation(page, await requestMagicLink(page, fixture))
+    await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
+    await page.getByRole('button', { name: 'Mon profil', exact: true }).click()
+    await page.getByLabel('Téléphone', { exact: true }).fill('0612345678')
+    const refreshedId = await page.evaluate(async () => {
+      const modulePath = '/src/lib/supabase.ts'
+      const { supabase } = await import(modulePath)
+      const result = await supabase.auth.refreshSession()
+      if (result.error) throw new Error('Local token refresh failed.')
+      return result.data.user?.id
+    })
+    expect(refreshedId).toBe(fixture.authUserId)
+    await expect(page.getByRole('heading', { name: 'Mon profil', exact: true })).toBeVisible()
+    await expect(page.getByLabel('Téléphone', { exact: true })).toHaveValue('0612345678')
+    await page.getByRole('button', { name: 'Enregistrer mon profil', exact: true }).click()
+    await expect(page.getByText('Profil enregistré.', { exact: true })).toBeVisible()
+    await page.getByLabel('Téléphone', { exact: true }).fill('0699999999')
+    await page.getByRole('button', { name: 'Se déconnecter', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Mon profil', exact: true })).toHaveCount(0)
+    await openConfirmation(page, await requestMagicLink(page, next))
+    await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Les séances', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Mon profil', exact: true }).click()
+    await expect(page.getByLabel('Téléphone', { exact: true })).toHaveValue('')
+  } finally { await removeMemberFixture(next) }
+})
+
 test('Supabase rejects a genuinely expired magic link', async ({ page }) => {
   const link = await requestMagicLink(page, fixture)
   expireMagicLink(fixture)

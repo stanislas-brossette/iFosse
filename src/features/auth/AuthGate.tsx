@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode, SubmitEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '../../lib/database.types'
@@ -18,6 +18,8 @@ export function AuthGate({ client, children }: Props) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const identity = useRef({ id: null as string | null, generation: 0 })
+  const profileSequence = useRef(0)
 
   useEffect(() => {
     if (callback) window.history.replaceState(null, '', '/auth/confirm')
@@ -25,31 +27,48 @@ export function AuthGate({ client, children }: Props) {
 
   useEffect(() => {
     let active = true
+    let authEvents = 0
+    function acceptSession(next: Session | null) {
+      const id = next?.user.id ?? null
+      if (id !== identity.current.id) {
+        identity.current = { id, generation: identity.current.generation + 1 }
+        setMember(null)
+        setError('')
+      }
+      setSession(next); setLoading(false)
+    }
     client.auth.getSession().then(({ data, error: authError }) => {
-      if (active) { setSession(data.session); setLoading(false); if (authError) setError('La connexion doit être renouvelée.') }
-    }).catch(() => { if (active) { setLoading(false); setError('Connexion au service impossible. Réessayez.') } })
+      // A late initial read must not overwrite a newer sign-in/sign-out event.
+      if (active && !authEvents) { acceptSession(data.session); if (authError) setError('La connexion doit être renouvelée.') }
+    }).catch(() => { if (active && !authEvents) { setLoading(false); setError('Connexion au service impossible. Réessayez.') } })
     // Avoid awaiting data queries inside the Auth SDK's session lock.
-    const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) setSession(next) })
-    return () => { active = false; data.subscription.unsubscribe() }
+    const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) { authEvents++; acceptSession(next) } })
+    return () => { active = false; identity.current.generation++; data.subscription.unsubscribe() }
   }, [client])
 
+  const userId = session?.user.id
   const refresh = useCallback(async () => {
-    if (!session) return
-    const { data, error: queryError } = await client.from('members').select('*').eq('auth_user_id', session.user.id).maybeSingle()
-    if (queryError) { setError('Le profil est indisponible. Réessayez.'); return }
-    setMember(data)
-  }, [client, session])
+    if (!userId || identity.current.id !== userId) return
+    const generation = identity.current.generation
+    const request = ++profileSequence.current
+    const current = () => identity.current.id === userId && identity.current.generation === generation && profileSequence.current === request
+    setProfileLoading(true)
+    try {
+      const { data, error: queryError } = await client.from('members').select('*').eq('auth_user_id', userId).maybeSingle()
+      if (!current()) return
+      if (queryError) {
+        setError('Le profil est indisponible. Réessayez.')
+        if (['401', '403', 'PGRST301', 'PGRST302'].includes(queryError.code)) setMember(null)
+      } else { setMember(data); setError('') }
+    } catch { if (current()) setError('Le profil est indisponible. Réessayez.') }
+    finally { if (current()) setProfileLoading(false) }
+  }, [client, userId])
 
   useEffect(() => {
-    let active = true
-    setMember(null)
     if (!session) { setProfileLoading(false); return }
-    setProfileLoading(true)
-    client.from('members').select('*').eq('auth_user_id', session.user.id).maybeSingle().then(({ data, error: queryError }) => {
-      if (active) { setMember(data); setProfileLoading(false); if (queryError) setError('Le profil est indisponible. Réessayez.') }
-    })
-    return () => { active = false }
-  }, [client, session])
+    // Renewed tokens recheck access without unmounting the same member's forms.
+    void refresh()
+  }, [session, refresh])
 
   useEffect(() => {
     const onFocus = () => { void refresh() }
@@ -91,7 +110,7 @@ export function AuthGate({ client, children }: Props) {
   if (session) return <>
     <div className="toolbar"><p>{member ? `${member.first_name} ${member.last_name}` : 'Compte connecté'}</p><button disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
     {error && <p role="alert">{error}</p>}
-    {member ? children(member, refresh) : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre compte doit être lié à un adhérent du club. Contactez un administrateur si le problème persiste.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
+    {member && member.auth_user_id === session.user.id ? <Fragment key={member.auth_user_id}>{children(member, refresh)}</Fragment> : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre compte doit être lié à un adhérent du club. Contactez un administrateur si le problème persiste.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
   </>
   return <section className="card login"><h1>Connexion à iFosse</h1><p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>
     {(error || callback) && <p role="alert">{error || invalidLink}</p>}
