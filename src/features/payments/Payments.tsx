@@ -22,6 +22,7 @@ export function PaymentSummary({ readiness, client, sessionId, firstName, lastNa
   if (!readiness) return <p>Préparation en cours d’actualisation.</p>
   const memberId = readiness.member_id
   const count = [readiness.selection_ready, readiness.caci_ready, readiness.transport_ready, readiness.payment_ready].filter(Boolean).length
+  const draft = readiness.selection_basis === 'draft'
 
   async function change(value: Payment) {
     setBusy(true)
@@ -34,11 +35,12 @@ export function PaymentSummary({ readiness, client, sessionId, firstName, lastNa
   }
 
   return <div className="readiness">
-    <p><strong>{count === 4 ? 'Prêt pour la fosse' : `${count}/4 points prêts`}</strong></p>
+    <p><strong>{count === 4 ? draft ? 'Brouillon prêt à publier' : 'Prêt pour la fosse' : `${count}/4 points prêts`}</strong></p>
+    <p>Base du récapitulatif : {draft ? 'brouillon privé, à publier' : 'sélection publiée'}.</p>
     <ul className="readiness-points">
       <li>Sélection : {selectionLabels[readiness.selection_state]}</li>
       <li>CACI au jour de la fosse : {caciLabels[readiness.caci_status as CaciStatus]}</li>
-      <li>Trajet : {transportLabels[readiness.transport_mode]}</li>
+      <li>Trajet : {transportLabels[readiness.transport_mode]}{readiness.transport_provisional && ' · Provisoire : conducteur non confirmé dans cette sélection'}</li>
       <li>Paiement : {paymentLabels[readiness.payment_status]}</li>
     </ul>
     <label>Paiement de {firstName} {lastName}

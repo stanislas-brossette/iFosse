@@ -36,6 +36,7 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
       await expect(device.getByRole('heading', { name: 'Ma réponse : Oui', exact: true })).toBeVisible()
       await device.getByRole('button', { name: 'Covoiturage', exact: true }).click()
     }
+    await page.getByRole('button', { name: 'Proposer une voiture', exact: true }).click()
     await page.getByLabel('Places passagers proposées').fill('1')
     await page.getByLabel('Point de rendez-vous', { exact: true }).fill('Parking fictif')
     await page.getByRole('button', { name: 'Enregistrer ma voiture', exact: true }).click()
