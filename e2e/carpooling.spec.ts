@@ -77,6 +77,7 @@ test('profile defaults only prefill an explicit offer; passenger reassigns after
     }
     const driverPanel = page.locator('.carpool')
     const passengerPanel = other.locator('.carpool')
+    await driverPanel.getByRole('button', { name: 'Proposer une voiture', exact: true }).click()
     await expect(driverPanel.getByLabel('Places passagers proposées')).toHaveValue('2')
     await expect(driverPanel.getByLabel('Point de rendez-vous', { exact: true })).toHaveValue('Parking habituel')
     await expect(driverPanel.getByText('Aucune voiture proposée pour cette séance.')).toBeVisible()
@@ -95,6 +96,7 @@ test('profile defaults only prefill an explicit offer; passenger reassigns after
     await passengerPanel.getByRole('button', { name: 'Je viens par mes propres moyens' }).click()
     await expect(passengerPanel.getByText('Mon trajet : Par mes propres moyens')).toBeVisible()
     // A member with no profile defaults can still explicitly offer a car.
+    await passengerPanel.getByRole('button', { name: 'Proposer une voiture', exact: true }).click()
     await passengerPanel.getByLabel('Places passagers proposées').fill('1')
     await passengerPanel.getByRole('button', { name: 'Enregistrer ma voiture' }).click()
     await expect(passengerPanel.getByText('Mon trajet : Conducteur')).toBeVisible()

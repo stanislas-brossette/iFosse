@@ -278,3 +278,11 @@ The latest successful publication is the member-visible state. A new draft does 
 The Participants view contains only Yes/Maybe, including their published selection status. Other session tabs show a compact personal selection summary, without prepending the full participant list. This tightens the older specification's general wording that all No responses were member-visible; it implements the review's recommended minimization rather than only hiding rows in React. Validated attendance/history remains governed by the existing bilan rules.
 
 **Withdrawal:** a response change that releases a published confirmed place or an occupied car requires explicit confirmation, including administrator corrections. Canceling changes nothing. Server checks run under the session lock; existing transactional car/selection cleanup remains authoritative.
+
+---
+
+## D027 — Provisional carpooling and checklist basis
+
+**Decision:** a Yes member may offer a car before final confirmation. Car cards and personal trips are provisional until the driver is effectively selected in the latest publication. Passenger booking remains possible; driver exclusion/withdrawal keeps the existing displacement rules.
+
+The administrator checklist uses one consistent selection basis for both the participant and their driver: the private draft when its header exists, otherwise the published effective selection. A passenger/driver trip is transport-ready only if that driver is selected in that basis. The checklist states its basis; four draft points display “Brouillon prêt à publier”, not a published confirmation. Public car cards always use the publication and never reveal draft state. This is an operational distinction, not a transport guarantee or regulatory assessment.

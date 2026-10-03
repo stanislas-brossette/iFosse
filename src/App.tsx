@@ -19,7 +19,7 @@ function MemberApp({ client, member, refresh }: { client: SupabaseClient<Databas
       <button aria-current={active === 'profile' ? 'page' : undefined} onClick={() => setArea('profile')}>Mon profil</button>
       {member.role !== 'member' && <button aria-current={active === 'admin' ? 'page' : undefined} onClick={() => setArea('admin')}>Administration</button>}
     </nav></section>
-    <div hidden={active !== 'sessions'}><Sessions client={client} member={member} /></div>
+    <div hidden={active !== 'sessions'}><Sessions client={client} member={member} refreshMember={refresh} /></div>
     <div hidden={active !== 'profile'}><Profile client={client} member={member} refresh={refresh} /></div>
     {member.role !== 'member' && <div hidden={active !== 'admin'}>{member.role === 'president' && <RoleManager client={client} />}<Directory client={client} /></div>}
   </>

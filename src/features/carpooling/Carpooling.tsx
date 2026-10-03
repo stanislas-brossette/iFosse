@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../lib/database.types'
@@ -16,13 +16,18 @@ function OfferForm({ member, car, disabled, save }: { member: Member; car?: Car;
   async function submit(event: SubmitEvent<HTMLFormElement>) { event.preventDefault(); await save(seats, meeting, time, note) }
   return <form onSubmit={event => void submit(event)}><h4>{car ? 'Modifier ma voiture' : 'Proposer ma voiture'}</h4><p>Les places proposées excluent le conducteur. Les habitudes du profil sont un préremplissage ; aucune voiture n’est créée automatiquement.</p><div className="form-grid"><label>Places passagers proposées<input type="number" required min={1} max={8} step={1} value={seats} onChange={event => setSeats(Number(event.target.value))} /></label><label>Point de rendez-vous<input maxLength={200} value={meeting} onChange={event => setMeeting(event.target.value)} /></label><label>Heure de départ<input type="time" value={time} onChange={event => setTime(event.target.value)} /></label></div><label>Note pour les passagers<textarea maxLength={300} value={note} onChange={event => setNote(event.target.value)} /></label><button disabled={disabled}>Enregistrer ma voiture</button></form>
 }
-export function Carpooling({ client, member, session }: { client: SupabaseClient<Database>; member: Member; session: Session }) {
+export function Carpooling({ client, member, session, onProfileSaved }: { client: SupabaseClient<Database>; member: Member; session: Session; onProfileSaved?: () => Promise<void> }) {
   const [cars, setCars] = useState<Car[]>([])
   const [people, setPeople] = useState<Transport[]>([])
   const [eligible, setEligible] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [pendingMode, setPendingMode] = useState<'needs' | 'own' | 'unset' | null>(null)
+  const [confirmedDrivers, setConfirmedDrivers] = useState<string[]>([])
+  const [showOffer, setShowOffer] = useState(false)
+  const [pendingDefaults, setPendingDefaults] = useState<{ seats: number; meeting: string } | null>(null)
+  const [savedDefaults, setSavedDefaults] = useState(false)
+  useEffect(() => { setSavedDefaults(member.has_usual_car) }, [member.has_usual_car])
   const sequence = useRef(0)
   const load = useCallback(async () => {
     const request = ++sequence.current
@@ -34,6 +39,7 @@ export function Carpooling({ client, member, session }: { client: SupabaseClient
     if (request !== sequence.current) return
     if (offers.error || transport.error || selection.error) { setMessage('Covoiturage indisponible. Actualisez la séance.'); return }
     setCars(offers.data ?? []); setPeople(transport.data ?? [])
+    setConfirmedDrivers((selection.data ?? []).filter(person => person.state === 'selected').map(person => person.member_id))
     const own = selection.data?.find(person => person.member_id === member.id)
     setEligible(own?.rsvp === 'yes' && own.state !== 'declined' && session.status === 'open')
   }, [client, member.id, session.id, session.status])
@@ -44,7 +50,19 @@ export function Carpooling({ client, member, session }: { client: SupabaseClient
     setBusy(true); setMessage('')
     const result = await client.rpc('offer_car', { p_session_id: session.id, p_passenger_capacity: seats, p_meeting_point: meeting, p_departure_time: time || undefined, p_note: note })
     if (result.error) setMessage('Offre refusée. Vérifiez les places déjà occupées, les champs et votre participation.')
-    else { setMessage('Voiture enregistrée pour cette séance.'); await load() }
+    else {
+      setMessage('Voiture enregistrée pour cette séance.'); setShowOffer(false)
+      if (!ownCar && !member.has_usual_car && !savedDefaults) setPendingDefaults({ seats, meeting })
+      await load()
+    }
+    setBusy(false)
+  }
+  async function rememberDefaults() {
+    if (!pendingDefaults) return
+    setBusy(true); setMessage('')
+    const result = await client.rpc('save_own_car_defaults', { p_passenger_seats: pendingDefaults.seats, p_meeting_point: pendingDefaults.meeting })
+    if (result.error) setMessage('La voiture reste enregistrée. Les habitudes du profil n’ont pas été enregistrées; réessayez ou gardez une offre ponctuelle.')
+    else { setSavedDefaults(true); setPendingDefaults(null); setMessage('Habitudes de covoiturage enregistrées.'); await onProfileSaved?.() }
     setBusy(false)
   }
   async function mode(value: 'needs' | 'own' | 'unset', confirmed = false) {
@@ -62,13 +80,18 @@ export function Carpooling({ client, member, session }: { client: SupabaseClient
     else { setMessage('Place passager enregistrée.'); await load() }
     setBusy(false)
   }
+  const bookedCar = cars.find(car => car.id === own?.car_offer_id)
+  const provisional = bookedCar && !confirmedDrivers.includes(bookedCar.driver_member_id)
   return <div className="mt carpool"><h3>Covoiturage</h3><p>Mon trajet : <strong>{transportLabels[own?.mode ?? 'unset']}</strong></p>
+    {provisional && <p role="status">Trajet provisoire : le conducteur n’est pas confirmé dans la sélection publiée.</p>}
     {!eligible && <p>Répondez Oui pour organiser votre trajet. Une exclusion publiée ou un bilan clôturé empêche les changements.</p>}
     <div className="actions"><button disabled={!eligible || busy} onClick={() => void mode('needs')}>{ownCar ? 'Retirer ma voiture' : own?.mode === 'passenger' ? 'Quitter cette voiture' : 'Je cherche un trajet'}</button><button disabled={!eligible || busy} onClick={() => void mode('own')}>Je viens par mes propres moyens</button><button disabled={!eligible || busy} onClick={() => void mode('unset')}>Préciser mon trajet plus tard</button></div>
     {pendingMode && <div className="mt"><p>{ownCar?.occupied === 1 ? 'Votre passager reste inscrit à la fosse, mais devra retrouver un trajet.' : `Vos ${ownCar?.occupied ?? 0} passagers restent inscrits à la fosse, mais devront retrouver un trajet.`} Confirmer le retrait de votre voiture ?</p><div className="actions"><button disabled={busy} onClick={() => void mode(pendingMode, true)}>Confirmer le retrait de ma voiture</button><button onClick={() => setPendingMode(null)}>Conserver ma voiture</button></div></div>}
-    {eligible && <OfferForm key={ownCar?.id ?? 'new'} member={member} car={ownCar} disabled={busy} save={save} />}
+    {eligible && !ownCar && !showOffer && <button disabled={busy} onClick={() => setShowOffer(true)}>Proposer une voiture</button>}
+    {eligible && (ownCar || showOffer) && <><OfferForm key={ownCar?.id ?? 'new'} member={member} car={ownCar} disabled={busy} save={save} />{!ownCar && <button disabled={busy} onClick={() => setShowOffer(false)}>Annuler la proposition</button>}</>}
+    {pendingDefaults && <div className="mt car-default-prompt"><p>Mémoriser ces habitudes dans mon profil ? Elles prérempliront mes prochaines propositions sans créer de voiture automatiquement. Pour une voiture empruntée ou une offre exceptionnelle, gardez une offre ponctuelle.</p><div className="actions"><button disabled={busy} onClick={() => void rememberDefaults()}>Mémoriser pour les prochaines séances</button><button disabled={busy} onClick={() => setPendingDefaults(null)}>Garder une offre ponctuelle</button></div></div>}
     <h4>Voitures proposées</h4>{!cars.length && <p>Aucune voiture proposée pour cette séance.</p>}
-    {cars.map(car => <article className="card" key={car.id}><h4>{car.first_name} {car.last_name}</h4><p>{car.passenger_capacity - car.occupied} {car.passenger_capacity - car.occupied === 1 ? 'place libre' : 'places libres'} / {car.passenger_capacity} {car.passenger_capacity === 1 ? 'place passager' : 'places passagers'}.</p><p>{car.meeting_point || 'Rendez-vous à préciser'}{car.departure_time && ` · départ ${car.departure_time.slice(0, 5)}`}</p><p>{car.note}</p><ul>{people.filter(person => person.mode === 'passenger' && person.car_offer_id === car.id).map(person => <li key={person.member_id}>{person.first_name} {person.last_name}</li>)}</ul>{car.driver_member_id !== member.id && <button disabled={!eligible || busy || !!ownCar || (car.occupied >= car.passenger_capacity && own?.car_offer_id !== car.id)} onClick={() => void join(car.id)} aria-label={`Rejoindre la voiture de ${car.first_name} ${car.last_name}`}>{own?.car_offer_id === car.id ? 'Ma voiture actuelle' : 'Prendre une place'}</button>}</article>)}
+    {cars.map(car => <article className="card" key={car.id}><h4>{car.first_name} {car.last_name}</h4><p>{confirmedDrivers.includes(car.driver_member_id) ? 'Conducteur confirmé dans la sélection publiée.' : 'Conducteur en attente de confirmation · Trajet provisoire.'}</p><p>{car.passenger_capacity - car.occupied} {car.passenger_capacity - car.occupied === 1 ? 'place libre' : 'places libres'} / {car.passenger_capacity} {car.passenger_capacity === 1 ? 'place passager' : 'places passagers'}.</p><p>{car.meeting_point || 'Rendez-vous à préciser'}{car.departure_time && ` · départ ${car.departure_time.slice(0, 5)}`}</p><p>{car.note}</p><ul>{people.filter(person => person.mode === 'passenger' && person.car_offer_id === car.id).map(person => <li key={person.member_id}>{person.first_name} {person.last_name}</li>)}</ul>{car.driver_member_id !== member.id && <button disabled={!eligible || busy || !!ownCar || (car.occupied >= car.passenger_capacity && own?.car_offer_id !== car.id)} onClick={() => void join(car.id)} aria-label={`Rejoindre la voiture de ${car.first_name} ${car.last_name}`}>{own?.car_offer_id === car.id ? 'Ma voiture actuelle' : 'Prendre une place'}</button>}</article>)}
     {message && <p role="status">{message}</p>}
   </div>
 }

@@ -422,7 +422,7 @@ isOneToOne: false
                            },
 "get_admin_readiness":
 { Args: { "p_session_id": string }; Returns: {
-              "caci_ready": boolean,"caci_status": string,"member_id": string,"payment_ready": boolean,"payment_status": Database["public"]['Enums']["payment_state"],"selection_ready": boolean,"selection_state": string,"transport_mode": Database["public"]['Enums']["transport_state"],"transport_ready": boolean
+              "caci_ready": boolean,"caci_status": string,"member_id": string,"payment_ready": boolean,"payment_status": Database["public"]['Enums']["payment_state"],"selection_basis": string,"selection_ready": boolean,"selection_state": string,"transport_mode": Database["public"]['Enums']["transport_state"],"transport_provisional": boolean,"transport_ready": boolean
             }[]
                            },
 "get_admin_session_responses":
@@ -514,6 +514,9 @@ isOneToOne: false
                            },
 "reopen_session_bilan":
 { Args: { "p_session_id": string }; Returns: undefined
+                           },
+"save_own_car_defaults":
+{ Args: { "p_meeting_point": string,"p_passenger_seats": number }; Returns: undefined
                            },
 "save_session":
 { Args: { "p_address": string,"p_capacity": number,"p_date": string,"p_end_time": string,"p_end_time_estimated": boolean,"p_id"?: string,"p_notes": string,"p_registration_open": boolean,"p_school_holiday": boolean,"p_start_time": string,"p_title": string,"p_venue": string }; Returns: string
