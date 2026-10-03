@@ -8,6 +8,7 @@ import type { Session } from './SessionEditor'
 import { Selection } from '../selection/Selection'
 import { Carpooling } from '../carpooling/Carpooling'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
+import { Palanquees } from '../palanquees/Palanquees'
 import { Attendance } from '../attendance/Attendance'
 import { attendanceLabels, paymentLabels } from '../../lib/labels'
 export type Response = Database['public']['Functions']['get_session_responses']['Returns'][number]
@@ -16,7 +17,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
   const [responses, setResponses] = useState<Response[]>([])
   const [own, setOwn] = useState<Tables<'session_participations'> | null>(null)
   const [directory, setDirectory] = useState<Pick<Member, 'id' | 'first_name' | 'last_name'>[]>([])
-  const [tab, setTab] = useState<'overview' | 'participants' | 'transport' | 'manage' | 'bilan'>('overview')
+  const [tab, setTab] = useState<'overview' | 'participants' | 'transport' | 'manage' | 'bilan' | 'groups'>('overview')
   const [warning, setWarning] = useState(false)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
@@ -52,7 +53,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
     <h2>{session.title} · {formatDate(session.date)}</h2><p>{session.start_time.slice(0, 5)} — {session.end_time.slice(0, 5)} · {session.venue || 'Lieu à préciser'}</p>
     {session.school_holiday && <p className="badge">Vacances scolaires</p>}{session.end_time_estimated && <p>Heure de fin à confirmer.</p>}
     <p>{session.address}</p><p className="preserve-lines">{session.notes}</p><p>{session.status === 'closed' ? 'Bilan clôturé' : session.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées · un désistement reste possible.'}</p>
-    <nav className="actions" aria-label="Rubriques de la séance">{([['overview', 'Ma participation'], ['participants', 'Participants'], ['transport', 'Covoiturage'], ['bilan', 'Bilan'], ...(admin ? [['manage', 'Gestion']] : [])] as [typeof tab, string][]).map(([key, label]) => <button key={key} aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}>{label}</button>)}</nav>
+    <nav className="actions" aria-label="Rubriques de la séance">{([['overview', 'Ma participation'], ['participants', 'Participants'], ['transport', 'Covoiturage'], ['bilan', 'Bilan'], ['groups', 'Palanquées'], ...(admin ? [['manage', 'Gestion']] : [])] as [typeof tab, string][]).map(([key, label]) => <button key={key} aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}>{label}</button>)}</nav>
     {tab === 'overview' && <div className="mt"><h3>Ma réponse : {rsvpLabels[own?.rsvp ?? 'unanswered']}</h3><p>{session.capacity} places pour la sélection finale. Dire Oui ne garantit pas une place.</p>
       <div className="actions" role="group" aria-label="Ma réponse pour la séance">{(['yes', 'maybe', 'no'] as const).map(value => <button key={value} aria-pressed={own?.rsvp === value} disabled={busy || session.status === 'closed' || (!session.registration_open && !admin && value !== 'no')} onClick={() => { setWarning(false); void respond(value) }}>{rsvpLabels[value]}</button>)}</div>
       {session.status === 'closed' && <p>Ma présence : <strong>{attendanceLabels[own?.attendance_status ?? 'unknown']}</strong></p>}
@@ -63,6 +64,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
     {tab === 'participants' && <div className="mt"><h3>Participants · Oui et Peut-être</h3>{!participants.length && <p>Aucune réponse Oui ou Peut-être.</p>}<ul className="member-list">{participants.map(response => <li key={response.member_id}><span>{response.first_name} {response.last_name} · {response.current_level}{response.preparing_level && ` · prépare ${response.preparing_level}`}</span><strong>{rsvpLabels[response.rsvp]}</strong></li>)}</ul></div>}
     {tab === 'manage' && admin && <div className="mt"><h3>Corriger une réponse</h3><ul className="member-list">{directory.map(person => <li key={person.id}><span>{person.first_name} {person.last_name}</span><label>Réponse de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed'} value={responses.find(response => response.member_id === person.id)?.rsvp ?? 'unanswered'} onChange={event => void respond(event.target.value as 'yes' | 'maybe' | 'no', false, person.id)}><option value="unanswered" disabled>Sans réponse</option>{(['yes', 'maybe', 'no'] as const).map(value => <option key={value} value={value}>{rsvpLabels[value]}</option>)}</select></label></li>)}</ul></div>}
     {tab === 'transport' && <Carpooling client={client} member={member} session={session} />}
+    {tab === 'groups' && <Palanquees client={client} member={member} session={session} />}
     {tab === 'bilan' && <Attendance client={client} member={member} session={session} onChanged={onChanged} />}
     <Selection client={client} member={member} session={session} manage={tab === 'manage'} />
     {message && <p role="status">{message}</p>}
