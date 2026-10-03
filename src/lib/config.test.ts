@@ -12,3 +12,20 @@ describe('browser configuration boundary', () => {
   it('rejects inherited production configuration in preview', () => expect(() => readPublicConfig({ ...config, VITE_APP_ENV: 'preview', VITE_SUPABASE_PROJECT_ENV: 'production' })).toThrow('correspondre'))
   it('requires HTTPS for hosted projects', () => expect(() => readPublicConfig({ ...config, VITE_APP_ENV: 'preview', VITE_SUPABASE_PROJECT_ENV: 'preview' })).toThrow('HTTPS'))
 })
+
+const hosted = { ...config, VITE_APP_ENV: 'preview', VITE_SUPABASE_PROJECT_ENV: 'preview', VITE_SUPABASE_URL: 'https://staging.example.test', VITE_PREVIEW_SUPABASE_URL: 'https://staging.example.test', VITE_PRODUCTION_SUPABASE_URL: 'https://production.example.test' }
+describe('hosted project isolation', () => {
+  it('accepts explicit distinct project mappings for each context', () => {
+    expect(readPublicConfig(hosted)?.environment).toBe('preview')
+    expect(readPublicConfig({ ...hosted, VITE_APP_ENV: 'production', VITE_SUPABASE_PROJECT_ENV: 'production', VITE_SUPABASE_URL: hosted.VITE_PRODUCTION_SUPABASE_URL })?.environment).toBe('production')
+  })
+  it('rejects preview pointing at production even if its marker says preview', () => {
+    expect(() => readPublicConfig({ ...hosted, VITE_SUPABASE_URL: hosted.VITE_PRODUCTION_SUPABASE_URL })).toThrow('URL fixée')
+    expect(() => readPublicConfig({ ...hosted, VITE_PREVIEW_SUPABASE_URL: hosted.VITE_PRODUCTION_SUPABASE_URL })).toThrow('distincts')
+    expect(() => readPublicConfig({ ...hosted, VITE_PRODUCTION_SUPABASE_URL: undefined })).toThrow('fixées')
+  })
+  it('refuses unexpected browser-prefixed variables before they can be bundled', () => {
+    expect(() => readPublicConfig({ ...config, VITE_SERVICE_ROLE_KEY: 'sentinel-never-bundle' })).toThrow('non autorisée')
+    expect(() => readPublicConfig({ VITE_DATABASE_PASSWORD: 'sentinel-never-bundle' })).toThrow('non autorisée')
+  })
+})

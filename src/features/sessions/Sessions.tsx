@@ -62,11 +62,11 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
       {warning && <div role="alert" className="mt"><p>Votre CACI sera expiré ou n’est pas renseigné pour cette fosse. Vous pourrez le renouveler avant la séance. Confirmer votre réponse Oui ?</p><div className="actions"><button disabled={busy} onClick={() => void respond('yes', true)}>Confirmer Oui malgré l’avertissement</button><button onClick={() => setWarning(false)}>Annuler la réponse</button></div></div>}
     </div>}
     {tab === 'participants' && <div className="mt"><h3>Participants · Oui et Peut-être</h3>{!participants.length && <p>Aucune réponse Oui ou Peut-être.</p>}<ul className="member-list">{participants.map(response => <li key={response.member_id}><span>{response.first_name} {response.last_name} · {response.current_level}{response.preparing_level && ` · prépare ${response.preparing_level}`}</span><strong>{rsvpLabels[response.rsvp]}</strong></li>)}</ul></div>}
+    <Selection client={client} member={member} session={session} manage={tab === 'manage'} />
     {tab === 'manage' && admin && <div className="mt"><h3>Corriger une réponse</h3><ul className="member-list">{directory.map(person => <li key={person.id}><span>{person.first_name} {person.last_name}</span><label>Réponse de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed'} value={responses.find(response => response.member_id === person.id)?.rsvp ?? 'unanswered'} onChange={event => void respond(event.target.value as 'yes' | 'maybe' | 'no', false, person.id)}><option value="unanswered" disabled>Sans réponse</option>{(['yes', 'maybe', 'no'] as const).map(value => <option key={value} value={value}>{rsvpLabels[value]}</option>)}</select></label></li>)}</ul></div>}
     {tab === 'transport' && <Carpooling client={client} member={member} session={session} />}
     {tab === 'groups' && <Palanquees client={client} member={member} session={session} />}
     {tab === 'bilan' && <Attendance client={client} member={member} session={session} onChanged={onChanged} />}
-    <Selection client={client} member={member} session={session} manage={tab === 'manage'} />
     {message && <p role="status">{message}</p>}
   </section>
 }
