@@ -39,3 +39,11 @@ Withdrawal preserves historical snapshots and releases the current place. Re-reg
 The Covoiturage tab supports explicit offers with 1–8 passenger seats, profile defaults as prefill, editing/removal, taking/changing/leaving a seat, and manual transport preferences. A member without defaults can still offer a car. Removing an occupied car explains passenger displacement before confirmation. Shared views expose offered rendezvous details and participant names, without private profile fields.
 
 Database tests cover seat limits, driver exclusion, failed-switch preservation, one car per passenger/session, cross-session rejection, closed bilan, driver withdrawal, private versus published selection exclusion and default-only profiles. Concurrent HTTP tests exercise the last seat and withdrawal versus join; passengers remain registered and can choose another transport.
+
+## #15 — Payments and operational readiness
+
+Members read their own unpaid/paid/free status. Administrators/president change payments through an audited, role-checked RPC, including corrections after closure. The admin selection view derives its checklist from the draft/publication, CACI on the session date, transport and payment. It stores no independent readiness flag and explicitly disclaims medical/regulatory validation. Public projections omit payment.
+
+## #16 — Attendance, bilan and season history
+
+The Bilan tab supports actual attendance after the Paris-local session end, closure after presence/capacity checks, and explicit reopening for corrections. Reopening retains attendance and keeps registration closed. Only actual dives in closed bilans count for the September–August season; the member overview, selection context and completed-bilan history refresh across accounts. SQL and browser regressions cover boundary dates, replacement attendance, permissions, audit rollback, concurrent closure/correction and reopening counts.

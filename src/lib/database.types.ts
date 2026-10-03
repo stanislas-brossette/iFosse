@@ -276,6 +276,9 @@ isOneToOne: false
             "bootstrap_president":
 { Args: { "p_member_id": string }; Returns: undefined
                            },
+"close_session_bilan":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
 "current_member_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -301,6 +304,11 @@ isOneToOne: false
               "caci_ready": boolean,"caci_status": string,"member_id": string,"payment_ready": boolean,"payment_status": Database["public"]['Enums']["payment_state"],"selection_ready": boolean,"selection_state": string,"transport_mode": Database["public"]['Enums']["transport_state"],"transport_ready": boolean
             }[]
                            },
+"get_bilan_state":
+{ Args: { "p_session_id": string }; Returns: {
+              "dived_count": number,"session_ended": boolean,"unknown_selected_count": number
+            }[]
+                           },
 "get_car_offers":
 { Args: { "p_session_id": string }; Returns: {
               "departure_time": string,"driver_member_id": string,"first_name": string,"id": string,"last_name": string,"meeting_point": string,"note": string,"occupied": number,"passenger_capacity": number
@@ -309,6 +317,16 @@ isOneToOne: false
 "get_current_selection":
 { Args: { "p_session_id": string }; Returns: {
               "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"publication_id": string,"publication_version": number,"rsvp": Database["public"]['Enums']["rsvp_state"],"state": string
+            }[]
+                           },
+"get_season_counts":
+{ Args: { "p_start_year": number }; Returns: {
+              "completed_count": number,"first_name": string,"last_name": string,"member_id": string
+            }[]
+                           },
+"get_session_attendance":
+{ Args: { "p_session_id": string }; Returns: {
+              "attendance_status": Database["public"]['Enums']["attendance_state"],"first_name": string,"last_name": string,"member_id": string
             }[]
                            },
 "get_session_responses":
@@ -345,8 +363,17 @@ isOneToOne: false
 "recover_president":
 { Args: { "p_member_id": string,"p_reason": string }; Returns: undefined
                            },
+"reopen_session_bilan":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
 "save_session":
 { Args: { "p_address": string,"p_capacity": number,"p_date": string,"p_end_time": string,"p_end_time_estimated": boolean,"p_id"?: string,"p_notes": string,"p_registration_open": boolean,"p_school_holiday": boolean,"p_start_time": string,"p_title": string,"p_venue": string }; Returns: string
+                           },
+"session_has_ended":
+{ Args: { "p_date": string,"p_end_time": string }; Returns: boolean
+                           },
+"set_attendance":
+{ Args: { "p_member_id": string,"p_session_id": string,"p_status": Database["public"]['Enums']["attendance_state"] }; Returns: undefined
                            },
 "set_draft_selection":
 { Args: { "p_member_id": string,"p_session_id": string,"p_state": Database["public"]['Enums']["selection_state"] }; Returns: undefined
