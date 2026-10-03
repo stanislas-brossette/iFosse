@@ -268,3 +268,13 @@ A separate custom API server is not required initially. Atomic business operatio
 The latest successful publication is the member-visible state. A new draft does not alter the current publication.
 
 **Rationale:** this matches the validated draft/publication UX and provides a straightforward audit/recovery path.
+
+---
+
+## D026 — Session response visibility is enforced at the API boundary
+
+**Decision:** following the independent review and the request to implement its fixes, regular member-facing response/selection projections expose other members only while their current response is Yes or Maybe. Members retain their own response and withdrawal/selection status. A separate admin-only response projection supports No/unanswered corrections. Direct historical selection/group reads follow the same own/admin/Yes-or-Maybe boundary; stored publications remain immutable.
+
+The Participants view contains only Yes/Maybe, including their published selection status. Other session tabs show a compact personal selection summary, without prepending the full participant list. This tightens the older specification's general wording that all No responses were member-visible; it implements the review's recommended minimization rather than only hiding rows in React. Validated attendance/history remains governed by the existing bilan rules.
+
+**Withdrawal:** a response change that releases a published confirmed place or an occupied car requires explicit confirmation, including administrator corrections. Canceling changes nothing. Server checks run under the session lock; existing transactional car/selection cleanup remains authoritative.

@@ -28,7 +28,7 @@ test('concurrent last-seat joins and driver withdrawal preserve capacity and pas
     const winner = attempts[0].error ? second : first
     const retry = attempts[0].error ? a : b
     const race = await Promise.all([
-      admin.rpc('set_session_rsvp', { p_session_id: id, p_rsvp: 'no' }),
+      admin.rpc('set_session_rsvp', { p_session_id: id, p_rsvp: 'no', p_confirm_withdrawal: true }),
       retry.rpc('join_car', { p_session_id: id, p_car_offer_id: offer.data! }),
     ])
     expect(race[0].error).toBeNull()

@@ -6,7 +6,7 @@ Statut : contrôles techniques locaux testés; décisions de conservation et inf
 
 | Données | Finalité dans le MVP | Accès applicatif |
 | --- | --- | --- |
-| Nom, prénom, niveaux | Inscriptions, sélection, organisation des palanquées | Identités/niveaux dans le contexte d’une séance; annuaire global administrateur uniquement |
+| Nom, prénom, niveaux | Inscriptions, sélection, organisation des palanquées | Réponses/sélections des autres membres limités aux Oui/Peut-être (D026), statut personnel conservé; bilans validés selon les règles d’historique; annuaire global administrateur uniquement |
 | Email/Auth | Connexion par lien magique, support | Soi/administrateur; aucune projection de participants ou de palanquées n’expose l’email |
 | Téléphone et habitudes de voiture | Coordination et préremplissage explicite | Soi/administrateur; proposer une voiture ne publie pas le téléphone |
 | Point de rendez-vous/heure/note proposés | Organisation d’un trajet de séance | Membres actifs; écrire seulement les informations utiles au trajet |

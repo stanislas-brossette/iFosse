@@ -42,7 +42,7 @@ A member can:
 - view sessions;
 - answer yes / maybe / no;
 - modify their answer;
-- see other members' answers;
+- see other members' Yes/Maybe answers and their own response status;
 - propose or withdraw a car for a session;
 - choose or change carpool arrangements;
 - see the published participant selection;
@@ -268,7 +268,7 @@ Rules:
 All members may see:
 
 - session information;
-- Yes / Maybe / No responses;
+- other members' current Yes / Maybe responses (No/unanswered remain own/admin-only under D026);
 - published selection;
 - published palanquees;
 - carpool availability.

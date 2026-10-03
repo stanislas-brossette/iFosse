@@ -63,3 +63,9 @@ An integrated browser test completes creation, member RSVP/CACI confirmation, ca
 ## Independent review — R1 auth renewal
 
 A real SDK token refresh reproduced loss of the open profile/unsaved input. Auth renewal now keeps the same member application mounted while rechecking access. Logout, identity change and an unavailable/revoked profile clear the application; identity generations and request ordering prevent late initial/profile/focus responses from restoring a previous account. Three component regressions cover renewal, access loss and account races; a real browser regression refreshes a token, preserves and saves unsaved input, then signs out and switches accounts without retaining the old form. No database or authorization policy changes.
+
+## Independent review — R2/R4 session coordination
+
+Response changes that release a published place or an occupied car now describe those consequences before saving, for both the member and admin correction flow. A preflight RPC is own/admin-only; the write repeats the check under the session lock to catch intervening passenger/selection changes. Cancellation leaves RSVP, publication and car seats unchanged. Confirmation retains the existing transactional cleanup and passenger registration.
+
+The Participants list combines only Yes/Maybe responses with published selection status. Carpool/groups/bilan receive a small personal summary rather than an unrelated full selection list. D026 makes the review's recommended minimization explicit: separate member/admin response projections, own withdrawal status, and consistent direct historical selection/group RLS. Immutable snapshots and attendance-history rules remain intact.
