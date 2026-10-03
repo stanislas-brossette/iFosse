@@ -117,6 +117,118 @@ isOneToOne: true
                   Relationships: [
 
                   ]
+                },"palanquee_draft": {
+                  Row: {
+                    "group_number": number,"is_leader": boolean,"member_id": string,"session_id": string,"updated_at": string,"updated_by": string | null
+                  }
+                  Insert: {
+                    "group_number": number,"is_leader"?: boolean,"member_id": string,"session_id": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "group_number"?: number,"is_leader"?: boolean,"member_id"?: string,"session_id"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "palanquee_draft_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "palanquee_draft_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "palanquee_drafts"
+      referencedColumns: ["session_id"]
+    },{
+      foreignKeyName: "palanquee_draft_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"palanquee_drafts": {
+                  Row: {
+                    "selection_publication_id": string,"session_id": string
+                  }
+                  Insert: {
+                    "selection_publication_id": string,"session_id": string
+                  }
+                  Update: {
+                    "selection_publication_id"?: string,"session_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "palanquee_drafts_selection_publication_id_session_id_fkey"
+      columns: ["selection_publication_id","session_id"]
+isOneToOne: false
+      referencedRelation: "selection_publications"
+      referencedColumns: ["id","session_id"]
+    },{
+      foreignKeyName: "palanquee_drafts_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: true
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"palanquee_publication_members": {
+                  Row: {
+                    "group_number": number,"is_leader": boolean,"member_id": string,"publication_id": string
+                  }
+                  Insert: {
+                    "group_number": number,"is_leader": boolean,"member_id": string,"publication_id": string
+                  }
+                  Update: {
+                    "group_number"?: number,"is_leader"?: boolean,"member_id"?: string,"publication_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "palanquee_publication_members_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "palanquee_publication_members_publication_id_fkey"
+      columns: ["publication_id"]
+isOneToOne: false
+      referencedRelation: "palanquee_publications"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"palanquee_publications": {
+                  Row: {
+                    "id": string,"published_at": string,"published_by": string | null,"selection_publication_id": string,"session_id": string,"version": number
+                  }
+                  Insert: {
+                    "id"?: string,"published_at"?: string,"published_by"?: string | null,"selection_publication_id": string,"session_id": string,"version": number
+                  }
+                  Update: {
+                    "id"?: string,"published_at"?: string,"published_by"?: string | null,"selection_publication_id"?: string,"session_id"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "palanquee_publications_published_by_fkey"
+      columns: ["published_by"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "palanquee_publications_selection_publication_id_session_id_fkey"
+      columns: ["selection_publication_id","session_id"]
+isOneToOne: false
+      referencedRelation: "selection_publications"
+      referencedColumns: ["id","session_id"]
+    },{
+      foreignKeyName: "palanquee_publications_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"selection_draft": {
                   Row: {
                     "member_id": string,"session_id": string,"state": Database["public"]['Enums']["selection_state"],"updated_at": string,"updated_by": string | null
@@ -293,7 +405,13 @@ isOneToOne: false
 "delete_session":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
+"discard_palanquee_draft":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
 "discard_selection_draft":
+{ Args: { "p_session_id": string }; Returns: undefined
+                           },
+"ensure_palanquee_draft":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
 "ensure_selection_draft":
@@ -314,9 +432,19 @@ isOneToOne: false
               "departure_time": string,"driver_member_id": string,"first_name": string,"id": string,"last_name": string,"meeting_point": string,"note": string,"occupied": number,"passenger_capacity": number
             }[]
                            },
+"get_current_palanquees":
+{ Args: { "p_session_id": string }; Returns: {
+              "current_level": string,"first_name": string,"group_number": number,"is_leader": boolean,"last_name": string,"member_id": string,"needs_review": boolean,"preparing_level": string,"publication_id": string,"publication_version": number,"selection_publication_id": string,"selection_version": number
+            }[]
+                           },
 "get_current_selection":
 { Args: { "p_session_id": string }; Returns: {
               "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"publication_id": string,"publication_version": number,"rsvp": Database["public"]['Enums']["rsvp_state"],"state": string
+            }[]
+                           },
+"get_palanquee_state":
+{ Args: { "p_session_id": string }; Returns: {
+              "needs_review": boolean,"publication_id": string,"publication_version": number,"selection_publication_id": string,"selection_version": number
             }[]
                            },
 "get_season_counts":
@@ -357,6 +485,9 @@ isOneToOne: false
 "provision_member":
 { Args: { "p_auth_user_id": string,"p_first_name": string,"p_last_name": string }; Returns: string
                            },
+"publish_palanquees":
+{ Args: { "p_session_id": string }; Returns: string
+                           },
 "publish_selection":
 { Args: { "p_session_id": string }; Returns: string
                            },
@@ -374,6 +505,9 @@ isOneToOne: false
                            },
 "set_attendance":
 { Args: { "p_member_id": string,"p_session_id": string,"p_status": Database["public"]['Enums']["attendance_state"] }; Returns: undefined
+                           },
+"set_draft_palanquee":
+{ Args: { "p_group_number"?: number,"p_is_leader"?: boolean,"p_member_id": string,"p_session_id": string }; Returns: undefined
                            },
 "set_draft_selection":
 { Args: { "p_member_id": string,"p_session_id": string,"p_state": Database["public"]['Enums']["selection_state"] }; Returns: undefined

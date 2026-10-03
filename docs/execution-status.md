@@ -47,3 +47,7 @@ Members read their own unpaid/paid/free status. Administrators/president change 
 ## #16 — Attendance, bilan and season history
 
 The Bilan tab supports actual attendance after the Paris-local session end, closure after presence/capacity checks, and explicit reopening for corrections. Reopening retains attendance and keeps registration closed. Only actual dives in closed bilans count for the September–August season; the member overview, selection context and completed-bilan history refresh across accounts. SQL and browser regressions cover boundary dates, replacement attendance, permissions, audit rollback, concurrent closure/correction and reopening counts.
+
+## #17 — Palanquée publication
+
+The Palanquées tab provides private manual assignments, optional informational encadrant flags, immediate group/selection level summaries, explicit versioned publication and abandonment of drafts. Members see the latest successful publication while a new draft is edited. Publications retain their source selection; selection changes require review and withdrawn assignments disappear from the effective view without altering history. Current profile levels refresh summaries, and unclassified profiles remain in the total. No regulatory validation or document generation is claimed.
