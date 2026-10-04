@@ -7,14 +7,14 @@ import type { Member } from './AuthGate'
 
 afterEach(cleanup)
 const session = (id: string) => ({ user: { id } }) as Session
-const member = (id: string) => ({ id, auth_user_id: id, first_name: id, last_name: 'Test' }) as Member
+const member = (id: string) => ({ id, auth_user_id: id, first_name: id, last_name: 'Test', role: id === 'A' ? 'admin' : 'member' }) as Member
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done }); return { promise, resolve } }
 function setup(initial = Promise.resolve({ data: { session: session('A') }, error: null })) {
   let notify!: (event: AuthChangeEvent, value: Session | null) => void
   const requests: ReturnType<typeof deferred<{ data: Member | null; error: null }>>[] = []
   const query = { select: () => query, eq: () => query, maybeSingle: () => { const request = deferred<{ data: Member | null; error: null }>(); requests.push(request); return request.promise } }
   const client = { auth: { getSession: () => initial, onAuthStateChange: (callback: typeof notify) => { notify = callback; return { data: { subscription: { unsubscribe: vi.fn() } } } } }, from: () => query } as unknown as SupabaseClient<Database>
-  render(<AuthGate client={client}>{value => <><h1>Compte {value.first_name}</h1><label>Champ non enregistré<input defaultValue={value.first_name} /></label></>}</AuthGate>)
+  render(<AuthGate client={client}>{value => <><h1>Compte {value.first_name}</h1>{value.role !== 'member' && <button>Administration privée</button>}<label>Champ non enregistré<input defaultValue={value.first_name} /></label></>}</AuthGate>)
   return { requests, event: async (event: AuthChangeEvent, value: Session | null) => { await act(async () => notify(event, value)) }, resolve: async (index: number, value: Member | null) => { await act(async () => requests[index].resolve({ data: value, error: null })) } }
 }
 describe('authenticated identity and pending profile requests', () => {
@@ -33,12 +33,15 @@ describe('authenticated identity and pending profile requests', () => {
   it('ignores an old account response after a switch, including a focus refresh', async () => {
     const app = setup()
     await waitFor(() => expect(app.requests).toHaveLength(1)); await app.resolve(0, member('A'))
+    expect(screen.getByRole('button', { name: 'Administration privée' })).toBeTruthy()
     fireEvent.change(screen.getByLabelText('Champ non enregistré'), { target: { value: 'Privé A' } })
     fireEvent(window, new Event('focus'))
     await app.event('SIGNED_IN', session('B'))
+    expect(screen.queryByRole('button', { name: 'Administration privée' })).toBeNull()
     expect(screen.queryByLabelText('Champ non enregistré')).toBeNull()
     await app.resolve(2, member('B')); await app.resolve(1, member('A'))
     expect(screen.getByRole('heading', { name: 'Compte B' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Administration privée' })).toBeNull()
     expect((screen.getByLabelText('Champ non enregistré') as HTMLInputElement).value).toBe('B')
     await app.event('SIGNED_OUT', null)
     expect(screen.queryByLabelText('Champ non enregistré')).toBeNull()

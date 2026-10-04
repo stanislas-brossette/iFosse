@@ -9,14 +9,21 @@ export function CaciEditor({ client, member, onSaved }: { client: SupabaseClient
   const [date, setDate] = useState(member.caci_expiry_date ?? '')
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const original = useRef(member.caci_expiry_date)
+  const dirty = useRef(false)
+  useEffect(() => {
+    if (!dirty.current) { original.current = member.caci_expiry_date; setDate(member.caci_expiry_date ?? '') }
+  }, [member.caci_expiry_date])
+  const changedElsewhere = original.current !== member.caci_expiry_date
   async function save(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setMessage('')
-    const { error } = await client.rpc('set_member_caci', { p_member_id: member.id, p_expiry_date: date || undefined })
-    if (error) setMessage('Modification du CACI refusée. Vérifiez vos droits et la date.')
-    else { setMessage('Date CACI enregistrée.'); await onSaved() }
+    const { error } = await client.rpc('set_member_caci_if_current', { p_member_id: member.id, p_expiry_date: date || undefined, p_expected_expiry_date: original.current ?? undefined })
+    if (error?.code === '40001') { setMessage('Le CACI a été modifié ailleurs. Rechargez la date enregistrée avant de réessayer.'); await onSaved() }
+    else if (error) setMessage('Modification du CACI refusée. Vérifiez vos droits et la date.')
+    else { original.current = date || null; dirty.current = false; setMessage('Date CACI enregistrée.'); await onSaved() }
     setBusy(false)
   }
-  return <form onSubmit={event => void save(event)}><label>Fin de validité CACI<input type="date" value={date} onChange={event => setDate(event.target.value)} /></label><button disabled={busy}>Enregistrer le CACI</button>{message && <p role="status">{message}</p>}</form>
+  return <form onSubmit={event => void save(event)}><label>Fin de validité CACI<input type="date" value={date} onChange={event => { dirty.current = true; setDate(event.target.value) }} /></label>{changedElsewhere && <p role="alert">La date enregistrée a changé. Votre saisie est conservée; rechargez la date avant de poursuivre.</p>}<button disabled={busy || changedElsewhere}>Enregistrer le CACI</button>{(changedElsewhere || message.includes('modifié ailleurs')) && <button type="button" disabled={busy} onClick={() => { original.current = member.caci_expiry_date; dirty.current = false; setDate(member.caci_expiry_date ?? ''); setMessage('') }}>Recharger la date enregistrée</button>}{message && <p role="status">{message}</p>}</form>
 }
 
 export function Profile({ client, member, refresh }: { client: SupabaseClient<Database>; member: Member; refresh: () => Promise<void> }) {

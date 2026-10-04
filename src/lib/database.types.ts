@@ -536,6 +536,9 @@ isOneToOne: false
 "set_member_caci":
 { Args: { "p_expiry_date"?: string,"p_member_id": string }; Returns: undefined
                            },
+"set_member_caci_if_current":
+{ Args: { "p_expected_expiry_date"?: string,"p_expiry_date"?: string,"p_member_id": string }; Returns: undefined
+                           },
 "set_member_role":
 { Args: { "p_member_id": string,"p_role": Database["public"]['Enums']["member_role"] }; Returns: undefined
                            },

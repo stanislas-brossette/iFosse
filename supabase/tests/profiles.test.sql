@@ -43,5 +43,16 @@ select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001'
 select is((select caci_expiry_date from public.members),null::date,'The member sees the administrator-maintained date');
 reset role;
 select is((select first_name from public.members where email='profiles.other@example.test'),'Autre','Ordinary profile edits cannot change another member');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+select throws_ok($$select public.set_member_caci((select id from profile_fixture where email='profiles.other@example.test'),date '2030-01-01')$$,'42501',null,'Member cannot edit another CACI');
+select throws_ok($$select public.set_member_caci_if_current(public.current_member_id(),date '2030-01-01')$$,'42501',null,'Member cannot use guarded CACI write');
+select is((select count(*) from public.members where id=(select id from profile_fixture where email='profiles.other@example.test')),0::bigint,'Private other profile is not retrievable');
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+select lives_ok($$select public.set_member_caci_if_current((select id from profile_fixture where email='profiles.member@example.test'),date '2028-01-01',null)$$,'Guarded write handles initially empty date');
+select throws_ok($$select public.set_member_caci_if_current((select id from profile_fixture where email='profiles.member@example.test'),date '2029-01-01',null)$$,'40001','CACI_EDIT_CONFLICT','Stale editor cannot overwrite a new value');
+select is((select caci_expiry_date from public.members where email='profiles.member@example.test'),date '2028-01-01','Conflict preserves server date');
+select lives_ok($$select public.set_member_caci_if_current((select id from profile_fixture where email='profiles.member@example.test'),null,date '2028-01-01')$$,'Guarded write can intentionally clear current date');
+reset role;
 select * from finish();
 rollback;
