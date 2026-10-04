@@ -83,3 +83,7 @@ The 2026-10-04 local investigation traced both permission observations to an aud
 ## Local acceptance — published occupancy
 
 Seasonal session cards use a single batched RPC for published effective count, publication presence and current capacity. The projection reuses the canonical selected-ID helper, never private draft rows. Database/browser regressions cover initial non-publication, empty/first/new publications, unchanged counts during private edits, withdrawal and equal member/admin visibility.
+
+## Local acceptance — React visual reference
+
+The shared React screens now use the V0 palette/layout with desktop sidebar, phone bottom navigation, identity/role bar, date tiles and published occupancy, semantic actions, readable grouped readiness and keyboard-operable detail tabs. Name search and expandable correction/governance sections support longer rosters. The synthetic 50-member browser scenario covers 20 published confirmations, cars/groups, both viewports, touch targets, focus and overflow; safe PNG artifacts are documented in [visual acceptance](visual-acceptance.md). Production architecture, RPC authorization and the V0 reference are preserved.

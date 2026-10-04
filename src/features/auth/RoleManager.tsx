@@ -20,7 +20,7 @@ export function RoleManager({ client }: { client: SupabaseClient<Database> }) {
     else await load()
     setBusy(null)
   }
-  return <section className="card"><h2>Droits administrateur</h2><p>Le président peut accorder ou retirer les droits de gestion des fosses.</p>{error && <p role="alert">{error}</p>}
-    <ul className="member-list">{members.filter(member => member.role !== 'president').map(member => <li key={member.id}><span>{member.first_name} {member.last_name}</span><button disabled={busy !== null} onClick={() => void change(member)}>{member.role === 'admin' ? 'Retirer les droits administrateur' : 'Accorder les droits administrateur'}</button></li>)}</ul>
+  return <section className="card role-management"><details><summary><span><span className="eyebrow">Gouvernance du club</span><h2>Droits administrateur</h2></span></summary><p>Le président peut accorder ou retirer les droits de gestion des fosses.</p>{error && <p role="alert">{error}</p>}
+    <ul className="member-list">{members.filter(member => member.role !== 'president').map(member => <li key={member.id}><span>{member.first_name} {member.last_name}</span><button className={member.role === 'admin' ? 'danger' : 'secondary'} disabled={busy !== null} onClick={() => void change(member)}>{member.role === 'admin' ? 'Retirer les droits administrateur' : 'Accorder les droits administrateur'}</button></li>)}</ul></details>
   </section>
 }

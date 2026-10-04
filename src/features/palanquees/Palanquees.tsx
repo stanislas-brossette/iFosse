@@ -97,8 +97,8 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
       })}</ul>
       <h4>Répartition de travail</h4><div className="draft-summaries">{draftGroups.map(group => <div key={group}><h4>Palanquée {group}</h4><Summary people={selected.filter(person => assignment(person.member_id)?.group_number === group)} /></div>)}</div>
       <p>{draftRemaining} participant{draftRemaining === 1 ? '' : 's'} non affecté{draftRemaining === 1 ? '' : 's'} dans le brouillon.</p>
-      <div className="actions"><button disabled={busy || session.status === 'closed' || staleDraft || !latestSelection} onClick={() => setConfirmation(true)}>Publier les palanquées</button>{source && <button disabled={busy || session.status === 'closed'} onClick={() => void discard()}>Abandonner le brouillon des palanquées</button>}</div>
-      {confirmation && <div className="mt"><p>Publier cette organisation ? Elle remplacera la version visible aux adhérents. Les participants non affectés restent à répartir.</p><div className="actions"><button disabled={busy} onClick={() => void publish()}>Confirmer la publication des palanquées</button><button disabled={busy} onClick={() => setConfirmation(false)}>Continuer le brouillon</button></div></div>}
+      <div className="actions"><button disabled={busy || session.status === 'closed' || staleDraft || !latestSelection} className="primary" onClick={() => setConfirmation(true)}>Publier les palanquées</button>{source && <button disabled={busy || session.status === 'closed'} onClick={() => void discard()}>Abandonner le brouillon des palanquées</button>}</div>
+      {confirmation && <div className="mt"><p>Publier cette organisation ? Elle remplacera la version visible aux adhérents. Les participants non affectés restent à répartir.</p><div className="actions"><button disabled={busy} className="primary" onClick={() => void publish()}>Confirmer la publication des palanquées</button><button disabled={busy} onClick={() => setConfirmation(false)}>Continuer le brouillon</button></div></div>}
     </div>}
     {message && <p role="status">{message}</p>}
   </div>
