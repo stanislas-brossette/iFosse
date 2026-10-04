@@ -73,7 +73,7 @@ test('profile defaults only prefill an explicit offer; passenger reassigns after
     for (const device of [page, other]) {
       await expect(device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` })).toBeVisible({ timeout: 12000 })
       await device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` }).click()
-      await device.getByRole('button', { name: 'Covoiturage', exact: true }).click()
+      await device.getByRole('tab', { name: 'Covoiturage', exact: true }).click()
     }
     const driverPanel = page.locator('.carpool')
     const passengerPanel = other.locator('.carpool')

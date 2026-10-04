@@ -35,13 +35,13 @@ export function PaymentSummary({ readiness, client, sessionId, firstName, lastNa
   }
 
   return <div className="readiness">
-    <p><strong>{count === 4 ? draft ? 'Brouillon prêt à publier' : 'Prêt pour la fosse' : `${count}/4 points prêts`}</strong></p>
+    <p className={`readiness-score ${count === 4 ? 'ready' : 'warning'}`}><strong>{count === 4 ? draft ? 'Brouillon prêt à publier' : 'Prêt pour la fosse' : `${count}/4 points prêts`}</strong></p>
     <p>Base du récapitulatif : {draft ? 'brouillon privé, à publier' : 'sélection publiée'}.</p>
     <ul className="readiness-points">
-      <li>Sélection : {selectionLabels[readiness.selection_state]}</li>
-      <li>CACI au jour de la fosse : {caciLabels[readiness.caci_status as CaciStatus]}</li>
-      <li>Trajet : {transportLabels[readiness.transport_mode]}{readiness.transport_provisional && ' · Provisoire : conducteur non confirmé dans cette sélection'}</li>
-      <li>Paiement : {paymentLabels[readiness.payment_status]}</li>
+      <li data-ready={readiness.selection_ready}>Sélection : {selectionLabels[readiness.selection_state]}</li>
+      <li data-ready={readiness.caci_ready}>CACI au jour de la fosse : {caciLabels[readiness.caci_status as CaciStatus]}</li>
+      <li data-ready={readiness.transport_ready}>Trajet : {transportLabels[readiness.transport_mode]}{readiness.transport_provisional && ' · Provisoire : conducteur non confirmé dans cette sélection'}</li>
+      <li data-ready={readiness.payment_ready}>Paiement : {paymentLabels[readiness.payment_status]}</li>
     </ul>
     <label>Paiement de {firstName} {lastName}
       <select disabled={busy} value={readiness.payment_status} onChange={event => void change(event.target.value as Payment)}>

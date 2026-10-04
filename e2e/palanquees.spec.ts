@@ -50,7 +50,7 @@ test('published palanquées survive private editing, update live levels and repu
     for (const device of [page, other]) {
       const button = device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` })
       await expect(button).toBeVisible({ timeout: 12000 }); await button.click()
-      await device.getByRole('button', { name: 'Palanquées', exact: true }).click()
+      await device.getByRole('tab', { name: 'Palanquées', exact: true }).click()
     }
     const editor = page.locator('.palanquee-editor'); const published = other.locator('.published-groups')
     await expect(other.locator('.palanquees > .level-summary')).toContainText('Total : 2 · E3 : 1 · Autres / non classés : 1')

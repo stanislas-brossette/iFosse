@@ -3,6 +3,7 @@ import type { SubmitEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../lib/database.types'
 import type { Member } from '../auth/AuthGate'
+import { PageHeading } from '../../components/Visual'
 import { caciLabels, caciStatus } from '../../lib/dates'
 
 export function CaciEditor({ client, member, onSaved }: { client: SupabaseClient<Database>; member: Member; onSaved: () => Promise<void> }) {
@@ -42,8 +43,8 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
     setBusy(false)
   }
   const textFields = [['first_name', 'Prénom', 100], ['last_name', 'Nom', 100], ['phone', 'Téléphone', 40], ['current_level', 'Niveau actuel', 40], ['preparing_level', 'Niveau préparé', 40]] as const
-  return <section className="card"><h2>Mon profil</h2><p>Email de connexion : {member.email}</p><p>Pour corriger votre adresse de connexion, contactez un administrateur.</p>
-    <p>CACI : <strong>{caciLabels[caciStatus(member.caci_expiry_date)]}</strong>{member.caci_expiry_date && ` · valable jusqu’au ${member.caci_expiry_date}`}</p>
+  return <section className="card profile-card"><PageHeading eyebrow="Votre espace" title="Mon profil"><p>Vos informations utiles aux séances du club.</p></PageHeading><p>Email de connexion : {member.email}</p><p>Pour corriger votre adresse de connexion, contactez un administrateur.</p>
+    <p>CACI : <strong className={`chip caci-${caciStatus(member.caci_expiry_date)}`}>{caciLabels[caciStatus(member.caci_expiry_date)]}</strong>{member.caci_expiry_date && ` · valable jusqu’au ${member.caci_expiry_date}`}</p>
     <form onSubmit={event => void save(event)}><div className="form-grid">{textFields.map(([key, label, max]) => <label key={key}>{label}<input type={key === 'phone' ? 'tel' : 'text'} maxLength={max} required={key === 'first_name' || key === 'last_name'} value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
       <label className="check"><input type="checkbox" checked={values.has_usual_car} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, has_usual_car: event.target.checked }) }} />Mémoriser mes habitudes de covoiturage</label>
       <p>Ces valeurs prérempliront une proposition de voiture. Elles ne créent aucune offre automatiquement.</p>

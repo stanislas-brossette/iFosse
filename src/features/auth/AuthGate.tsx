@@ -106,13 +106,13 @@ export function AuthGate({ client, children }: Props) {
   }
 
   if (loading) return <p role="status">Connexion en cours…</p>
-  if (callback && 'tokenHash' in callback) return <section className="card"><h1>Confirmer la connexion</h1><p>Connectez-vous sur cet appareil avec le lien reçu par email.</p>{error && <p role="alert">{error}</p>}<button disabled={busy} onClick={() => void confirmLink()}>Se connecter</button></section>
+  if (callback && 'tokenHash' in callback) return <section className="card login"><p className="eyebrow">Votre espace APSAP</p><h1>Confirmer la connexion</h1><p>Connectez-vous sur cet appareil avec le lien reçu par email.</p>{error && <p role="alert">{error}</p>}<button disabled={busy} onClick={() => void confirmLink()}>Se connecter</button></section>
   if (session) return <>
-    <div className="toolbar"><p>{member ? `${member.first_name} ${member.last_name}` : 'Compte connecté'}</p><button disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
+    <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span><div className="identity"><span className="avatar" aria-hidden="true">{member ? `${member.first_name.slice(0, 1)}${member.last_name.slice(0, 1)}` : '…'}</span><div><strong>{member ? `${member.first_name} ${member.last_name}` : 'Compte connecté'}</strong>{member && <span className="identity-role">{{ member: 'Adhérent', admin: 'Administrateur', president: 'Président' }[member.role]}</span>}</div></div><button disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
     {error && <p role="alert">{error}</p>}
     {member && member.auth_user_id === session.user.id ? <Fragment key={member.auth_user_id}>{children(member, refresh)}</Fragment> : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre compte doit être lié à un adhérent du club. Contactez un administrateur si le problème persiste.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
   </>
-  return <section className="card login"><h1>Connexion à iFosse</h1><p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>
+  return <section className="card login"><p className="eyebrow">Bienvenue au club</p><h1>Connexion à iFosse</h1><p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>
     {(error || callback) && <p role="alert">{error || invalidLink}</p>}
     {message && <p role="status">{message}</p>}
     <form onSubmit={event => void requestLink(event)}><label>Adresse email<input type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} /></label><button disabled={busy} type="submit">Recevoir un lien de connexion</button></form>

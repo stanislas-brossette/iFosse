@@ -28,7 +28,7 @@ test('administrator changes private payment and live readiness while member only
       await expect(button).toBeVisible({ timeout: 12000 }); await button.click()
     }
     await expect(other.getByText('Mon paiement : À régler')).toBeVisible()
-    await page.getByRole('button', { name: 'Gestion', exact: true }).click()
+    await page.getByRole('tab', { name: 'Gestion', exact: true }).click()
     await page.getByRole('combobox', { name: `Sélection de ${member.firstName} Fictif`, exact: true }).selectOption('selected')
     const summary = page.locator('.readiness').filter({ has: page.getByRole('combobox', { name: `Paiement de ${member.firstName} Fictif`, exact: true }) })
     await expect(summary.getByText('3/4 points prêts', { exact: true })).toBeVisible()

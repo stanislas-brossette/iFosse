@@ -33,7 +33,7 @@ export function SessionEditor({ client, session, onSaved, onCancel }: { client: 
     {([['registration_open', 'Ouvrir les inscriptions'], ['school_holiday', 'Vacances scolaires'], ['end_time_estimated', 'Heure de fin à confirmer']] as const).map(([key, label]) => <label className="check" key={key}><input type="checkbox" disabled={key === 'registration_open' && session?.status === 'closed'} checked={values[key]} onChange={event => setValues({ ...values, [key]: event.target.checked })} />{label}</label>)}
     <p>La capacité limite la sélection finale, pas le nombre de réponses Oui. Encadrants compris.</p>
     <div className="actions"><button disabled={busy}>Enregistrer la séance</button><button type="button" onClick={onCancel}>Annuler</button></div>
-    </form>{session && <div className="mt">{confirmDelete ? <><p>Supprimer définitivement cette séance et ses participations ?</p><div className="actions"><button disabled={busy} onClick={() => void remove()}>Confirmer la suppression</button><button onClick={() => setConfirmDelete(false)}>Conserver la séance</button></div></> : <button onClick={() => setConfirmDelete(true)}>Supprimer la séance</button>}</div>}
+    </form>{session && <div className="mt">{confirmDelete ? <><p>Supprimer définitivement cette séance et ses participations ?</p><div className="actions"><button className="danger" disabled={busy} onClick={() => void remove()}>Confirmer la suppression</button><button onClick={() => setConfirmDelete(false)}>Conserver la séance</button></div></> : <button className="danger" onClick={() => setConfirmDelete(true)}>Supprimer la séance</button>}</div>}
     {message && <p role="alert">{message}</p>}
   </section>
 }
