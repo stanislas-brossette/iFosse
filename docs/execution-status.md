@@ -79,3 +79,7 @@ The offer form opens only after “Proposer une voiture”. A successful new off
 ## Local acceptance — member permissions and CACI freshness
 
 The 2026-10-04 local investigation traced both permission observations to an audited president promotion of the acceptance member to admin, with matching source/schema and Auth links. A deterministic localhost-only setup restores the two named test roles; direct regular-member API checks deny self/other CACI writes and return only the own private profile. No redundant authorization guards were added. Identity-switch regressions explicitly remove admin UI while late profile requests finish. CACI editors now refresh untouched values, preserve unsaved edits and reject stale writes under a row lock; directory refresh uses the existing shared-data polling. See [local acceptance](local-acceptance.md). Hosted and organizer gates remain open.
+
+## Local acceptance — published occupancy
+
+Seasonal session cards use a single batched RPC for published effective count, publication presence and current capacity. The projection reuses the canonical selected-ID helper, never private draft rows. Database/browser regressions cover initial non-publication, empty/first/new publications, unchanged counts during private edits, withdrawal and equal member/admin visibility.

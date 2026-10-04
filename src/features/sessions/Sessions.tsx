@@ -10,6 +10,8 @@ import { Carpooling } from '../carpooling/Carpooling'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
 import { Palanquees } from '../palanquees/Palanquees'
 import { Attendance } from '../attendance/Attendance'
+import { PublishedOccupancy } from './PublishedOccupancy'
+import type { CardSummary } from './PublishedOccupancy'
 import { attendanceLabels, paymentLabels } from '../../lib/labels'
 export type Response = Database['public']['Functions']['get_session_responses']['Returns'][number]
 export const rsvpLabels = { unanswered: 'Sans réponse', yes: 'Oui', maybe: 'Peut-être', no: 'Non' } as const
@@ -92,6 +94,7 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
   const [counts, setCounts] = useState<Database['public']['Functions']['get_season_counts']['Returns']>([])
   const [history, setHistory] = useState(false)
   const [sessions, setSessions] = useState<Session[]>([])
+  const [summaries, setSummaries] = useState<Record<string, CardSummary>>({})
   const [selected, setSelected] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [message, setMessage] = useState('')
@@ -99,16 +102,20 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
   const load = useCallback(async () => {
     const request = ++loadSequence.current
     const bounds = seasonBounds(season)
-    const [calendar, totals] = await Promise.all([
+    const [calendar, totals, occupancy] = await Promise.all([
       client.from('sessions').select('*').gte('date', bounds.start).lt('date', bounds.end).order('date').order('start_time'),
       client.rpc('get_season_counts', { p_start_year: season }),
+      client.rpc('get_session_card_summaries', { p_start_year: season }),
     ])
     const { data, error } = calendar
     if (request !== loadSequence.current) return
     if (totals.error) setCounts([])
     else setCounts(totals.data ?? [])
-    if (error || totals.error) setMessage('Calendrier indisponible. Réessayez.')
-    else { setSessions(data ?? []); setMessage('') }
+    if (error || totals.error || occupancy.error) setMessage('Calendrier indisponible. Réessayez.')
+    else {
+      const summary = Object.fromEntries((occupancy.data ?? []).map(row => [row.session_id, row]))
+      setSummaries(summary); setSessions((data ?? []).map(row => ({ ...row, capacity: summary[row.id]?.capacity ?? row.capacity }))); setMessage('')
+    }
   }, [client, season])
   useSharedRefresh(load)
   const session = sessions.find(item => item.id === selected)
@@ -120,6 +127,6 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
     await load(); setSelected(id); setEditing(false)
   }
   return <><section className="card"><div className="toolbar"><h2>Les séances</h2>{member.role !== 'member' && <button onClick={() => { setSelected(null); setEditing(true) }}>Nouvelle séance</button>}</div><p>Mes fosses réalisées cette saison : <strong>{counts.find(row => row.member_id === member.id)?.completed_count ?? 0}</strong>. Seuls les bilans clôturés comptent.</p><label>Saison<select value={season} onChange={event => { setSeason(Number(event.target.value)); setSelected(null); setEditing(false) }}>{Array.from(new Set([season, seasonOf(todayParis()) - 1, seasonOf(todayParis()), ...sessions.map(item => seasonOf(item.date))])).sort((a, b) => b - a).map(year => <option key={year} value={year}>{year}–{year + 1}</option>)}</select></label><div className="actions"><button onClick={() => { setSeason(season - 1); setSelected(null); setEditing(false) }}>Saison précédente</button><button onClick={() => { setSeason(season + 1); setSelected(null); setEditing(false) }}>Saison suivante</button></div><div className="actions mt"><button aria-pressed={!history} onClick={() => { setHistory(false); setSelected(null); setEditing(false) }}>Toutes les séances</button><button aria-pressed={history} onClick={() => { setHistory(true); setSelected(null); setEditing(false) }}>Historique des bilans clôturés</button></div>{message && <p role="alert">{message}</p>}</section>
-    {editing && selected && !session ? <section className="card"><p>Cette séance n’est plus disponible dans le calendrier.</p><button onClick={() => { setSelected(null); setEditing(false) }}>Retour au calendrier</button></section> : editing ? <SessionEditor key={selected ?? 'new'} client={client} session={session} onSaved={saved} onCancel={() => setEditing(false)} /> : session ? <SessionDetail key={session.id} client={client} member={member} session={session} onEdit={() => setEditing(true)} onBack={() => setSelected(null)} onChanged={load} refreshMember={refreshMember} /> : <div className="session-grid">{sessions.filter(item => !history || item.status === 'closed').map(item => <article className="card" key={item.id}><h3>{formatDate(item.date)}</h3><p>{item.title} · {item.start_time.slice(0, 5)} — {item.end_time.slice(0, 5)}</p><p>{item.venue || 'Lieu à préciser'} · {item.capacity} places</p>{item.school_holiday && <p className="badge">Vacances scolaires</p>}<p>{item.status === 'closed' ? 'Bilan clôturé' : item.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées'}</p><button onClick={() => setSelected(item.id)} aria-label={`Voir la séance du ${formatDate(item.date)}`}>Voir la séance</button></article>)}{!sessions.some(item => !history || item.status === 'closed') && <p>{history ? 'Aucun bilan clôturé dans cette saison.' : 'Aucune séance dans cette saison.'}</p>}</div>}
+    {editing && selected && !session ? <section className="card"><p>Cette séance n’est plus disponible dans le calendrier.</p><button onClick={() => { setSelected(null); setEditing(false) }}>Retour au calendrier</button></section> : editing ? <SessionEditor key={selected ?? 'new'} client={client} session={session} onSaved={saved} onCancel={() => setEditing(false)} /> : session ? <SessionDetail key={session.id} client={client} member={member} session={session} onEdit={() => setEditing(true)} onBack={() => setSelected(null)} onChanged={load} refreshMember={refreshMember} /> : <div className="session-grid">{sessions.filter(item => !history || item.status === 'closed').map(item => <article className="card" key={item.id}><h3>{formatDate(item.date)}</h3><p>{item.title} · {item.start_time.slice(0, 5)} — {item.end_time.slice(0, 5)}</p><p>{item.venue || 'Lieu à préciser'}</p><PublishedOccupancy summary={summaries[item.id]} />{item.school_holiday && <p className="badge">Vacances scolaires</p>}<p>{item.status === 'closed' ? 'Bilan clôturé' : item.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées'}</p><button onClick={() => setSelected(item.id)} aria-label={`Voir la séance du ${formatDate(item.date)}`}>Voir la séance</button></article>)}{!sessions.some(item => !history || item.status === 'closed') && <p>{history ? 'Aucun bilan clôturé dans cette saison.' : 'Aucune séance dans cette saison.'}</p>}</div>}
   </>
 }

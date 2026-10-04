@@ -28,3 +28,9 @@ label { display: block; margin-bottom: 16px; }
 button[aria-pressed=true], button[aria-current=page] { background: #12495b; box-shadow: inset 0 0 0 2px #a3dce8; }
 .readiness-points { list-style: none; padding: 0; }
 .member-list .readiness-points li { display: block; padding: 0; border: 0; }
+
+.occupancy p { margin-bottom: 8px; }
+.occupancy progress { width: 100%; height: 8px; border: none; border-radius: 999px; overflow: hidden; accent-color: #087f82; background: #e4ebee; }
+.occupancy progress::-webkit-progress-bar { background: #e4ebee; }
+.occupancy progress::-webkit-progress-value { background: #087f82; border-radius: 999px; }
+.occupancy progress::-moz-progress-bar { background: #087f82; border-radius: 999px; }
