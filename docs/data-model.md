@@ -311,3 +311,7 @@ The session-review migration adds own/admin-only RSVP consequence inspection and
 ## Implemented carpool readiness review
 
 The carpool-review migration extends `get_admin_readiness` with `selection_basis` and `transport_provisional`. Transport readiness depends on the driver's selection in the same draft/publication basis as the participant. Public car cards keep using effective published confirmation. `save_own_car_defaults` accepts only seat count and meeting point, resolves the current active member server-side, and updates only those convenience fields; it neither modifies offers nor writes other profile/permission fields.
+
+## CACI editor conflicts
+
+`set_member_caci_if_current` rechecks administrator access, locks the target member and compares the original date (including null) before invoking the existing audited CACI write. SQLSTATE 40001 preserves a newer server value. Browser editors refresh untouched inputs, retain deliberate unsaved edits and require explicit reload on conflict. Private profile RLS and president-only role management are unchanged.

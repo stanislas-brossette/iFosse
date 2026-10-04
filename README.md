@@ -98,6 +98,10 @@ npm run test:e2e
 
 Database migrations live in `supabase/migrations`. After changing them, reset the local database, run database tests and regenerate the committed types with `npm run db:types`. Reset deletes local development data. `npm run db:stop` stops the stack while preserving local volumes.
 
+## Try the shared app with fictitious accounts
+
+See [local acceptance instructions](docs/local-acceptance.md) for reproducible organizer/member setup, login through the captured email inbox and manual workflows. `npm run local:setup` explicitly restores the test member role; ordinary member imports intentionally preserve roles.
+
 ## Deployment environments
 
 Netlify builds `dist/` using `netlify.toml`; pull requests use the deploy-preview context. Linking the GitHub repository to an existing Netlify site is an external setup step, tracked in [execution status](docs/execution-status.md).

@@ -20,7 +20,8 @@
     "members:import": "node scripts/provision-members.mjs",
     "president:manage": "node scripts/manage-president.mjs",
     "db:restore-check": "node scripts/check-restore.mjs",
-    "calendar:import": "node scripts/import-calendar.mjs"
+    "calendar:import": "node scripts/import-calendar.mjs",
+    "local:setup": "node scripts/setup-local-acceptance.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",
