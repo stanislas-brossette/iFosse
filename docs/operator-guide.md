@@ -52,3 +52,11 @@ Pour un appareil perdu, révoquer les sessions côté Auth et, si le blocage clu
 Après une erreur de sélection, abandonner un brouillon ou préparer/publier une nouvelle version; ne pas éditer un ancien snapshot. Pour un conflit de capacité/voiture, actualiser et vérifier les effectifs avant une nouvelle tentative. Éviter de dupliquer des séances pour masquer un conflit.
 
 Les événements importants sont dans `audit_events`, lisibles par admin/opérateur et non modifiables via le navigateur. Inspecter acteur, cible, séance, type, date et payload minimal. Publications, CACI, paiements, présences, bilan, rôles et import sont audités. Pour une perte de données, appliquer le [runbook de reprise](recovery.md), sans supprimer les protections pour faire passer la restauration.
+
+## Voiture habituelle et modifications rapides
+
+Dans **Mon profil > Ma voiture habituelle**, cocher « J’ai habituellement une voiture disponible » puis renseigner les places passagers habituelles (hors conducteur) et le rendez-vous habituel. **Enregistrer mon profil** conserve ces préférences. Elles préremplissent uniquement une proposition future; elles ne créent aucune offre. Départ et note restent propres à chaque séance.
+
+Dans **Covoiturage**, une offre existante apparaît en résumé **Ma voiture** avec places libres, rendez-vous/départ et passagers. **Modifier ma voiture** ouvre les valeurs actuelles; enregistrer avec succès referme le formulaire. Un refus conserve la saisie; annuler revient au résumé. **Retirer ma voiture** conserve la confirmation lorsqu’elle transporte des passagers, qui restent inscrits à la fosse. Une nouvelle offre se crée toujours avec **Proposer une voiture**.
+
+Dans l’annuaire, enregistrer un CACI avec succès actualise immédiatement son statut/date et referme l’éditeur. Un conflit ou refus le laisse ouvert avec la saisie et les options de reprise existantes. L’éditeur de son propre profil reste ouvert après sauvegarde.

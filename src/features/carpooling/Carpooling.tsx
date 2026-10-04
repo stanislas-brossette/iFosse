@@ -25,6 +25,8 @@ export function Carpooling({ client, member, session, onProfileSaved }: { client
   const [pendingMode, setPendingMode] = useState<'needs' | 'own' | 'unset' | null>(null)
   const [confirmedDrivers, setConfirmedDrivers] = useState<string[]>([])
   const [showOffer, setShowOffer] = useState(false)
+  const offerToggle = useRef<HTMLButtonElement | null>(null)
+  function closeEditor() { setShowOffer(false); requestAnimationFrame(() => offerToggle.current?.focus()) }
   const [pendingDefaults, setPendingDefaults] = useState<{ seats: number; meeting: string } | null>(null)
   const [savedDefaults, setSavedDefaults] = useState(false)
   useEffect(() => { setSavedDefaults(member.has_usual_car) }, [member.has_usual_car])
@@ -45,15 +47,17 @@ export function Carpooling({ client, member, session, onProfileSaved }: { client
   }, [client, member.id, session.id, session.status])
   useSharedRefresh(load)
   const ownCar = cars.find(car => car.driver_member_id === member.id)
+  const previousCar = useRef<string | undefined>(undefined)
+  useEffect(() => { if (previousCar.current !== ownCar?.id) setShowOffer(false); previousCar.current = ownCar?.id }, [ownCar?.id])
   const own = people.find(person => person.member_id === member.id)
   async function save(seats: number, meeting: string, time: string, note: string) {
     setBusy(true); setMessage('')
     const result = await client.rpc('offer_car', { p_session_id: session.id, p_passenger_capacity: seats, p_meeting_point: meeting, p_departure_time: time || undefined, p_note: note })
     if (result.error) setMessage('Offre refusée. Vérifiez les places déjà occupées, les champs et votre participation.')
     else {
-      setMessage('Voiture enregistrée pour cette séance.'); setShowOffer(false)
+      setMessage('Voiture enregistrée pour cette séance.')
       if (!ownCar && !member.has_usual_car && !savedDefaults) setPendingDefaults({ seats, meeting })
-      await load()
+      await load(); closeEditor()
     }
     setBusy(false)
   }
@@ -70,7 +74,7 @@ export function Carpooling({ client, member, session, onProfileSaved }: { client
     setBusy(true); setMessage('')
     const result = await client.rpc('set_own_transport', { p_session_id: session.id, p_mode: value })
     if (result.error) setMessage('Changement de trajet refusé. Actualisez votre participation.')
-    else { setPendingMode(null); setMessage('Trajet enregistré.'); await load() }
+    else { setPendingMode(null); setShowOffer(false); setMessage('Trajet enregistré.'); await load() }
     setBusy(false)
   }
   async function join(id: string) {
@@ -85,13 +89,22 @@ export function Carpooling({ client, member, session, onProfileSaved }: { client
   return <div className="mt carpool"><h3>Covoiturage</h3><p>Mon trajet : <strong>{transportLabels[own?.mode ?? 'unset']}</strong></p>
     {provisional && <p role="status">Trajet provisoire : le conducteur n’est pas confirmé dans la sélection publiée.</p>}
     {!eligible && <p>Répondez Oui pour organiser votre trajet. Une exclusion publiée ou un bilan clôturé empêche les changements.</p>}
-    <div className="actions"><button className={ownCar ? 'danger' : 'secondary'} disabled={!eligible || busy} onClick={() => void mode('needs')}>{ownCar ? 'Retirer ma voiture' : own?.mode === 'passenger' ? 'Quitter cette voiture' : 'Je cherche un trajet'}</button><button disabled={!eligible || busy} onClick={() => void mode('own')}>Je viens par mes propres moyens</button><button disabled={!eligible || busy} onClick={() => void mode('unset')}>Préciser mon trajet plus tard</button></div>
+    <div className="actions">{!ownCar && <button disabled={!eligible || busy} onClick={() => void mode('needs')}>{own?.mode === 'passenger' ? 'Quitter cette voiture' : 'Je cherche un trajet'}</button>}<button disabled={!eligible || busy} onClick={() => void mode('own')}>Je viens par mes propres moyens</button><button disabled={!eligible || busy} onClick={() => void mode('unset')}>Préciser mon trajet plus tard</button></div>
     {pendingMode && <div className="mt"><p>{ownCar?.occupied === 1 ? 'Votre passager reste inscrit à la fosse, mais devra retrouver un trajet.' : `Vos ${ownCar?.occupied ?? 0} passagers restent inscrits à la fosse, mais devront retrouver un trajet.`} Confirmer le retrait de votre voiture ?</p><div className="actions"><button className="danger" disabled={busy} onClick={() => void mode(pendingMode, true)}>Confirmer le retrait de ma voiture</button><button onClick={() => setPendingMode(null)}>Conserver ma voiture</button></div></div>}
-    {eligible && !ownCar && !showOffer && <button className="primary" disabled={busy} onClick={() => setShowOffer(true)}>Proposer une voiture</button>}
-    {eligible && (ownCar || showOffer) && <><OfferForm key={ownCar?.id ?? 'new'} member={member} car={ownCar} disabled={busy} save={save} />{!ownCar && <button disabled={busy} onClick={() => setShowOffer(false)}>Annuler la proposition</button>}</>}
+    {ownCar && <section className="card own-car-summary" aria-label="Ma voiture">
+      <h4>Ma voiture</h4><p className={`chip ${confirmedDrivers.includes(member.id) ? 'green' : 'amber'}`}>{confirmedDrivers.includes(member.id) ? 'Conducteur confirmé dans la sélection publiée.' : 'Conducteur en attente de confirmation · Trajet provisoire.'}</p>
+      <p>{ownCar.passenger_capacity - ownCar.occupied} {ownCar.passenger_capacity - ownCar.occupied === 1 ? 'place libre' : 'places libres'} / {ownCar.passenger_capacity} {ownCar.passenger_capacity === 1 ? 'place passager' : 'places passagers'}.</p>
+      <p>{ownCar.meeting_point || 'Rendez-vous à préciser'}{ownCar.departure_time && ` · départ ${ownCar.departure_time.slice(0, 5)}`}</p>
+      {ownCar.note && <p className="preserve-lines">{ownCar.note}</p>}
+      <p>{ownCar.occupied} passager{ownCar.occupied === 1 ? '' : 's'} à bord.</p>
+      {ownCar.occupied > 0 && <ul>{people.filter(person => person.mode === 'passenger' && person.car_offer_id === ownCar.id).map(person => <li key={person.member_id}>{person.first_name} {person.last_name}</li>)}</ul>}
+      <div className="actions"><button ref={offerToggle} disabled={!eligible || busy} aria-expanded={showOffer} aria-controls="car-offer-editor" onClick={() => setShowOffer(true)}>Modifier ma voiture</button><button className="danger" disabled={!eligible || busy} onClick={() => void mode('needs')}>Retirer ma voiture</button></div>
+    </section>}
+    {eligible && !ownCar && !showOffer && <button ref={offerToggle} className="primary" disabled={busy} onClick={() => setShowOffer(true)}>Proposer une voiture</button>}
+    {eligible && showOffer && <div id="car-offer-editor"><OfferForm key={ownCar?.id ?? 'new'} member={member} car={ownCar} disabled={busy} save={save} /><button disabled={busy} onClick={closeEditor}>{ownCar ? 'Annuler la modification' : 'Annuler la proposition'}</button></div>}
     {pendingDefaults && <div className="mt car-default-prompt"><p>Mémoriser ces habitudes dans mon profil ? Elles prérempliront mes prochaines propositions sans créer de voiture automatiquement. Pour une voiture empruntée ou une offre exceptionnelle, gardez une offre ponctuelle.</p><div className="actions"><button className="primary" disabled={busy} onClick={() => void rememberDefaults()}>Mémoriser pour les prochaines séances</button><button disabled={busy} onClick={() => setPendingDefaults(null)}>Garder une offre ponctuelle</button></div></div>}
-    <h4>Voitures proposées</h4>{!cars.length && <p>Aucune voiture proposée pour cette séance.</p>}
-    <div className="car-grid">{cars.map(car => <article className="card car-card" key={car.id}><h4>{car.first_name} {car.last_name}</h4><p className={`chip ${confirmedDrivers.includes(car.driver_member_id) ? 'green' : 'amber'}`}>{confirmedDrivers.includes(car.driver_member_id) ? 'Conducteur confirmé dans la sélection publiée.' : 'Conducteur en attente de confirmation · Trajet provisoire.'}</p><p>{car.passenger_capacity - car.occupied} {car.passenger_capacity - car.occupied === 1 ? 'place libre' : 'places libres'} / {car.passenger_capacity} {car.passenger_capacity === 1 ? 'place passager' : 'places passagers'}.</p><p>{car.meeting_point || 'Rendez-vous à préciser'}{car.departure_time && ` · départ ${car.departure_time.slice(0, 5)}`}</p><p>{car.note}</p><ul>{people.filter(person => person.mode === 'passenger' && person.car_offer_id === car.id).map(person => <li key={person.member_id}>{person.first_name} {person.last_name}</li>)}</ul>{car.driver_member_id !== member.id && <button disabled={!eligible || busy || !!ownCar || (car.occupied >= car.passenger_capacity && own?.car_offer_id !== car.id)} onClick={() => void join(car.id)} aria-label={`Rejoindre la voiture de ${car.first_name} ${car.last_name}`}>{own?.car_offer_id === car.id ? 'Ma voiture actuelle' : 'Prendre une place'}</button>}</article>)}</div>
+    <h4>Autres voitures proposées</h4>{!cars.some(car => car.driver_member_id !== member.id) && <p>{ownCar ? 'Aucune autre voiture proposée pour cette séance.' : 'Aucune voiture proposée pour cette séance.'}</p>}
+    <div className="car-grid">{cars.filter(car => car.driver_member_id !== member.id).map(car => <article className="card car-card" key={car.id}><h4>{car.first_name} {car.last_name}</h4><p className={`chip ${confirmedDrivers.includes(car.driver_member_id) ? 'green' : 'amber'}`}>{confirmedDrivers.includes(car.driver_member_id) ? 'Conducteur confirmé dans la sélection publiée.' : 'Conducteur en attente de confirmation · Trajet provisoire.'}</p><p>{car.passenger_capacity - car.occupied} {car.passenger_capacity - car.occupied === 1 ? 'place libre' : 'places libres'} / {car.passenger_capacity} {car.passenger_capacity === 1 ? 'place passager' : 'places passagers'}.</p><p>{car.meeting_point || 'Rendez-vous à préciser'}{car.departure_time && ` · départ ${car.departure_time.slice(0, 5)}`}</p><p>{car.note}</p><ul>{people.filter(person => person.mode === 'passenger' && person.car_offer_id === car.id).map(person => <li key={person.member_id}>{person.first_name} {person.last_name}</li>)}</ul>{car.driver_member_id !== member.id && <button disabled={!eligible || busy || !!ownCar || (car.occupied >= car.passenger_capacity && own?.car_offer_id !== car.id)} onClick={() => void join(car.id)} aria-label={`Rejoindre la voiture de ${car.first_name} ${car.last_name}`}>{own?.car_offer_id === car.id ? 'Ma voiture actuelle' : 'Prendre une place'}</button>}</article>)}</div>
     {message && <p role="status">{message}</p>}
   </div>
 }

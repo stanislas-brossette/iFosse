@@ -236,3 +236,12 @@ summary:focus-visible { outline: 3px solid var(--teal-dark); outline-offset: 3px
 .selection-management > p { display: inline-block; margin: 0 16px 5px 0; font-size: 12px; color: var(--muted); }
 .selection-management > .mt { margin-top: 18px; }
 .selection-management > .mt > p { font-size: 12px; max-width: 85ch; line-height: 1.55; }
+
+.usual-car { min-width: 0; margin: 4px 0 24px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: #f4f9f8; }
+.usual-car legend { padding: 0 8px; font-size: 18px; font-weight: 700; }
+.usual-car > p { color: var(--muted); font-size: 12px; }
+.usual-car .form-grid label { margin-bottom: 0; }
+.own-car-summary { padding: 20px; background: var(--teal-tint); }
+.own-car-summary h4 { font-size: 18px; }
+.own-car-summary > p { font-size: 13px; }
+#car-offer-editor form { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f4f9f8; margin-bottom: 12px; }
