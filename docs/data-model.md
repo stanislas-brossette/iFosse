@@ -315,3 +315,7 @@ The carpool-review migration extends `get_admin_readiness` with `selection_basis
 ## CACI editor conflicts
 
 `set_member_caci_if_current` rechecks administrator access, locks the target member and compares the original date (including null) before invoking the existing audited CACI write. SQLSTATE 40001 preserves a newer server value. Browser editors refresh untouched inputs, retain deliberate unsaved edits and require explicit reload on conflict. Private profile RLS and president-only role management are unchanged.
+
+## Session-card occupancy
+
+`get_session_card_summaries(start_year)` returns one batched seasonal projection of session IDs, current capacity, latest publication version and effective confirmed count. It reuses `current_selected_ids`, including RSVP revision/withdrawal filtering. Only active members can call it; no identities, private profiles or draft fields are returned. Capacity/count/version share one database snapshot. A zero publication version is distinct from an empty published selection.

@@ -32,6 +32,8 @@ L’URL explicite doit correspondre à `SUPABASE_URL`. Un seul RPC transactionne
 
 Utiliser la navigation **Séances / Mon profil / Administration**. L’annuaire et les droits ne sont pas montrés aux membres ordinaires. Un changement de vue conserve le travail de séance; une modification enregistrée en base se retrouve sur un autre appareil.
 
+Les cartes indiquent les confirmés de la dernière sélection publiée et la capacité, avec une barre d’occupation. « Sélection non publiée » signifie qu’aucune publication n’existe; un brouillon ne change jamais ce chiffre. Un désistement libère immédiatement une confirmation effective.
+
 1. **Séances → Nouvelle séance** : date, horaires Paris, lieu, capacité (20 par défaut), inscriptions et vacances explicites. Dire Oui reste possible au-delà de la capacité.
 2. Les membres répondent **Oui / Peut-être / Non**. Le CACI manquant/expiré au jour de la séance produit un avertissement à confirmer. Quitter un Oui confirmé ou retirer une voiture occupée via la réponse demande une confirmation des conséquences; annuler conserve la réponse et les places. Cela vaut aussi pour une correction administrateur. Administration permet de renseigner le CACI; Mon profil permet à chacun de consulter le sien.
 3. **Gestion** : travailler la sélection, utiliser les compteurs et le checklist CACI/transport/paiement, puis **Publier la sélection → Confirmer**. Le récapitulatif précise sa base : brouillon privé ou sélection publiée, pour le membre et son conducteur. « Brouillon prêt à publier » ne signifie pas encore confirmation publiée. La correction de réponse d’un adhérent reste accessible après la sélection. Les encadrants comptent dans la capacité.

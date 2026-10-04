@@ -470,6 +470,11 @@ isOneToOne: false
               "attendance_status": Database["public"]['Enums']["attendance_state"],"first_name": string,"last_name": string,"member_id": string
             }[]
                            },
+"get_session_card_summaries":
+{ Args: { "p_start_year": number }; Returns: {
+              "capacity": number,"confirmed_count": number,"publication_version": number,"session_id": string
+            }[]
+                           },
 "get_session_responses":
 { Args: { "p_session_id": string }; Returns: {
               "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"rsvp": Database["public"]['Enums']["rsvp_state"]
