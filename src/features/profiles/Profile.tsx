@@ -6,7 +6,7 @@ import type { Member } from '../auth/AuthGate'
 import { PageHeading } from '../../components/Visual'
 import { caciLabels, caciStatus } from '../../lib/dates'
 
-export function CaciEditor({ client, member, onSaved }: { client: SupabaseClient<Database>; member: Member; onSaved: () => Promise<void> }) {
+export function CaciEditor({ client, member, onRefresh, onSaved }: { client: SupabaseClient<Database>; member: Member; onRefresh: () => Promise<void>; onSaved?: (date: string | null) => Promise<void> }) {
   const [date, setDate] = useState(member.caci_expiry_date ?? '')
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
@@ -19,9 +19,9 @@ export function CaciEditor({ client, member, onSaved }: { client: SupabaseClient
   async function save(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setMessage('')
     const { error } = await client.rpc('set_member_caci_if_current', { p_member_id: member.id, p_expiry_date: date || undefined, p_expected_expiry_date: original.current ?? undefined })
-    if (error?.code === '40001') { setMessage('Le CACI a été modifié ailleurs. Rechargez la date enregistrée avant de réessayer.'); await onSaved() }
+    if (error?.code === '40001') { setMessage('Le CACI a été modifié ailleurs. Rechargez la date enregistrée avant de réessayer.'); await onRefresh() }
     else if (error) setMessage('Modification du CACI refusée. Vérifiez vos droits et la date.')
-    else { original.current = date || null; dirty.current = false; setMessage('Date CACI enregistrée.'); await onSaved() }
+    else { original.current = date || null; dirty.current = false; setMessage('Date CACI enregistrée.'); if (onSaved) await onSaved(date || null); else await onRefresh() }
     setBusy(false)
   }
   return <form onSubmit={event => void save(event)}><label>Fin de validité CACI<input type="date" value={date} onChange={event => { dirty.current = true; setDate(event.target.value) }} /></label>{changedElsewhere && <p role="alert">La date enregistrée a changé. Votre saisie est conservée; rechargez la date avant de poursuivre.</p>}<button disabled={busy || changedElsewhere}>Enregistrer le CACI</button>{(changedElsewhere || message.includes('modifié ailleurs')) && <button type="button" disabled={busy} onClick={() => { original.current = member.caci_expiry_date; dirty.current = false; setDate(member.caci_expiry_date ?? ''); setMessage('') }}>Recharger la date enregistrée</button>}{message && <p role="status">{message}</p>}</form>
@@ -46,11 +46,11 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
   return <section className="card profile-card"><PageHeading eyebrow="Votre espace" title="Mon profil"><p>Vos informations utiles aux séances du club.</p></PageHeading><p>Email de connexion : {member.email}</p><p>Pour corriger votre adresse de connexion, contactez un administrateur.</p>
     <p>CACI : <strong className={`chip caci-${caciStatus(member.caci_expiry_date)}`}>{caciLabels[caciStatus(member.caci_expiry_date)]}</strong>{member.caci_expiry_date && ` · valable jusqu’au ${member.caci_expiry_date}`}</p>
     <form onSubmit={event => void save(event)}><div className="form-grid">{textFields.map(([key, label, max]) => <label key={key}>{label}<input type={key === 'phone' ? 'tel' : 'text'} maxLength={max} required={key === 'first_name' || key === 'last_name'} value={values[key]} onChange={event => setValues({ ...values, [key]: event.target.value })} /></label>)}</div>
-      <label className="check"><input type="checkbox" checked={values.has_usual_car} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, has_usual_car: event.target.checked }) }} />Mémoriser mes habitudes de covoiturage</label>
-      <p>Ces valeurs prérempliront une proposition de voiture. Elles ne créent aucune offre automatiquement.</p>
+      <fieldset className="usual-car"><legend>Ma voiture habituelle</legend><p id="usual-car-help">Ces valeurs préremplissent vos futures propositions pour une séance. Elles ne créent aucune offre automatiquement. L’heure de départ et la note se renseignent pour chaque séance.</p>
+      <label className="check"><input type="checkbox" aria-describedby="usual-car-help" checked={values.has_usual_car} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, has_usual_car: event.target.checked }) }} />J’ai habituellement une voiture disponible</label>
       {values.has_usual_car && <div className="form-grid"><label>Places passagers habituelles<input type="number" min={1} max={8} required value={values.usual_passenger_seats} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, usual_passenger_seats: Number(event.target.value) }) }} /></label><label>Point de rendez-vous habituel<input maxLength={200} value={values.usual_meeting_point} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, usual_meeting_point: event.target.value }) }} /></label></div>}
-      <button disabled={busy}>Enregistrer mon profil</button>{message && <p role="status">{message}</p>}
+      </fieldset><button disabled={busy}>Enregistrer mon profil</button>{message && <p role="status">{message}</p>}
     </form>
-    {member.role !== 'member' && <div className="mt"><h3>Mettre à jour mon CACI</h3><CaciEditor client={client} member={member} onSaved={refresh} /></div>}
+    {member.role !== 'member' && <div className="mt"><h3>Mettre à jour mon CACI</h3><CaciEditor client={client} member={member} onRefresh={refresh} /></div>}
   </section>
 }

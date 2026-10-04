@@ -57,7 +57,7 @@ test('profile defaults only prefill an explicit offer; passenger reassigns after
     await openConfirmation(page, await requestMagicLink(page, driver))
     await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
     await page.getByRole('button', { name: 'Mon profil', exact: true }).click()
-    await page.getByLabel('Mémoriser mes habitudes de covoiturage').check()
+    await page.getByLabel('J’ai habituellement une voiture disponible').check()
     await page.getByLabel('Places passagers habituelles').fill('2')
     await page.getByLabel('Point de rendez-vous habituel').fill('Parking habituel')
     await page.getByRole('button', { name: 'Enregistrer mon profil' }).click()

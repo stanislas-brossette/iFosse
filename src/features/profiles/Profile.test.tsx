@@ -15,7 +15,7 @@ describe('profile defaults changed by an explicit session opt-in', () => {
     fireEvent.change(field('Téléphone'), { target: { value: '0699999999' } })
     view.rerender(<Profile client={client} member={saved} refresh={async () => {}} />)
     expect(field('Téléphone').value).toBe('0699999999')
-    expect(field('Mémoriser mes habitudes de covoiturage').checked).toBe(true)
+    expect(field('J’ai habituellement une voiture disponible').checked).toBe(true)
     expect(field('Places passagers habituelles').value).toBe('2')
     expect(field('Point de rendez-vous habituel').value).toBe('Parking')
   })
