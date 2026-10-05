@@ -145,3 +145,14 @@ For coding-agent guidance, see [AGENTS.md](AGENTS.md).
 The calendar groups sessions by September–August season. Administrators manage session details and responses; members can answer without a capacity cap. A missing/expired-on-session-day CACI asks for confirmation rather than blocking registration. Active pages refresh shared data every five seconds and when focused. PostgreSQL policies and RPCs enforce permissions independently of the interface.
 
 Rollout procedures: [operator guide](docs/operator-guide.md), [tested recovery](docs/recovery.md), [privacy review](docs/privacy-review.md), and [real organizer pilot](docs/pilot-checklist.md). The real calendar import defaults to offline validation and never imports V0 demo registrations/history.
+
+## Synthetic hosted staging data
+
+The operator-only [staging seed workflow](docs/staging-seed.md) initializes 30 fictitious members and seven rich session scenarios on the pinned **ifosse-staging** project. After applying its reviewed migration to staging and configuring private operator environment variables:
+
+```sh
+npm run staging:seed
+npm run staging:seed -- --apply
+```
+
+Default is a read-only target/ownership preflight and plan. Apply sends no emails, creates no passwords and preserves manually provisioned tester accounts. Reruns retain existing fixtures and tester edits without writes. Production is explicitly unsupported and positively rejected; there is no reset/delete mode. Privileged credentials belong only in the private operator environment, never frontend/Netlify configuration.
