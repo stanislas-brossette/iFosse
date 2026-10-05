@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it, vi } from 'vitest'
-import { parseSeedArgs, readStagingConfig, seedStaging, seedEmail, STAGING_REF, STAGING_URL, SEED } from './staging-seed.mjs'
+import { seedFailureMessage, parseSeedArgs, readStagingConfig, seedStaging, seedEmail, STAGING_REF, STAGING_URL, SEED } from './staging-seed.mjs'
 const token = claims => `fixture.${Buffer.from(JSON.stringify(claims)).toString('base64url')}.fixture`
 const env = { SUPABASE_URL: STAGING_URL, SUPABASE_PROJECT_ENV: 'preview', SUPABASE_SERVICE_ROLE_KEY: token({ role: 'service_role', ref: STAGING_REF }) }
 const preflight = { seed: SEED, project_ref: STAGING_REF, initialized: false, auth_ids: Array(30).fill(null) }
@@ -61,5 +61,22 @@ it('ownership or schema failure aborts before Auth creation and does not log pro
   const c = client()
   c.rpc.mockResolvedValue({ error: { message: 'private credential' } })
   await expect(seedStaging(c, env, { apply: true })).rejects.toThrow('no provider details')
+  expect(c.auth.admin.createUser).not.toHaveBeenCalled()
+})
+
+it('prints actionable safe configuration failures while suppressing arbitrary provider messages', () => {
+  let failure
+  try { readStagingConfig({}) } catch (error) { failure = error }
+  expect(seedFailureMessage(failure)).toContain('Missing operator environment variables: SUPABASE_URL, SUPABASE_PROJECT_ENV, SUPABASE_SERVICE_ROLE_KEY')
+  expect(seedFailureMessage(failure)).toContain('.env.local is not loaded')
+  expect(seedFailureMessage(new Error('private-key-value'))).not.toContain('private-key-value')
+})
+it('identifies a missing migration without exposing the provider message', async () => {
+  const c = client()
+  c.rpc.mockResolvedValue({ error: { code: 'PGRST202', message: 'private-key-value' } })
+  let failure
+  try { await seedStaging(c, env) } catch (error) { failure = error }
+  expect(seedFailureMessage(failure)).toContain('Apply migration 20261005010000_staging_seed.sql to staging first')
+  expect(seedFailureMessage(failure)).not.toContain('private-key-value')
   expect(c.auth.admin.createUser).not.toHaveBeenCalled()
 })

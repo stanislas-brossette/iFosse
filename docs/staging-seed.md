@@ -14,6 +14,17 @@ Dans un terminal opérateur privé, fournir ces variables (aucun préfixe `VITE_
 | `SUPABASE_PROJECT_ENV` | Exactement `preview`, marqueur existant pour staging |
 | `SUPABASE_SERVICE_ROLE_KEY` | JWT **legacy service_role** du projet staging, fourni uniquement par l’environnement opérateur privé |
 
+Les variables doivent être **exportées dans le terminal qui lance npm**; le script Node ne charge pas `.env.local` et les variables `VITE_*` ne configurent pas l’opérateur. Exemple Bash, sans clé dans l’historique :
+
+```sh
+export SUPABASE_URL=https://btpojwwwsxrepsehmxbm.supabase.co
+export SUPABASE_PROJECT_ENV=preview
+read -r -s -p "Staging legacy service-role JWT: " SUPABASE_SERVICE_ROLE_KEY
+export SUPABASE_SERVICE_ROLE_KEY
+```
+
+Coller la clé uniquement dans cette invite masquée, jamais dans le chat. Après usage, `unset SUPABASE_SERVICE_ROLE_KEY`. Un échec affiche uniquement une catégorie sûre (configuration manquante, cible/clé refusée, RPC absent, collision ou propriété incohérente), jamais le message brut du fournisseur. Le preflight sans `--apply` reste sans écriture.
+
 Ne pas enregistrer la clé dans le dépôt, des fixtures, la documentation, Netlify ou un frontend. Le format `sb_secret_…` est volontairement refusé : ce workflow exige le claim signé `ref` du JWT pour une vérification positive du projet côté RPC. Ne jamais utiliser une clé production.
 
 ```sh
