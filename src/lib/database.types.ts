@@ -379,13 +379,29 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"staging_seed_runs": {
+                  Row: {
+                    "anchor": string,"auth_ids": (string)[],"created_at": string,"member_ids": (string)[],"seed": string,"session_ids": (string)[]
+                  }
+                  Insert: {
+                    "anchor": string,"auth_ids": (string)[],"created_at"?: string,"member_ids": (string)[],"seed": string,"session_ids": (string)[]
+                  }
+                  Update: {
+                    "anchor"?: string,"auth_ids"?: (string)[],"created_at"?: string,"member_ids"?: (string)[],"seed"?: string,"session_ids"?: (string)[]
+                  }
+                  Relationships: [
+
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "bootstrap_president":
+            "apply_staging_seed":
+{ Args: { "p_auth_ids": (string)[] }; Returns: Json
+                           },
+"bootstrap_president":
 { Args: { "p_member_id": string }; Returns: undefined
                            },
 "can_read_session_participant":
@@ -555,6 +571,9 @@ isOneToOne: false
                            },
 "set_session_rsvp":
 { Args: { "p_confirm_caci_warning"?: boolean,"p_confirm_withdrawal"?: boolean,"p_member_id"?: string,"p_rsvp": Database["public"]['Enums']["rsvp_state"],"p_session_id": string }; Returns: undefined
+                           },
+"staging_seed_status":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "transfer_presidency":
 { Args: { "p_member_id": string }; Returns: undefined

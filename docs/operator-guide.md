@@ -60,3 +60,7 @@ Dans **Mon profil > Ma voiture habituelle**, cocher « J’ai habituellement une
 Dans **Covoiturage**, une offre existante apparaît en résumé **Ma voiture** avec places libres, rendez-vous/départ et passagers. **Modifier ma voiture** ouvre les valeurs actuelles; enregistrer avec succès referme le formulaire. Un refus conserve la saisie; annuler revient au résumé. **Retirer ma voiture** conserve la confirmation lorsqu’elle transporte des passagers, qui restent inscrits à la fosse. Une nouvelle offre se crée toujours avec **Proposer une voiture**.
 
 Dans l’annuaire, enregistrer un CACI avec succès actualise immédiatement son statut/date et referme l’éditeur. Un conflit ou refus le laisse ouvert avec la saisie et les options de reprise existantes. L’éditeur de son propre profil reste ouvert après sauvegarde.
+
+## Peupler uniquement le staging avec des données inventées
+
+Le [workflow synthétique staging](staging-seed.md) fournit `npm run staging:seed` (prévalidation/plan en lecture seule), puis `npm run staging:seed -- --apply`. Il est fixé au projet **ifosse-staging**, vérifie positivement URL, environnement et JWT service-role du projet, et refuse production. Appliquer d’abord sa migration sur staging. Les 30 identités réservées `.invalid` et sept séances utilisent les RPC métier, sans emails/passwords. Le registre privé permet de relancer sans doublons ni écrasement des essais; aucun reset/delete n’est proposé. Les comptes réels des testeurs et leurs droits sont préservés.
