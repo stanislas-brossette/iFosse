@@ -40,9 +40,10 @@ No separate custom API server is required for the MVP unless a concrete need app
 
 ### Hosting
 
-- **Netlify** for the frontend
-- preview deployments for pull requests
-- production frontend configured with the production Supabase project
+- **Netlify** for the frontend, using two sites: `ifosse-staging.netlify.app` (primary branch `staging`, application environment `preview`) and `ifosse.netlify.app` (primary branch `master`, application environment `production`)
+- preview deployments for pull requests use the staging Supabase project on either site
+- all six public environment variables are explicitly configured per site/context; Netlify's primary-deploy `production` context does not determine the application environment
+- staging frontend uses `ifosse-staging`; production frontend uses the separate `ifosse-production` Supabase project
 - secrets and service-role credentials must never be exposed to the browser
 
 ## 3. Authentication
