@@ -58,6 +58,8 @@ describe('unified member management', () => {
     vi.mocked(client.rpc).mockResolvedValueOnce({ error: { code: '42501' }, data: null } as never)
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }))
     await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Modification refusée'))
+    fireEvent(window, new Event('focus'))
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Modification refusée'))
     expect(screen.getByRole('dialog')).toBeTruthy()
     expect(screen.getAllByText('Camille Fictif')).toHaveLength(2)
     expect(client.rpc).toHaveBeenCalledExactlyOnceWith('set_member_active', { p_member_id: 'Camille', p_active: false })
