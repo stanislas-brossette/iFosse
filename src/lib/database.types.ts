@@ -337,13 +337,13 @@ isOneToOne: false
                   ]
                 },"session_participations": {
                   Row: {
-                    "attendance_status": Database["public"]['Enums']["attendance_state"],"member_id": string,"payment_status": Database["public"]['Enums']["payment_state"],"rsvp": Database["public"]['Enums']["rsvp_state"],"rsvp_revision": number,"session_id": string,"transport_mode": Database["public"]['Enums']["transport_state"],"updated_at": string
+                    "attendance_status": Database["public"]['Enums']["attendance_state"],"member_id": string,"payment_status": Database["public"]['Enums']["payment_state"],"registered_at": string | null,"rsvp": Database["public"]['Enums']["rsvp_state"],"rsvp_revision": number,"session_id": string,"transport_mode": Database["public"]['Enums']["transport_state"],"updated_at": string
                   }
                   Insert: {
-                    "attendance_status"?: Database["public"]['Enums']["attendance_state"],"member_id": string,"payment_status"?: Database["public"]['Enums']["payment_state"],"rsvp"?: Database["public"]['Enums']["rsvp_state"],"rsvp_revision"?: number,"session_id": string,"transport_mode"?: Database["public"]['Enums']["transport_state"],"updated_at"?: string
+                    "attendance_status"?: Database["public"]['Enums']["attendance_state"],"member_id": string,"payment_status"?: Database["public"]['Enums']["payment_state"],"registered_at"?: string | null,"rsvp"?: Database["public"]['Enums']["rsvp_state"],"rsvp_revision"?: number,"session_id": string,"transport_mode"?: Database["public"]['Enums']["transport_state"],"updated_at"?: string
                   }
                   Update: {
-                    "attendance_status"?: Database["public"]['Enums']["attendance_state"],"member_id"?: string,"payment_status"?: Database["public"]['Enums']["payment_state"],"rsvp"?: Database["public"]['Enums']["rsvp_state"],"rsvp_revision"?: number,"session_id"?: string,"transport_mode"?: Database["public"]['Enums']["transport_state"],"updated_at"?: string
+                    "attendance_status"?: Database["public"]['Enums']["attendance_state"],"member_id"?: string,"payment_status"?: Database["public"]['Enums']["payment_state"],"registered_at"?: string | null,"rsvp"?: Database["public"]['Enums']["rsvp_state"],"rsvp_revision"?: number,"session_id"?: string,"transport_mode"?: Database["public"]['Enums']["transport_state"],"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -466,7 +466,7 @@ isOneToOne: false
                            },
 "get_current_selection":
 { Args: { "p_session_id": string }; Returns: {
-              "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"publication_id": string,"publication_version": number,"rsvp": Database["public"]['Enums']["rsvp_state"],"state": string
+              "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"publication_id": string,"publication_version": number,"registered_at": string,"rsvp": Database["public"]['Enums']["rsvp_state"],"state": string
             }[]
                            },
 "get_palanquee_state":

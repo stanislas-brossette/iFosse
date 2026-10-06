@@ -261,3 +261,8 @@ dialog::backdrop { background: rgb(24 54 66 / 35%); }
 summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 @media (max-width: 900px) { .directory-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); } .directory-search { grid-column: 1/-1; } }
 @media (max-width: 600px) { .directory-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .directory-access { grid-column: 1/-1; } .member-actions { max-width: none; } .member-create { padding: 16px; } }
+
+/* Sorting is separate from management search; controls retain 44px targets. */
+.participant-sort { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 10px; margin: 16px 0; }
+.participant-sort label { width: 170px; max-width: 100%; margin: 0; }
+.participant-sort button { flex-shrink: 0; }

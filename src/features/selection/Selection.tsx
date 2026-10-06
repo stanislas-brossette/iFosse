@@ -9,6 +9,8 @@ import { seasonOf } from '../../lib/dates'
 import { selectionLabels } from '../../lib/labels'
 import { PaymentSummary } from '../payments/Payments'
 import type { Readiness } from '../payments/Payments'
+import { readSort, saveSort, sortLabels, sortParticipants } from './participantSort'
+import type { SortKey, SortPreference } from './participantSort'
 export function Selection({ client, member, session, manage, participants = false }: { client: SupabaseClient<Database>; member: Member; session: Session; manage: boolean; participants?: boolean }) {
   const [counts, setCounts] = useState<Database['public']['Functions']['get_season_counts']['Returns']>([])
   const [current, setCurrent] = useState<CurrentSelection[]>([])
@@ -20,6 +22,8 @@ export function Selection({ client, member, session, manage, participants = fals
   const [busy, setBusy] = useState(false)
   const [confirm, setConfirm] = useState(false)
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState(readSort)
+  function changeSort(next: SortPreference) { setSort(next); saveSort(next) }
   const sequence = useRef(0)
   const admin = member.role !== 'member'
   const load = useCallback(async () => {
@@ -82,7 +86,10 @@ export function Selection({ client, member, session, manage, participants = fals
     <p>Ma place : <strong>{selectionLabels[own?.state ?? (publication ? 'none' : 'pending')]}</strong></p>
     <p>{selected.length} participants confirmés / {session.capacity} places.</p>
     {!publication && <p>Aucune sélection publiée pour le moment.</p>}
-    {participants && <div className="participant-selection"><h3>Participants · Oui et Peut-être</h3>{!editable.length && <p>Aucune réponse Oui ou Peut-être.</p>}<ul className="member-list">{editable.map(person => <li key={person.member_id}><span>{person.first_name} {person.last_name} · {person.current_level}{person.preparing_level && ` · prépare ${person.preparing_level}`}</span><strong className={`chip ${person.state === 'selected' ? 'green' : person.state === 'declined' ? 'red' : 'amber'}`}>{person.rsvp === 'yes' ? 'Oui' : 'Peut-être'} · {selectionLabels[person.state]}</strong></li>)}</ul></div>}
+    {participants && <div className="participant-selection"><h3>Participants · {editable.length}</h3><p className="muted">Réponses Oui et Peut-être.</p>
+      <div className="participant-sort"><label>Trier par<select value={sort.key} onChange={event => changeSort({ key: event.target.value as SortKey, descending: false })}>{Object.entries(sortLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><button type="button" aria-label={`Ordre ${sort.descending ? 'décroissant' : 'croissant'} : passer à l’ordre ${sort.descending ? 'croissant' : 'décroissant'}`} onClick={() => changeSort({ ...sort, descending: !sort.descending })}><span aria-hidden="true">{sort.descending ? '↓' : '↑'}</span> {sort.descending ? 'Décroissant' : 'Croissant'}</button></div>
+      {sort.key === 'registration' && editable.some(person => !person.registered_at) && <p className="muted">Dates d’inscription anciennes inconnues : affichées en dernier.</p>}
+      {!editable.length && <p>Aucune réponse Oui ou Peut-être.</p>}<ul className="member-list">{sortParticipants(editable, sort).map(person => <li key={person.member_id}><span>{person.first_name} {person.last_name} · {person.current_level || 'Niveau non renseigné'}{person.preparing_level && ` · prépare ${person.preparing_level}`}</span><strong className={`chip ${person.state === 'selected' ? 'green' : person.state === 'declined' ? 'red' : 'amber'}`}>{person.rsvp === 'yes' ? 'Oui' : 'Peut-être'} · {selectionLabels[person.state] ?? 'Statut inconnu'}</strong></li>)}</ul></div>}
     {manage && admin && <div className="mt"><h3>Sélection de travail · {draftCount} / {session.capacity}</h3><p>{hasDraft ? 'Brouillon privé en cours.' : 'La sélection publiée sert de point de départ.'} Les adhérents voient uniquement la dernière publication.</p><p>Préparation opérationnelle uniquement : ce récapitulatif ne valide ni l’aptitude médicale ni la conformité réglementaire.</p>
       <div className="actions publish-actions"><button className="primary" disabled={busy || session.status === 'closed'} onClick={() => setConfirm(true)}>Publier la sélection</button>{hasDraft && <button disabled={busy || session.status === 'closed'} className="danger" onClick={() => void discard()}>Abandonner le brouillon</button>}</div>
       {confirm && <div className="mt"><p>Publier cette sélection de {draftCount} personnes ? Elle remplacera la version visible aux adhérents.</p><div className="actions"><button className="primary" disabled={busy} onClick={() => void publish()}>Confirmer la publication</button><button onClick={() => setConfirm(false)}>Continuer le brouillon</button></div></div>}
