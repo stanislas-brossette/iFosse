@@ -104,20 +104,31 @@ See [local acceptance instructions](docs/local-acceptance.md) for reproducible o
 
 ## Deployment environments
 
-Netlify builds `dist/` using `netlify.toml`; pull requests use the deploy-preview context. Linking the GitHub repository to an existing Netlify site is an external setup step, tracked in [execution status](docs/execution-status.md).
+Netlify builds `dist/` using the unchanged build/test command in `netlify.toml`. Two separate sites share this repository:
 
-Set public frontend variables separately for each Netlify build context:
-
-| Variable | Local | Deploy preview / branch | Production |
+| Netlify site | Primary (Netlify production) branch | iFosse environment | Supabase project |
 | --- | --- | --- | --- |
-| `VITE_APP_ENV` | `local` | `preview` (in TOML) | `production` (in TOML) |
-| `VITE_SUPABASE_PROJECT_ENV` | `local` | `preview` | `production` |
-| `VITE_SUPABASE_URL` | local API URL | staging EU project URL | production EU project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | local public key | staging public key | production public key |
-| `VITE_PREVIEW_SUPABASE_URL` | unset | pinned staging URL | pinned staging URL |
-| `VITE_PRODUCTION_SUPABASE_URL` | unset | pinned production URL | pinned production URL |
+| `ifosse-staging.netlify.app` | `staging` | `preview` | `ifosse-staging` |
+| `ifosse.netlify.app` | `master` | `production` | `ifosse-production` |
 
-Hosted builds require two distinct pinned project URLs and fail if the selected URL does not match the context, even when its environment marker is mislabeled. Unexpected `VITE_*` variables fail validation; browser code refers only to the approved variables. Do not set the Supabase variables in Netlify's shared/all-context scope: use explicit contexts and separate projects. Preview databases contain only fictitious test data. Frontend builds do not apply migrations; apply reviewed migrations separately to the intended Supabase project. `.env.local`, local Netlify state, generated bundles and database runtime files are ignored by Git.
+**Netlify's `production` context means the site's primary deploy, not the application's environment.** The staging site's primary deploy must explicitly receive `VITE_APP_ENV=preview`. No `VITE_APP_ENV` value is hardcoded in TOML; set it alongside the other public variables in Netlify's environment settings, with **Builds** scope and explicit context values on each site.
+
+Configure this exact public environment matrix. Public keys below mean the corresponding project's **publishable browser key**, supplied in Netlify; no privileged key belongs here.
+
+| Variable | `ifosse-staging`: production + deploy-preview + branch-deploy | `ifosse`: production | `ifosse`: deploy-preview + branch-deploy |
+| --- | --- | --- | --- |
+| `VITE_APP_ENV` | `preview` | `production` | `preview` |
+| `VITE_SUPABASE_PROJECT_ENV` | `preview` | `production` | `preview` |
+| `VITE_SUPABASE_URL` | `https://btpojwwwsxrepsehmxbm.supabase.co` | `https://qjrpxuatsnvrqxhzklzq.supabase.co` | `https://btpojwwwsxrepsehmxbm.supabase.co` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | public publishable key of `ifosse-staging` | public publishable key of `ifosse-production` | public publishable key of `ifosse-staging` |
+| `VITE_PREVIEW_SUPABASE_URL` | `https://btpojwwwsxrepsehmxbm.supabase.co` | `https://btpojwwwsxrepsehmxbm.supabase.co` | `https://btpojwwwsxrepsehmxbm.supabase.co` |
+| `VITE_PRODUCTION_SUPABASE_URL` | `https://qjrpxuatsnvrqxhzklzq.supabase.co` | `https://qjrpxuatsnvrqxhzklzq.supabase.co` | `https://qjrpxuatsnvrqxhzklzq.supabase.co` |
+
+If deploy previews or branch deploys are enabled on either site, explicitly supply their preview values before building them. Do not let non-primary deploys inherit production project's URL/key via shared/all-context defaults. Both sites pin both public project URLs to the same two distinct values; pinning a URL does not grant database access. Never configure service-role/secret keys or additional `VITE_*` variables in frontend builds. This PR's repository configuration does not update Netlify dashboard values automatically.
+
+`src/lib/config.ts` continues to validate all six public variables at build and runtime. Hosted configurations require distinct HTTPS preview/production pins and the selected URL must match `VITE_APP_ENV`, even if an environment marker is mislabeled. `VITE_SUPABASE_PROJECT_ENV` must match the application environment; unexpected browser-prefixed variables and privileged key formats are rejected. No isolation checks are relaxed.
+
+Local development remains `VITE_APP_ENV=local`, `VITE_SUPABASE_PROJECT_ENV=local`, the local API URL and local public key; hosted URL pins may remain unset locally. Preview/staging fixtures are synthetic; manually provisioned pilot accounts remain separate. Frontend builds do not apply migrations; apply reviewed migrations separately to the intended Supabase project. `.env.local`, local Netlify state, generated bundles and database runtime files are ignored by Git.
 
 ## Product principles
 

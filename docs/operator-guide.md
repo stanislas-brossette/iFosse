@@ -2,7 +2,11 @@
 
 ## Préparer les environnements
 
-Créer/configurer deux projets Supabase EU distincts : production privée pour le club, staging avec données fictives pour previews et essais. Appliquer les migrations revues séparément au bon projet; le build Netlify ne migre pas la base. Lier le dépôt au site Netlify et configurer les contextes explicitement. Les URL fixées `VITE_PREVIEW_SUPABASE_URL` et `VITE_PRODUCTION_SUPABASE_URL` doivent être différentes; `VITE_SUPABASE_URL` doit correspondre au contexte. Seules les six variables publiques décrites dans le README sont autorisées. Aucun secret/service-role ne reçoit un préfixe `VITE_` ou une place dans le build frontend.
+Créer/configurer deux projets Supabase EU distincts : production privée pour le club, staging avec données fictives pour previews et essais. Appliquer les migrations revues séparément au bon projet; le build Netlify ne migre pas la base.
+
+Lier le dépôt à deux sites Netlify : `ifosse-staging.netlify.app` avec branche principale `staging`, et `ifosse.netlify.app` avec branche principale `master`. Le contexte Netlify `production` du premier reçoit `VITE_APP_ENV=preview` / `VITE_SUPABASE_PROJECT_ENV=preview` et le projet Supabase `ifosse-staging`; celui du second reçoit les deux marqueurs `production` et le projet `ifosse-production`. TOML ne fixe aucun marqueur d’environnement iFosse.
+
+Configurer les six variables publiques avec scope Builds pour chaque site/contexte selon la [matrice exacte du README](../README.md#deployment-environments); les deploy-preview/branch-deploy activés utilisent toujours les marqueurs preview et le projet staging, sur les deux sites. Éviter tout héritage de valeurs production dans les previews. Les réglages du dashboard restent une étape opérateur séparée. Les URL fixées `VITE_PREVIEW_SUPABASE_URL` et `VITE_PRODUCTION_SUPABASE_URL` doivent être différentes; `VITE_SUPABASE_URL` doit correspondre au contexte. Seules les six variables publiques décrites dans le README sont autorisées. Aucun secret/service-role ne reçoit un préfixe `VITE_` ou une place dans le build frontend.
 
 Suivre [l’authentification](authentication.md) pour désactiver signup public/anonymous, garder le fournisseur email actif, fixer `/auth/confirm`, installer le template, SMTP et expiry. N’autoriser les URL de preview que sur staging. Tester réception, scanner d’email, lien expiré/réutilisé, autre navigateur et déconnexion avec les organisateurs. Vérifier [la reprise](recovery.md) et signer [la revue de confidentialité](privacy-review.md).
 

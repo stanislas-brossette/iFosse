@@ -5,17 +5,10 @@ publish = "dist"
 [build.environment]
 NODE_VERSION = "22"
 
-# Configure the public Supabase URL/key with explicit deployment contexts in the
-# Netlify dashboard. Preview/branch contexts must use non-production projects.
-# Never store service-role keys in Netlify's frontend build environment.
-[context.production.environment]
-VITE_APP_ENV = "production"
-
-[context.deploy-preview.environment]
-VITE_APP_ENV = "preview"
-
-[context.branch-deploy.environment]
-VITE_APP_ENV = "preview"
+# Set all public VITE_* variables explicitly in Netlify per site/context.
+# Netlify's production context also serves the staging site's primary branch;
+# VITE_APP_ENV is therefore supplied by site configuration, never inferred here.
+# Preview/branch deploys use staging Supabase. No service-role keys in builds.
 
 [[redirects]]
 from = "/*"
