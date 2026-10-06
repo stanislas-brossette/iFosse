@@ -26,7 +26,12 @@ export function Carpooling({ client, member, session, onProfileSaved }: { client
   const [confirmedDrivers, setConfirmedDrivers] = useState<string[]>([])
   const [showOffer, setShowOffer] = useState(false)
   const offerToggle = useRef<HTMLButtonElement | null>(null)
-  function closeEditor() { setShowOffer(false); requestAnimationFrame(() => offerToggle.current?.focus()) }
+  const restoreOfferFocus = useRef(false)
+  function closeEditor() { restoreOfferFocus.current = true; setShowOffer(false) }
+  useEffect(() => {
+    // Focus only after React committed the collapsed form and enabled controls.
+    if (restoreOfferFocus.current && !showOffer && !busy) { offerToggle.current?.focus(); restoreOfferFocus.current = false }
+  }, [showOffer, busy])
   const [pendingDefaults, setPendingDefaults] = useState<{ seats: number; meeting: string } | null>(null)
   const [savedDefaults, setSavedDefaults] = useState(false)
   useEffect(() => { setSavedDefaults(member.has_usual_car) }, [member.has_usual_car])
