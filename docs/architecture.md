@@ -66,7 +66,7 @@ Magic links should be short-lived and single-use.
 
 Open public sign-up is not required.
 
-A member account must correspond to a known club member email. Initial users are imported or invited by an administrator. The authenticated Supabase user is linked 1:1 to an iFosse member profile.
+A member account must correspond to a known club member email. Users are provisioned by the President or a trusted bootstrap/recovery operator, without invitations. The President UI uses a small Supabase Edge Function for the privileged Auth Admin identity creation; ordinary business rules remain transactional SQL/RLS. The authenticated Supabase user is linked 1:1 to an iFosse member profile.
 
 Email addresses are unique.
 
@@ -184,3 +184,7 @@ Not part of the production MVP:
 - complex event/trip management.
 
 These can be revisited after the fosse workflow is running reliably in production.
+
+## Member lifecycle boundary
+
+President-managed access suspension uses `members.disabled_at` and the required Custom Access Token hook; existing JWTs lose RLS/RPC access immediately. Creation verifies the current President before Auth Admin and again in a transactional SQL finalizer. No custom API server, passwords, public signup or client-side service keys are introduced. [Deployment/security details](member-management.md).

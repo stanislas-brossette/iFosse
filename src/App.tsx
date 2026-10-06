@@ -5,7 +5,6 @@ import type { Member } from './features/auth/AuthGate'
 import { publicConfig as config } from './lib/publicConfig'
 import { supabase } from './lib/supabase'
 import { AuthGate } from './features/auth/AuthGate'
-import { RoleManager } from './features/auth/RoleManager'
 import { Profile } from './features/profiles/Profile'
 import { Directory } from './features/profiles/Directory'
 import { Sessions } from './features/sessions/Sessions'
@@ -28,7 +27,7 @@ function MemberApp({ client, member, refresh }: { client: SupabaseClient<Databas
     <div className="app-content">
       <div hidden={active !== 'sessions'}><Sessions client={client} member={member} refreshMember={refresh} /></div>
       <div hidden={active !== 'profile'}><Profile client={client} member={member} refresh={refresh} /></div>
-      {member.role !== 'member' && <div hidden={active !== 'admin'}>{member.role === 'president' && <RoleManager client={client} />}<Directory client={client} /></div>}
+      {member.role !== 'member' && <div hidden={active !== 'admin'}><Directory client={client} member={member} /></div>}
       <footer className="app-footer">APSAP · Les fosses, simplement.</footer>
     </div>
   </div>

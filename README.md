@@ -167,3 +167,7 @@ npm run staging:seed -- --apply
 ```
 
 Default is a read-only target/ownership preflight and plan. Apply sends no emails, creates no passwords and preserves manually provisioned tester accounts. Reruns retain existing fixtures and tester edits without writes. Production is explicitly unsupported and positively rejected; there is no reset/delete mode. Privileged credentials belong only in the private operator environment, never frontend/Netlify configuration.
+
+## Member management
+
+Administration now uses one searchable directory. Admins maintain CACI; the President can add ordinary members (normal magic-link login), manage admin rights, and deactivate/reactivate access without deleting history. Operator bootstrap/recovery remains available. [Deployment and security guide](docs/member-management.md) documents the required staging Edge Function and Auth token hook; neither is installed by a Netlify frontend deploy. Hard deletion is intentionally excluded.

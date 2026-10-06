@@ -38,7 +38,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
     if (publicResult.error || ownResult.error) { setMessage('Actualisation impossible. Réessayez.'); return }
     setResponses(publicResult.data ?? []); setOwn(ownResult.data)
     if (admin) {
-      const result = await client.from('members').select('id, first_name, last_name').order('last_name')
+      const result = await client.from('members').select('id, first_name, last_name').is('disabled_at', null).order('last_name')
       if (request === loadSequence.current && !result.error) setDirectory(result.data ?? [])
     }
   }, [client, member.id, admin, session.id])

@@ -106,9 +106,11 @@ The president is a super-admin.
 The president has all admin capabilities and can additionally:
 
 - promote a regular member to admin;
-- remove admin rights from an admin.
+- remove admin rights from an admin;
+- create an ordinary member (first name, last name, email) who subsequently uses normal magic-link login;
+- deactivate/reactivate access with confirmation, while preserving all historical records (D028).
 
-Regular admins cannot change application roles.
+Regular admins cannot change application roles or create/deactivate/reactivate members. Administration uses one searchable directory with row-level actions; members cannot access it. Hard deletion is excluded. [Lifecycle and deployment details](member-management.md).
 
 The MVP/prototype keeps exactly one president. The president role cannot be removed from the member editor.
 

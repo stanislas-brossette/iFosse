@@ -6,7 +6,7 @@ import type { Session } from '../sessions/SessionEditor'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
 import { attendanceLabels } from '../../lib/labels'
 
-type Person = { id: string; first_name: string; last_name: string }
+type Person = { id: string; first_name: string; last_name: string; disabled_at: string | null }
 type AttendanceRow = Database['public']['Functions']['get_session_attendance']['Returns'][number]
 type Bilan = Database['public']['Functions']['get_bilan_state']['Returns'][number]
 type Status = Database['public']['Enums']['attendance_state']
@@ -29,7 +29,7 @@ export function Attendance({ client, member, session, onChanged }: { client: Sup
     setRows(attendance.data ?? [])
     if (admin) {
       const [directory, selection, bilan] = await Promise.all([
-        client.from('members').select('id,first_name,last_name').order('last_name'),
+        client.from('members').select('id,first_name,last_name,disabled_at').order('last_name'),
         client.rpc('get_current_selection', { p_session_id: session.id }),
         client.rpc('get_bilan_state', { p_session_id: session.id }),
       ])
@@ -56,7 +56,7 @@ export function Attendance({ client, member, session, onChanged }: { client: Sup
     if (!result.error) setConfirmation(null)
     await load(); await onChanged(); setBusy(false)
   }
-  const displayed = people.filter(person => all || selected.includes(person.id) || rows.some(row => row.member_id === person.id && row.attendance_status !== 'unknown'))
+  const displayed = people.filter(person => (all && !person.disabled_at) || selected.includes(person.id) || rows.some(row => row.member_id === person.id && row.attendance_status !== 'unknown'))
   return <div className="mt attendance"><h3>Bilan des présences</h3>
     <p>{session.status === 'closed' ? 'Bilan clôturé : seules les plongées réalisées comptent pour la saison.' : 'Les présences comptent uniquement après clôture du bilan.'}</p>
     {admin ? <>

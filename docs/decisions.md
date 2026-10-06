@@ -286,3 +286,11 @@ The Participants view contains only Yes/Maybe, including their published selecti
 **Decision:** a Yes member may offer a car before final confirmation. Car cards and personal trips are provisional until the driver is effectively selected in the latest publication. Passenger booking remains possible; driver exclusion/withdrawal keeps the existing displacement rules.
 
 The administrator checklist uses one consistent selection basis for both the participant and their driver: the private draft when its header exists, otherwise the published effective selection. A passenger/driver trip is transport-ready only if that driver is selected in that basis. The checklist states its basis; four draft points display “Brouillon prêt à publier”, not a published confirmation. Public car cards always use the publication and never reveal draft state. This is an operational distinction, not a transport guarantee or regulatory assessment.
+
+---
+
+## D028 — President-managed membership lifecycle
+
+**Decision (explicit member-management request):** one Admin/President directory replaces the duplicated rights list. Only the current President can create an ordinary member or suspend/reactivate access. Creation uses a small Supabase Edge Function for Auth Admin, followed by a caller-authorized transactional SQL finalizer reusing operator provisioning. No passwords, public signup or invitations are introduced; operator bootstrap/recovery remains available.
+
+Suspension is `members.disabled_at`, enforced both by current-member RLS/RPC authorization and a required Custom Access Token Auth hook. History, operational session state, roles and seed ownership remain intact; organizers handle any future-session adjustments explicitly. Reactivation clears the suspension, without removing separate operator Auth bans. An inactive profile cannot become President. General hard deletion is excluded, including test accounts, pending a separate verified history/referential-integrity procedure. See [deployment and recovery instructions](member-management.md).

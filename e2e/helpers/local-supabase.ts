@@ -173,3 +173,15 @@ export async function fixtureClient(fixture: MemberFixture) {
   if (result.error) throw new Error('Local fixture authentication failed.')
   return client
 }
+
+export function makeFixturePresident(fixture: MemberFixture) {
+  status()
+  if (![fixture.authUserId, fixture.memberId].every(id => /^[0-9a-f-]{36}$/i.test(id))) throw new Error('Invalid local fixture identity.')
+  const sql = `begin; select pg_advisory_xact_lock(hashtextextended('ifosse:identity',0)); do $$ begin if exists(select 1 from public.members where role='president') then raise exception 'Use an isolated local stack for President tests'; end if; end $$; update public.members set role='president' where id='${fixture.memberId}' and auth_user_id='${fixture.authUserId}' and email like 'ifosse-e2e-%@example.test'; commit;`
+  execFileSync('docker', ['exec', 'supabase_db_ifosse', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', sql], { stdio: ['ignore', 'pipe', 'pipe'] })
+}
+export function releaseFixturePresident(fixture: MemberFixture) {
+  status()
+  if (!/^[0-9a-f-]{36}$/i.test(fixture.memberId)) throw new Error('Invalid local fixture identity.')
+  execFileSync('docker', ['exec', 'supabase_db_ifosse', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-c', `update public.members set role='member' where id='${fixture.memberId}' and email like 'ifosse-e2e-%@example.test';`], { stdio: ['ignore', 'pipe', 'pipe'] })
+}

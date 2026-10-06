@@ -1,18 +1,31 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../lib/database.types'
 import type { Member } from '../auth/AuthGate'
-import { caciLabels, caciStatus } from '../../lib/dates'
+import { caciLabels, caciStatus, formatDate, todayParis } from '../../lib/dates'
 import { CaciEditor } from './Profile'
+import { MemberCreate } from './MemberCreate'
 import { PageHeading } from '../../components/Visual'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
 
-export function Directory({ client }: { client: SupabaseClient<Database> }) {
+const roleLabels = { member: 'Adhérent', admin: 'Administrateur', president: 'Président' }
+type Action = { member: Member; kind: 'deactivate' | 'reactivate' | 'grant' | 'revoke' }
+export function Directory({ client, member: current }: { client: SupabaseClient<Database>; member: Member }) {
   const [members, setMembers] = useState<Member[]>([])
   const [search, setSearch] = useState('')
+  const [role, setRole] = useState('all')
+  const [caci, setCaci] = useState('all')
+  const [active, setActive] = useState('active')
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
+  const [create, setCreate] = useState(false)
+  const [action, setAction] = useState<Action | null>(null)
+  const [busy, setBusy] = useState(false)
+  const dialog = useRef<HTMLDialogElement>(null)
+  const accessFilter = useRef<HTMLSelectElement>(null)
   const sequence = useRef(0)
+  const president = current.role === 'president'
   const load = useCallback(async () => {
     const request = ++sequence.current
     const { data, error: queryError } = await client.from('members').select('*').order('last_name')
@@ -21,9 +34,30 @@ export function Directory({ client }: { client: SupabaseClient<Database> }) {
     else { setMembers(data ?? []); setError('') }
   }, [client])
   useSharedRefresh(load)
-  return <section className="card directory"><PageHeading eyebrow="Administration" title="Annuaire des adhérents"><p>{members.length} adhérents · informations réservées aux organisateurs.</p></PageHeading><label>Rechercher un adhérent<input type="search" value={search} onChange={event => setSearch(event.target.value)} /></label>{error && <p role="alert">{error}</p>}
-    <ul className="member-list">{members.filter(member => `${member.first_name} ${member.last_name}`.toLocaleLowerCase('fr').includes(search.toLocaleLowerCase('fr'))).map(member => <li key={member.id}><div><strong>{member.first_name} {member.last_name}</strong><p>{member.current_level || 'Niveau non renseigné'} · CACI {caciLabels[caciStatus(member.caci_expiry_date)]}{member.caci_expiry_date && ` · valable jusqu’au ${member.caci_expiry_date}`}</p><p>{member.email}{member.phone && ` · ${member.phone}`}</p></div><button id={`caci-toggle-${member.id}`} aria-expanded={selected === member.id} onClick={() => setSelected(selected === member.id ? null : member.id)}>Modifier le CACI de {member.first_name} {member.last_name}</button>
-      {selected === member.id && <CaciEditor key={member.id} client={client} member={member} onRefresh={load} onSaved={async date => { setMembers(current => current.map(row => row.id === member.id ? { ...row, caci_expiry_date: date } : row)); await load(); setSelected(current => current === member.id ? null : current); document.getElementById(`caci-toggle-${member.id}`)?.focus() }} />}
-    </li>)}</ul>
+  useEffect(() => { if (action && president) dialog.current?.showModal(); else dialog.current?.close() }, [action, president])
+  async function confirm() {
+    if (!action || !president) return
+    setBusy(true); setError(''); setMessage('')
+    try {
+      const result = action.kind === 'grant' || action.kind === 'revoke'
+        ? await client.rpc('set_member_role', { p_member_id: action.member.id, p_role: action.kind === 'grant' ? 'admin' : 'member' })
+        : await client.rpc('set_member_active', { p_member_id: action.member.id, p_active: action.kind === 'reactivate' })
+      if (result.error) setError('Modification refusée. Vérifiez vos droits et actualisez l’annuaire.')
+      else { setAction(null); setMessage('Adhérent mis à jour.'); await load(); if (action.kind === 'deactivate' || action.kind === 'reactivate') accessFilter.current?.focus() }
+    } catch { setError('Modification indisponible. Réessayez.') }
+    finally { setBusy(false) }
+  }
+  const visible = members.filter(member => `${member.first_name} ${member.last_name} ${member.email}`.toLocaleLowerCase('fr').includes(search.trim().toLocaleLowerCase('fr')) && (role === 'all' || member.role === role) && (caci === 'all' || caciStatus(member.caci_expiry_date) === caci) && (active === 'all' || (member.disabled_at ? 'inactive' : 'active') === active))
+  return <section className="card directory"><PageHeading eyebrow="Administration" title="Gestion des adhérents" actions={president && <button className="primary" aria-expanded={create} onClick={() => { setCreate(!create); setMessage('') }}>Ajouter un adhérent</button>}><p>Un annuaire partagé pour les informations du club{president ? ', les droits et les accès.' : '.'}</p></PageHeading>
+    {create && president && <MemberCreate client={client} onCancel={() => { setCreate(false); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} onSaved={async () => { await load(); setCreate(false); setSearch(''); setRole('all'); setCaci('all'); setActive('active'); setMessage('Adhérent créé. Il peut demander son lien de connexion.'); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} />}
+    <div className="directory-filters"><label className="directory-search">Rechercher un adhérent<input type="search" placeholder="Nom ou email" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Rôle<select value={role} onChange={event => setRole(event.target.value)}><option value="all">Tous les rôles</option>{Object.entries(roleLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>CACI<select value={caci} onChange={event => setCaci(event.target.value)}><option value="all">Tous les CACI</option>{Object.entries(caciLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>Accès<select ref={accessFilter} value={active} onChange={event => setActive(event.target.value)}><option value="active">Actifs</option><option value="inactive">Inactifs</option><option value="all">Tous les accès</option></select></label></div>
+    <p className="muted" role="status">{visible.length} adhérent{visible.length !== 1 && 's'} affiché{visible.length !== 1 && 's'}{message && ` · ${message}`}</p>{error && !action && <p role="alert">{error}</p>}
+    {!visible.length && <p className="empty-state">Aucun adhérent ne correspond à ces critères.</p>}
+    <ul className="member-list">{visible.map(member => { const name = `${member.first_name} ${member.last_name}`; const status = caciStatus(member.caci_expiry_date); return <li key={member.id}>
+      <div className="member-information"><div className="member-title"><strong>{name}</strong><span className={`chip ${member.role === 'member' ? 'neutral' : 'teal'}`}>{roleLabels[member.role]}</span>{member.disabled_at && <span className="chip amber">Inactif</span>}</div><p>{member.email}{member.phone && ` · ${member.phone}`}</p><p>{member.current_level || 'Niveau non renseigné'}{member.preparing_level && ` · Prépare ${member.preparing_level}`}</p><p><span className={`chip ${status === 'valid' ? 'green' : status === 'expired' ? 'red' : 'amber'}`}>CACI {caciLabels[status]}</span>{member.caci_expiry_date && <span> · valable jusqu’au {member.caci_expiry_date}</span>}</p>{member.disabled_at && <p>Désactivé le {formatDate(todayParis(new Date(member.disabled_at)))} · historique conservé</p>}</div>
+      <div className="member-actions"><button id={`caci-toggle-${member.id}`} aria-expanded={selected === member.id} onClick={() => setSelected(selected === member.id ? null : member.id)}>Modifier le CACI de {name}</button>{president && member.role !== 'president' && <details><summary>Gérer les droits et l’accès de {name}</summary><div className="actions"><button onClick={() => { setError(''); setAction({ member, kind: member.role === 'admin' ? 'revoke' : 'grant' }) }}>{member.role === 'admin' ? 'Retirer les droits admin' : 'Accorder les droits admin'}</button><button className={member.disabled_at ? 'secondary' : 'danger'} onClick={() => { setError(''); setAction({ member, kind: member.disabled_at ? 'reactivate' : 'deactivate' }) }}>{member.disabled_at ? 'Réactiver' : 'Désactiver'}</button></div></details>}</div>
+      {selected === member.id && <CaciEditor key={member.id} client={client} member={member} onRefresh={load} onSaved={async date => { setMembers(rows => rows.map(row => row.id === member.id ? { ...row, caci_expiry_date: date } : row)); await load(); setSelected(value => value === member.id ? null : value); document.getElementById(`caci-toggle-${member.id}`)?.focus() }} />}
+    </li> })}</ul>
+    {president && <dialog ref={dialog} aria-labelledby="member-action-title" onCancel={event => { if (busy) event.preventDefault(); else setAction(null) }} onClose={() => setAction(null)}><h2 id="member-action-title">{action?.kind === 'deactivate' ? 'Désactiver cet adhérent ?' : action?.kind === 'reactivate' ? 'Réactiver cet adhérent ?' : 'Modifier les droits administrateur ?'}</h2><p>{action?.member.first_name} {action?.member.last_name}</p><p>{action?.kind === 'deactivate' ? 'Cette personne ne pourra plus se connecter ni utiliser iFosse. Ses participations, paiements et autres historiques seront conservés. Vous pourrez la réactiver.' : action?.kind === 'reactivate' ? 'La personne pourra de nouveau demander un lien de connexion. Son rôle et son historique sont conservés.' : action?.kind === 'grant' ? 'Cette personne pourra gérer les séances et les données opérationnelles des adhérents.' : 'Cette personne retrouvera les accès d’un adhérent ordinaire.'}</p>{error && <p role="alert">{error}</p>}<div className="actions"><button autoFocus disabled={busy} onClick={() => setAction(null)}>Annuler</button><button className={action?.kind === 'deactivate' || action?.kind === 'revoke' ? 'danger' : 'primary'} disabled={busy} onClick={() => void confirm()}>Confirmer</button></div></dialog>}
   </section>
 }
