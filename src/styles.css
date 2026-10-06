@@ -248,6 +248,7 @@ summary:focus-visible { outline: 3px solid var(--teal-dark); outline-offset: 3px
 
 /* Member management: one directory, with operational/lifecycle actions grouped. */
 .directory-filters { display: grid; grid-template-columns: minmax(180px, 2fr) repeat(3, minmax(120px, 1fr)); gap: 12px; align-items: end; }
+.directory-filters > label { min-width: 0; }
 .member-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .member-information { overflow-wrap: anywhere; }
 .member-actions { max-width: 330px; display: grid; gap: 8px; }
@@ -259,4 +260,4 @@ dialog { width: min(540px, calc(100% - 32px)); border: 1px solid var(--line); bo
 dialog::backdrop { background: rgb(24 54 66 / 35%); }
 summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 @media (max-width: 900px) { .directory-filters { grid-template-columns: repeat(3, minmax(0, 1fr)); } .directory-search { grid-column: 1/-1; } }
-@media (max-width: 600px) { .directory-filters { grid-template-columns: minmax(0, 1fr); } .member-actions { max-width: none; } .member-create { padding: 16px; } }
+@media (max-width: 600px) { .directory-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .directory-access { grid-column: 1/-1; } .member-actions { max-width: none; } .member-create { padding: 16px; } }
