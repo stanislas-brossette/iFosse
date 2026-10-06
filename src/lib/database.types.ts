@@ -106,13 +106,13 @@ isOneToOne: true
                   ]
                 },"members": {
                   Row: {
-                    "auth_user_id": string | null,"caci_expiry_date": string | null,"created_at": string,"current_level": string,"email": string,"first_name": string,"has_usual_car": boolean,"id": string,"last_name": string,"phone": string | null,"preparing_level": string | null,"role": Database["public"]['Enums']["member_role"],"updated_at": string,"usual_meeting_point": string,"usual_passenger_seats": number
+                    "auth_user_id": string | null,"caci_expiry_date": string | null,"created_at": string,"current_level": string,"disabled_at": string | null,"email": string,"first_name": string,"has_usual_car": boolean,"id": string,"last_name": string,"phone": string | null,"preparing_level": string | null,"role": Database["public"]['Enums']["member_role"],"updated_at": string,"usual_meeting_point": string,"usual_passenger_seats": number
                   }
                   Insert: {
-                    "auth_user_id"?: string | null,"caci_expiry_date"?: string | null,"created_at"?: string,"current_level"?: string,"email": string,"first_name": string,"has_usual_car"?: boolean,"id"?: string,"last_name": string,"phone"?: string | null,"preparing_level"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"updated_at"?: string,"usual_meeting_point"?: string,"usual_passenger_seats"?: number
+                    "auth_user_id"?: string | null,"caci_expiry_date"?: string | null,"created_at"?: string,"current_level"?: string,"disabled_at"?: string | null,"email": string,"first_name": string,"has_usual_car"?: boolean,"id"?: string,"last_name": string,"phone"?: string | null,"preparing_level"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"updated_at"?: string,"usual_meeting_point"?: string,"usual_passenger_seats"?: number
                   }
                   Update: {
-                    "auth_user_id"?: string | null,"caci_expiry_date"?: string | null,"created_at"?: string,"current_level"?: string,"email"?: string,"first_name"?: string,"has_usual_car"?: boolean,"id"?: string,"last_name"?: string,"phone"?: string | null,"preparing_level"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"updated_at"?: string,"usual_meeting_point"?: string,"usual_passenger_seats"?: number
+                    "auth_user_id"?: string | null,"caci_expiry_date"?: string | null,"created_at"?: string,"current_level"?: string,"disabled_at"?: string | null,"email"?: string,"first_name"?: string,"has_usual_car"?: boolean,"id"?: string,"last_name"?: string,"phone"?: string | null,"preparing_level"?: string | null,"role"?: Database["public"]['Enums']["member_role"],"updated_at"?: string,"usual_meeting_point"?: string,"usual_passenger_seats"?: number
                   }
                   Relationships: [
 
@@ -410,6 +410,9 @@ isOneToOne: false
 "close_session_bilan":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
+"create_member_from_identity":
+{ Args: { "p_auth_user_id": string,"p_first_name": string,"p_last_name": string,"p_request_id": string }; Returns: string
+                           },
 "current_member_id":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -518,6 +521,9 @@ isOneToOne: false
 "lock_transport_session":
 { Args: { "p_session_id": string }; Returns: string
                            },
+"member_access_token_hook":
+{ Args: { "event": Json }; Returns: Json
+                           },
 "offer_car":
 { Args: { "p_departure_time"?: string,"p_meeting_point": string,"p_note": string,"p_passenger_capacity": number,"p_session_id": string }; Returns: string
                            },
@@ -553,6 +559,9 @@ isOneToOne: false
                            },
 "set_draft_selection":
 { Args: { "p_member_id": string,"p_session_id": string,"p_state": Database["public"]['Enums']["selection_state"] }; Returns: undefined
+                           },
+"set_member_active":
+{ Args: { "p_active": boolean,"p_member_id": string }; Returns: undefined
                            },
 "set_member_caci":
 { Args: { "p_expiry_date"?: string,"p_member_id": string }; Returns: undefined

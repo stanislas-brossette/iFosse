@@ -68,3 +68,7 @@ Dans l’annuaire, enregistrer un CACI avec succès actualise immédiatement son
 ## Peupler uniquement le staging avec des données inventées
 
 Le [workflow synthétique staging](staging-seed.md) fournit `npm run staging:seed` (prévalidation/plan en lecture seule), puis `npm run staging:seed -- --apply`. Il est fixé au projet **ifosse-staging**, vérifie positivement URL, environnement et JWT service-role du projet, et refuse production. Appliquer d’abord sa migration sur staging. Les 30 identités réservées `.invalid` et sept séances utilisent les RPC métier, sans emails/passwords. Le registre privé permet de relancer sans doublons ni écrasement des essais; aucun reset/delete n’est proposé. Les comptes réels des testeurs et leurs droits sont préservés.
+
+## Gestion des adhérents
+
+[Guide complet](member-management.md) : annuaire unique avec recherche nom/email, filtres et CACI pour admin; création, droits et désactivation/réactivation uniquement pour président. La suspension conserve l’historique. Déployer la fonction et activer le hook Auth sur staging avant utilisation; aucun déploiement production n’est inclus. Les scripts opérateur restent le chemin bootstrap/récupération.

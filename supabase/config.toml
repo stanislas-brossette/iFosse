@@ -61,3 +61,12 @@ content_path = "./supabase/templates/magic-link.html"
 
 [analytics]
 enabled = false
+
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/member_access_token_hook"
+
+[functions.create-member]
+# The handler verifies the bearer with Auth.getUser and checks the LIVE database
+# role twice. Supports hosted asymmetric JWTs; never trusts decoded claims alone.
+verify_jwt = false

@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
-import { createOperatorClient, hasControlCharacters } from './operator-client.mjs'
+import { createOperatorClient } from './operator-client.mjs'
+
+import { normalizeMember } from '../supabase/functions/_shared/member-input.mjs'
 
 const usage = 'Usage: node scripts/provision-members.mjs ROSTER.json [--apply]\nDefault: validate only. --apply provisions accounts without sending emails.'
 const pageSize = 100
@@ -25,24 +27,11 @@ export function parseRoster(text) {
   const emails = new Set()
   return input.map((row, index) => {
     const fail = (description) => { throw new Error(`Roster entry ${index + 1}: ${description}`) }
-    if (row === null || typeof row !== 'object' || Array.isArray(row)) fail('expected an object.')
-    const keys = Object.keys(row)
-    if (keys.length !== 3 || keys.some((key) => !['email', 'first_name', 'last_name'].includes(key))) {
-      fail('only email, first_name and last_name are accepted; roles are managed separately.')
-    }
-    if (typeof row.email !== 'string') fail('email is required.')
-    const email = row.email.trim().toLowerCase()
-    if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) fail('email is invalid.')
-    if (emails.has(email)) fail('duplicate email address.')
-    emails.add(email)
-    const names = {}
-    for (const field of ['first_name', 'last_name']) {
-      if (typeof row[field] !== 'string') fail(`${field} is required.`)
-      const value = row[field].trim()
-      if (!value || value.length > 100 || hasControlCharacters(value)) fail(`${field} must contain 1 to 100 printable characters.`)
-      names[field] = value
-    }
-    return { email, ...names }
+    let member
+    try { member = normalizeMember(row) } catch (error) { fail(error.message) }
+    if (emails.has(member.email)) fail('duplicate email address.')
+    emails.add(member.email)
+    return member
   })
 }
 

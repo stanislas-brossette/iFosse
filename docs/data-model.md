@@ -17,6 +17,7 @@ Fields:
 - current_level
 - preparing_level (optional)
 - role: member | admin | president
+- disabled_at: nullable timestamp; NULL is active, non-NULL preserves the suspension date
 - caci_expiry_date (date, optional)
 - has_usual_car
 - usual_passenger_seats
@@ -319,3 +320,7 @@ The carpool-review migration extends `get_admin_readiness` with `selection_basis
 ## Session-card occupancy
 
 `get_session_card_summaries(start_year)` returns one batched seasonal projection of session IDs, current capacity, latest publication version and effective confirmed count. It reuses `current_selected_ids`, including RSVP revision/withdrawal filtering. Only active members can call it; no identities, private profiles or draft fields are returned. Capacity/count/version share one database snapshot. A zero publication version is distinct from an empty published selection.
+
+## Membership suspension
+
+`set_member_active` is President-only, audited and serialized with role changes. `members_president_active` prevents an inactive President. Historical joins/FKs, participation, payments and publications remain unchanged; normal active-member pickers omit suspended profiles, while attendance retains selected/recorded historical identities. `current_member_id` excludes suspended profiles, and the Auth token hook denies new tokens/refresh. `create_member_from_identity` finalizes only a President-owned Auth Admin request, always through default-member provisioning; existing seed ownership and operator imports are unchanged.

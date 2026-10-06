@@ -59,7 +59,7 @@ export function AuthGate({ client, children }: Props) {
       if (queryError) {
         setError('Le profil est indisponible. Réessayez.')
         if (['401', '403', 'PGRST301', 'PGRST302'].includes(queryError.code)) setMember(null)
-      } else { setMember(data); setError('') }
+      } else { setMember(data?.disabled_at ? null : data); setError('') }
     } catch { if (current()) setError('Le profil est indisponible. Réessayez.') }
     finally { if (current()) setProfileLoading(false) }
   }, [client, userId])
@@ -73,7 +73,8 @@ export function AuthGate({ client, children }: Props) {
   useEffect(() => {
     const onFocus = () => { void refresh() }
     window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') void refresh() }, 5000)
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', onFocus) }
   }, [refresh])
 
   async function requestLink(event: SubmitEvent<HTMLFormElement>) {
@@ -110,7 +111,7 @@ export function AuthGate({ client, children }: Props) {
   if (session) return <>
     <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span><div className="identity"><span className="avatar" aria-hidden="true">{member ? `${member.first_name.slice(0, 1)}${member.last_name.slice(0, 1)}` : '…'}</span><div><strong>{member ? `${member.first_name} ${member.last_name}` : 'Compte connecté'}</strong>{member && <span className="identity-role">{{ member: 'Adhérent', admin: 'Administrateur', president: 'Président' }[member.role]}</span>}</div></div><button disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
     {error && <p role="alert">{error}</p>}
-    {member && member.auth_user_id === session.user.id ? <Fragment key={member.auth_user_id}>{children(member, refresh)}</Fragment> : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre compte doit être lié à un adhérent du club. Contactez un administrateur si le problème persiste.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
+    {member && member.auth_user_id === session.user.id ? <Fragment key={member.auth_user_id}>{children(member, refresh)}</Fragment> : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre accès doit être actif et lié à un adhérent du club. Contactez le président si votre compte a été désactivé.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
   </>
   return <section className="card login"><p className="eyebrow">Bienvenue au club</p><h1>Connexion à iFosse</h1><p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>
     {(error || callback) && <p role="alert">{error || invalidLink}</p>}

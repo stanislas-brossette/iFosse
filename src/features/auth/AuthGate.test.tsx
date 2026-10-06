@@ -30,6 +30,14 @@ describe('authenticated identity and pending profile requests', () => {
     expect(screen.queryByLabelText('Champ non enregistré')).toBeNull()
     expect(screen.getByRole('heading', { name: 'Profil indisponible' })).toBeTruthy()
   })
+  it('removes cached app access when a refresh returns a suspended profile', async () => {
+    const app = setup()
+    await waitFor(() => expect(app.requests).toHaveLength(1)); await app.resolve(0, member('A'))
+    fireEvent(window, new Event('focus'))
+    await app.resolve(1, { ...member('A'), disabled_at: '2026-10-06T12:00:00Z' })
+    expect(screen.queryByRole('button', { name: 'Administration privée' })).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Profil indisponible' })).toBeTruthy()
+  })
   it('ignores an old account response after a switch, including a focus refresh', async () => {
     const app = setup()
     await waitFor(() => expect(app.requests).toHaveLength(1)); await app.resolve(0, member('A'))

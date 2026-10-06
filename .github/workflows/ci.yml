@@ -45,6 +45,8 @@ jobs:
       - run: npm run db:test
       - run: npm run db:types -- --check
       - run: npx playwright install --with-deps chromium
+      - name: Serve the authenticated member-creation function locally
+        run: npx supabase --network-id ifosse-local functions serve create-member > /tmp/ifosse-edge.log 2>&1 &
       - run: npm run test:e2e
       - run: npm run db:restore-check
       - name: Save safe local acceptance screenshots
