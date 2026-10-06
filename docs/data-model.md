@@ -324,3 +324,10 @@ The carpool-review migration extends `get_admin_readiness` with `selection_basis
 ## Membership suspension
 
 `set_member_active` is President-only, audited and serialized with role changes. `members_president_active` prevents an inactive President. Historical joins/FKs, participation, payments and publications remain unchanged; normal active-member pickers omit suspended profiles, while attendance retains selected/recorded historical identities. `current_member_id` excludes suspended profiles, and the Auth token hook denies new tokens/refresh. `create_member_from_identity` finalizes only a President-owned Auth Admin request, always through default-member provisioning; existing seed ownership and operator imports are unchanged.
+
+Participant display ordering uses nullable `session_participations.registered_at`:
+first Yes/Maybe response, set by a server trigger and retained thereafter. It does
+not use `updated_at`, which also changes for payment/transport/attendance. Earlier
+registrations stay NULL because the original date cannot be recovered reliably.
+The existing permission-filtered `get_current_selection` projection adds this field;
+no private operational fields or draft data are exposed.
