@@ -38,6 +38,13 @@ describe('President member creation boundary', () => {
     expect(app.admin.auth.admin.createUser).not.toHaveBeenCalled()
     expect(app.caller.rpc).toHaveBeenCalledTimes(1)
   })
+  it.each(['email_exists', 'user_already_exists'])('reports concurrent provider duplicates clearly without linking (%s)', async code => {
+    const app = setup()
+    app.admin.auth.admin.createUser.mockResolvedValueOnce({ data: { user: null }, error: { code, message: 'sensitive provider diagnostic' } })
+    const response = await app.invoke(); expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({ code: 'EMAIL_EXISTS' })
+    expect(app.caller.rpc).toHaveBeenCalledTimes(1)
+  })
   it('resumes only the same marked request, including a lost success response', async () => {
     const app = setup({ users: [...Array.from({ length: 100 }, (_, i) => ({ email: `other-${i}@example.test` })), { id: 'owned', email: 'camille@example.test', app_metadata: { ifosse_creation_actor: actor, ifosse_creation_request: requestId } }] })
     expect((await app.invoke()).status).toBe(200); expect((await app.invoke()).status).toBe(200)

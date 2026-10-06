@@ -44,7 +44,10 @@ export function createMemberHandler({ userClient, serviceClient }) {
       if (user && !owned(user, actor, input.request_id)) return reply(409, 'EMAIL_EXISTS')
       if (!user) {
         const created = await admin.auth.admin.createUser({ email: member.email, email_confirm: true, app_metadata: { ifosse_creation_actor: actor, ifosse_creation_request: input.request_id } })
-        if (created.error || !created.data.user) return reply(created.error?.code === 'email_exists' ? 409 : 503, created.error?.code === 'email_exists' ? 'EMAIL_EXISTS' : 'CREATION_UNAVAILABLE')
+        if (created.error || !created.data.user) {
+          const duplicate = ['email_exists', 'user_already_exists'].includes(created.error?.code)
+          return reply(duplicate ? 409 : 503, duplicate ? 'EMAIL_EXISTS' : 'CREATION_UNAVAILABLE')
+        }
         user = created.data.user
       }
       // Atomic SQL rechecks Presidency after Auth creation and refuses to link
