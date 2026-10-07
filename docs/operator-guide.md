@@ -72,3 +72,5 @@ Le [workflow synthétique staging](staging-seed.md) fournit `npm run staging:see
 ## Gestion des adhérents
 
 [Guide complet](member-management.md) : annuaire unique avec recherche nom/email, filtres et CACI pour admin; création, droits et désactivation/réactivation uniquement pour président. La suspension conserve l’historique. Déployer la fonction et activer le hook Auth sur staging avant utilisation; aucun déploiement production n’est inclus. Les scripts opérateur restent le chemin bootstrap/récupération.
+
+Netlify preview magic-link setup: use the exact staging Site URL and narrow `/auth/confirm` redirect entries in [Hosted Auth configuration](authentication.md#staging-and-netlify-deploy-preview-redirects). Ensure the hosted email template uses `.RedirectTo`, and keep preview redirect rules out of production Supabase.
