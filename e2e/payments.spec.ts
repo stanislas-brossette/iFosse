@@ -24,7 +24,7 @@ test('administrator changes private payment and live readiness while member only
     expect((await client.rpc('set_member_caci', { p_member_id: member.memberId, p_expiry_date: testSessionDate })).error).toBeNull()
     expect((await memberClient.rpc('set_own_transport', { p_session_id: id, p_mode: 'own' })).error).toBeNull()
     for (const device of [page, other]) {
-      const button = device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` })
+      const button = device.getByRole('button', { name: new RegExp(`séance du ${formatDate(testSessionDate)}`) })
       await expect(button).toBeVisible({ timeout: 12000 }); await button.click()
     }
     await expect(other.getByText('Mon paiement : À régler')).toBeVisible()

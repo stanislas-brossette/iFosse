@@ -20,7 +20,7 @@ test('participant sorting uses response/name/publication, survives navigation, a
     }
     id = await createSession(client, `Tri ${admin.firstName}`, 20)
     for (const fixture of fixtures) expect((await client.rpc('set_session_rsvp',{p_session_id:id,p_member_id:fixture.memberId,p_rsvp:fixture === admin ? 'maybe' : 'yes'})).error).toBeNull()
-    await page.getByRole('button',{name:`Voir la séance du ${formatDate(testSessionDate)}`}).click()
+    await page.getByRole('button',{name:new RegExp(`séance du ${formatDate(testSessionDate)}`)}).click()
     await page.getByRole('tab',{name:'Participants',exact:true}).click()
     const rows=page.locator('.participant-selection .member-list > li')
     const names=async()=>Promise.all((await rows.all()).map(async row=>(await row.locator('span').first().textContent())?.split(' · ')[0]))

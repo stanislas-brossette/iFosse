@@ -48,7 +48,7 @@ test('published palanquées survive private editing, update live levels and repu
     }
     expect((await client.rpc('publish_selection', { p_session_id: id })).error).toBeNull()
     for (const device of [page, other]) {
-      const button = device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` })
+      const button = device.getByRole('button', { name: new RegExp(`séance du ${formatDate(testSessionDate)}`) })
       await expect(button).toBeVisible({ timeout: 12000 }); await button.click()
       await device.getByRole('tab', { name: 'Palanquées', exact: true }).click()
     }
