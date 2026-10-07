@@ -20,8 +20,7 @@ test('realistic club volumes retain desktop/mobile layout, keyboard tabs and rol
     if (section) await device.locator(section).first().evaluate(element => window.scrollTo(0, element.getBoundingClientRect().top + scrollY - 180))
     expect(new URL(device.url()).hash).toBe('')
     expect(await device.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
-    const tooSmall = await device.locator('button:visible, input:visible:not([type=checkbox]), select:visible').evaluateAll(nodes => nodes.filter(node => node.getBoundingClientRect().height < 43).length)
-    expect(tooSmall).toBe(0)
+    await expect.poll(() => device.locator('button:visible, input:visible:not([type=checkbox]), select:visible').evaluateAll(nodes => nodes.filter(node => node.getBoundingClientRect().height < 43).map(node => ({ tag: node.tagName, class: node.className, height: node.getBoundingClientRect().height })))).toEqual([])
     await device.screenshot({ path: `test-results/visual-acceptance/${name}.png`, fullPage })
   }
   const ok = (result: { error: unknown }) => expect(result.error).toBeNull()
