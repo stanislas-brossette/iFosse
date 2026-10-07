@@ -27,7 +27,8 @@ test('two accounts share sessions and responses, with advisory CACI and private 
     await page.getByLabel('Lieu', { exact: true }).fill('Piscine de test')
     await page.getByLabel('Vacances scolaires', { exact: true }).check()
     await page.getByRole('button', { name: 'Enregistrer la séance', exact: true }).click()
-    await expect(page.getByRole('heading', { name: `Fosse ${admin.firstName} · ${formatDate(date)}` })).toBeVisible()
+    await expect(page.getByRole('heading', { name: `Fosse ${admin.firstName}` })).toBeVisible()
+    await expect(page.locator('.session-metadata')).toContainText(formatDate(date))
     const row = await client.from('sessions').select('id').eq('title', `Fosse ${admin.firstName}`).single()
     expect(row.error).toBeNull(); sessionId = row.data?.id
     await expect(other.getByRole('button', { name: new RegExp(`séance du ${formatDate(date)}`) })).toBeVisible({ timeout: 12000 })
@@ -50,7 +51,7 @@ test('two accounts share sessions and responses, with advisory CACI and private 
     await expect(other.getByRole('heading', { name: 'Ma réponse : Non' })).toBeVisible()
     await expect(page.getByText(`${member.firstName} Fictif ·`, { exact: false })).toHaveCount(0, { timeout: 12000 })
     await other.getByRole('tab', { name: 'Participants', exact: true }).click()
-    const detail = other.locator('section').filter({ has: other.getByRole('heading', { name: `Fosse ${admin.firstName} · ${formatDate(date)}` }) })
+    const detail = other.locator('section').filter({ has: other.getByRole('heading', { name: `Fosse ${admin.firstName}` }) })
     await expect(detail.getByText(admin.email, { exact: false })).toHaveCount(0)
     await expect(detail.getByText(member.email, { exact: false })).toHaveCount(0)
     await other.setViewportSize({ width: 390, height: 844 })
@@ -64,7 +65,7 @@ test('two accounts share sessions and responses, with advisory CACI and private 
     await page.getByRole('button', { name: 'Modifier la séance', exact: true }).click()
     await page.getByRole('button', { name: 'Supprimer la séance', exact: true }).click()
     await page.getByRole('button', { name: 'Confirmer la suppression', exact: true }).click()
-    await expect(other.getByRole('heading', { name: `Fosse ${admin.firstName} · ${formatDate(date)}` })).toHaveCount(0, { timeout: 12000 })
+    await expect(other.getByRole('heading', { name: `Fosse ${admin.firstName}` })).toHaveCount(0, { timeout: 12000 })
     await expect(other.getByRole('button', { name: new RegExp(`séance du ${formatDate(date)}`) })).toHaveCount(0)
     sessionId = undefined
   } finally {

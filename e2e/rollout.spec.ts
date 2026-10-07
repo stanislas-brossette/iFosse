@@ -25,7 +25,8 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
     await page.getByLabel('Lieu', { exact: true }).fill('Piscine fictive')
     await page.getByLabel('Nombre de places', { exact: true }).fill('2')
     await page.getByRole('button', { name: 'Enregistrer la séance', exact: true }).click()
-    await expect(page.getByRole('heading', { name: `${title} · ${formatDate(past)}`, exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible()
+    await expect(page.locator('.session-metadata')).toContainText(formatDate(past))
     const stored = await client.from('sessions').select('id').eq('title', title).single()
     expect(stored.error).toBeNull(); id = stored.data!.id
     await expect(other.getByRole('button', { name: new RegExp(`séance du ${formatDate(past)}`) })).toBeVisible({ timeout: 12000 })
