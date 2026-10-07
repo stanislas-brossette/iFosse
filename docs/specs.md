@@ -440,4 +440,5 @@ horizontaux disposent de commandes de continuation quand ils débordent ;
 flèches/Home/End déplacent le focus et rendent l’onglet actif visible.
 Un bouton Gestion explicite reste réservé aux Admin/Président, sans changer
 la rubrique personnelle ouverte par défaut. Hors participation, la place
-publiée reste visible et la répétition réponse/trajet est dépliable.
+publiée reste visible et la répétition réponse/trajet tient sur une ligne compacte
+qui revient à la ligne si nécessaire.

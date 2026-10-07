@@ -25,7 +25,7 @@ L’identité peut passer sur deux lignes avec texte agrandi. Le header devient
 non fixe sur téléphone pour éviter de masquer des commandes ; publication
 reste fixe pendant le défilement de Gestion. Les informations d’accès sont
 repliées, et absentes si vides. La place publiée reste immédiatement visible
-sur chaque rubrique ; réponse/trajet sont dépliables dans le résumé compact.
+sur chaque rubrique ; réponse/trajet restent visibles sur une ligne compacte qui se replie si nécessaire.
 Les erreurs et confirmations de retrait ne sont pas repliées.
 
 Pas de migration, de changement des autorisations ou des règles métier.

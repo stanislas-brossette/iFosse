@@ -348,3 +348,7 @@ summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
   .auth-toolbar > .identity-link { flex: 1 1 160px; }
   .auth-toolbar > button:not(.identity-link) { margin-left: auto; }
 }
+
+.compact-facts { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 4px; font-size: 1rem; }
+.compact-facts p { margin: 0; }
+.compact-facts .chip { flex-basis: 100%; }
