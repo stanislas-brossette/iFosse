@@ -3,6 +3,8 @@ import type { KeyboardEvent, ReactNode, SubmitEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '../../lib/database.types'
 import { readLoginCallback } from './callback'
+import { publicConfig } from '../../lib/publicConfig'
+import { loginRedirectUrl } from './redirect'
 
 export type Member = Tables<'members'>
 type Props = { client: SupabaseClient<Database>; children: (member: Member, refresh: () => Promise<void>) => ReactNode; onOpenProfile?: (member: Member) => void; onIdentityChange?: () => void }
@@ -107,7 +109,9 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   async function requestLink(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); setMessage('')
     try {
-      const { error: requestError } = await client.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false, emailRedirectTo: `${window.location.origin}/auth/confirm` } })
+      const emailRedirectTo = loginRedirectUrl(window.location.origin, publicConfig?.environment ?? 'local')
+      if (!emailRedirectTo) { setError('Cette adresse n’est pas autorisée pour la connexion à iFosse.'); return }
+      const { error: requestError } = await client.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false, emailRedirectTo } })
       if (requestError?.status === 429) setError('Patientez une minute avant de demander un nouveau lien.')
       else if (requestError && (requestError.status ?? 0) >= 500) setError('Connexion au service impossible. Réessayez.')
       else setMessage('Si cette adresse est connue du club, vous recevrez un lien de connexion. Vérifiez aussi les courriers indésirables.')

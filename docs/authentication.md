@@ -68,6 +68,28 @@ Configure staging and production independently; local TOML does not configure ho
 4. Configure SMTP for club recipients and disable link tracking. Verify deliverability, provider limits, expired/reused links and real email scanners with organizers before launch.
 5. Keep refresh-token rotation enabled. Choose provider session limits suitable for personal devices; never make access tokens indefinitely valid.
 
+### Staging and Netlify deploy-preview redirects
+
+In **ifosse-staging** → Authentication → URL Configuration, set **Site URL** to `https://ifosse-staging.netlify.app` and add these **Redirect URLs**:
+
+| Origin/use | Redirect URL entry |
+| --- | --- |
+| Main staging | `https://ifosse-staging.netlify.app/auth/confirm` |
+| Deploy previews of the staging site | `https://deploy-preview-*--ifosse-staging.netlify.app/auth/confirm` |
+| Master branch deploy, if enabled | `https://master--ifosse-staging.netlify.app/auth/confirm` |
+| Deploy previews of the production Netlify site, if enabled with preview environment | `https://deploy-preview-*--ifosse.netlify.app/auth/confirm` |
+| Staging branch deploy of the production Netlify site, if enabled | `https://staging--ifosse.netlify.app/auth/confirm` |
+
+Only the first two entries are needed for the main staging site and its PR previews. For a single PR, the exact `https://deploy-preview-54--ifosse-staging.netlify.app/auth/confirm` entry is even narrower than the preview pattern. The `*` pattern is limited to one hostname segment with the fixed iFosse site suffix and exact callback path; do not use `https://**.netlify.app/**` or an unrestricted path wildcard. The frontend further requires a numeric deploy-preview ID and explicitly named branch origins. Other branch/custom-domain origins require an intentional code/configuration update.
+
+These preview rules belong **only to the staging Supabase project**. The separate production project's Site URL is `https://ifosse.netlify.app` and its hosted Redirect URL is exactly `https://ifosse.netlify.app/auth/confirm`. Do not mirror preview/branch rules into production. Preview builds of either Netlify site must use `VITE_APP_ENV=preview` and the pinned staging Supabase project, as specified in the README environment matrix.
+
+The frontend sends the **current allowed browser origin** plus `/auth/confirm` as `emailRedirectTo`. Supabase must allow that URL; otherwise login can fall back to Site URL. Install the checked-in Magic Link template in hosted Auth → Emails as well: its link must use `{{ .RedirectTo }}#token_hash={{ .TokenHash }}&amp;type=email`, **not** `{{ .SiteURL }}`. `.RedirectTo` already includes `/auth/confirm`; do not append it again. Repository template/configuration changes do not update the hosted dashboard automatically.
+
+After saving hosted settings, request a **new** link from the intended preview and verify that it opens that preview's `/auth/confirm`. Previously sent emails retain their old destination. Keep tokens/auth URLs out of logs and screenshots. Local development continues to allow `http://localhost:5173/auth/confirm`, `http://127.0.0.1:5173/auth/confirm` and the equivalent `4173` URLs configured in local TOML; they do not need to be added to hosted production.
+
+See [Supabase redirect URL matching and wildcard semantics](https://supabase.com/docs/guides/auth/redirect-urls) and [wrong redirect troubleshooting](https://supabase.com/docs/guides/troubleshooting/why-am-i-being-redirected-to-the-wrong-url-when-using-auth-redirectto-option-_vqIeO).
+
 The template targets the application with a token hash in the URL fragment. The app removes it from the visible URL and verifies it only after “Se connecter” is clicked. Ordinary scanner GETs do not consume the link, and a second browser needs no verifier from the browser that requested it. An advanced scanner that clicks interactive buttons remains a provider/rollout test concern.
 
 The SDK persists and refreshes the session across normal browser restarts. “Se déconnecter” clears this device's session and revokes its refresh token. Existing access tokens can remain valid until expiry; deleting/unlinking/banning the Auth account or revoking an application role stops the corresponding club access immediately through database authorization. For a lost device, use Supabase account/session revocation and, if immediate club blocking is required, ban the account until support resolves it. Do not share accounts.
