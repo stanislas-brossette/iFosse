@@ -30,3 +30,17 @@ it('refreshes effective personal state after republication/rejoin and preserves 
   expect(screen.getByText(/Vous êtes en attente dans la sélection publiée/)).toBeTruthy()
   expect(screen.queryByText(/Votre place est confirmée/)).toBeNull()
 })
+
+it('omits empty access information and exposes Gestion only to organizers', async () => {
+  const query = { select: () => query, eq: () => query, order: () => query, limit: () => query, is: () => query, maybeSingle: async () => ({ data: null, error: null }) }
+  const client = { rpc: vi.fn(async () => ({ data: [], error: null })), from: () => query } as unknown as SupabaseClient<Database>
+  const props = { client, member: { id: 'self', role: 'member' } as Member, session: { id: 's', title: 'Fosse', date: '2026-11-04', start_time: '21:00', end_time: '22:00', address: '', notes: '', status: 'open', capacity: 20 } as Session, onEdit: vi.fn(), onBack: vi.fn(), onChanged: vi.fn() }
+  const view = render(<SessionDetail {...props} />)
+  expect(screen.queryByText('Informations et accès')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Ouvrir Gestion de la séance' })).toBeNull()
+  view.rerender(<SessionDetail {...props} member={{ ...props.member, role: 'admin' }} session={{ ...props.session, address: 'Entrée côté parking' }} />)
+  expect(screen.getByText('Informations et accès').closest('details')?.open).toBe(false)
+  fireEvent.click(screen.getByRole('button', { name: 'Ouvrir Gestion de la séance' }))
+  expect(screen.getByRole('tab', { name: 'Gestion' }).getAttribute('aria-selected')).toBe('true')
+  await waitFor(() => expect(client.rpc).toHaveBeenCalledWith('get_admin_readiness', { p_session_id: 's' }))
+})
