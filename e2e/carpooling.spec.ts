@@ -71,8 +71,8 @@ test('profile defaults only prefill an explicit offer; passenger reassigns after
     for (const fixture of [driver, passenger]) expect((await client.rpc('set_session_rsvp', { p_session_id: id, p_member_id: fixture.memberId, p_rsvp: 'yes' })).error).toBeNull()
     expect((await client.rpc('get_car_offers', { p_session_id: id })).data).toEqual([])
     for (const device of [page, other]) {
-      await expect(device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` })).toBeVisible({ timeout: 12000 })
-      await device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` }).click()
+      await expect(device.getByRole('button', { name: new RegExp(`séance du ${formatDate(testSessionDate)}`) })).toBeVisible({ timeout: 12000 })
+      await device.getByRole('button', { name: new RegExp(`séance du ${formatDate(testSessionDate)}`) }).click()
       await device.getByRole('tab', { name: 'Covoiturage', exact: true }).click()
     }
     const driverPanel = page.locator('.carpool')

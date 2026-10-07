@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '../../lib/database.types'
 import type { Member } from '../auth/AuthGate'
-import { caciLabels, caciStatus, formatDate, seasonBounds, seasonOf, todayParis } from '../../lib/dates'
+import { caciLabels, caciStatus, formatDate, seasonOf, todayParis } from '../../lib/dates'
 import { SessionEditor } from './SessionEditor'
 import type { Session } from './SessionEditor'
 import { Selection } from '../selection/Selection'
@@ -11,17 +11,21 @@ import { useSharedRefresh } from '../../lib/useSharedRefresh'
 import { Palanquees } from '../palanquees/Palanquees'
 import { Attendance } from '../attendance/Attendance'
 import { DateTile, Icon, PageHeading } from '../../components/Visual'
+import type { SessionTab } from '../../components/SessionTabs'
+import { PersonalStatus } from './PersonalStatus'
+import { calendarAction, calendarSessions, nextSession, validSummary } from './calendar'
+import type { CalendarFilter } from './calendar'
 import { SessionTabs } from '../../components/SessionTabs'
 import { PublishedOccupancy } from './PublishedOccupancy'
 import type { CardSummary } from './PublishedOccupancy'
-import { attendanceLabels, paymentLabels } from '../../lib/labels'
+import { attendanceLabels, paymentLabels, rsvpLabels } from '../../lib/labels'
 export type Response = Database['public']['Functions']['get_session_responses']['Returns'][number]
-export const rsvpLabels = { unanswered: 'Sans réponse', yes: 'Oui', maybe: 'Peut-être', no: 'Non' } as const
-export function SessionDetail({ client, member, session, onEdit, onBack, onChanged, refreshMember }: { client: SupabaseClient<Database>; member: Member; session: Session; onEdit: () => void; onBack: () => void; onChanged: () => Promise<void>; refreshMember?: () => Promise<void> }) {
+export { rsvpLabels } from '../../lib/labels'
+export function SessionDetail({ client, member, session, onEdit, onBack, onChanged, refreshMember, initialTab = 'overview' }: { client: SupabaseClient<Database>; member: Member; session: Session; onEdit: () => void; onBack: () => void; onChanged: () => Promise<void>; refreshMember?: () => Promise<void>; initialTab?: SessionTab }) {
   const [responses, setResponses] = useState<Response[]>([])
   const [own, setOwn] = useState<Tables<'session_participations'> | null>(null)
   const [directory, setDirectory] = useState<Pick<Member, 'id' | 'first_name' | 'last_name'>[]>([])
-  const [tab, setTab] = useState<'overview' | 'participants' | 'transport' | 'manage' | 'bilan' | 'groups'>('overview')
+  const [tab, setTab] = useState<SessionTab>(initialTab)
   const [warning, setWarning] = useState(false)
   const [pendingResponse, setPendingResponse] = useState<{ rsvp: 'maybe' | 'no'; target: string; name: string; selected: boolean; passengers: number } | null>(null)
   const [message, setMessage] = useState('')
@@ -93,9 +97,10 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
   </section>
 }
 export function Sessions({ client, member, refreshMember }: { client: SupabaseClient<Database>; member: Member; refreshMember?: () => Promise<void> }) {
-  const [season, setSeason] = useState(seasonOf(todayParis()))
+  const season = seasonOf(todayParis())
   const [counts, setCounts] = useState<Database['public']['Functions']['get_season_counts']['Returns']>([])
-  const [history, setHistory] = useState(false)
+  const [filter, setFilter] = useState<CalendarFilter>('upcoming')
+  const [entryTab, setEntryTab] = useState<SessionTab>('overview')
   const [loadedSeason, setLoadedSeason] = useState<number | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [summaries, setSummaries] = useState<Record<string, CardSummary>>({})
@@ -105,32 +110,53 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
   const loadSequence = useRef(0)
   const load = useCallback(async () => {
     const request = ++loadSequence.current
-    const bounds = seasonBounds(season)
-    const [calendar, totals, occupancy] = await Promise.all([
-      client.from('sessions').select('*').gte('date', bounds.start).lt('date', bounds.end).order('date').order('start_time'),
-      client.rpc('get_season_counts', { p_start_year: season }),
-      client.rpc('get_session_card_summaries', { p_start_year: season }),
-    ])
-    const { data, error } = calendar
-    if (request !== loadSequence.current) return
-    if (totals.error) setCounts([])
-    else setCounts(totals.data ?? [])
-    if (error || totals.error || occupancy.error) setMessage('Calendrier indisponible. Réessayez.')
-    else {
-      const summary = Object.fromEntries((occupancy.data ?? []).map(row => [row.session_id, row]))
-      setLoadedSeason(season); setSummaries(summary); setSessions((data ?? []).map(row => ({ ...row, capacity: summary[row.id]?.capacity ?? row.capacity }))); setMessage('')
+    try {
+      const calendar = await client.from('sessions').select('*').order('date').order('start_time')
+      if (request !== loadSequence.current) return
+      if (calendar.error) { setMessage('Actualisation du calendrier impossible. Les dernières données reçues sont conservées.'); return }
+      const years = [...new Set((calendar.data ?? []).map(row => seasonOf(row.date)))]
+      const [totals, ...projections] = await Promise.all([
+        client.rpc('get_season_counts', { p_start_year: season }),
+        ...years.map(year => client.rpc('get_session_card_summaries', { p_start_year: year })),
+      ])
+      if (request !== loadSequence.current) return
+      const data = calendar.data
+      const occupancy = { data: projections.flatMap(result => result.data ?? []), error: projections.find(result => result.error)?.error }
+      const summary = Object.fromEntries(occupancy.data.map(row => [row.session_id, row]))
+      const personalFields = ['my_rsvp', 'my_selection_state', 'my_transport_mode', 'my_transport_provisional', 'my_payment_status'] as const
+      const oldProjection = !occupancy.error && (occupancy.data ?? []).some(row => personalFields.some(field => row[field] === undefined))
+      if (oldProjection || occupancy.error?.code === 'PGRST202') {
+        setMessage('Le calendrier nécessite une mise à jour du serveur. Contactez l’administrateur du club. Les dernières données reçues sont conservées.'); return
+      }
+      if (totals.error || occupancy.error || (data ?? []).some(row => !summary[row.id] || !validSummary(summary[row.id]))) {
+        setMessage('Actualisation du calendrier impossible. Les dernières données reçues sont conservées.'); return
+      }
+      setCounts(totals.data ?? [])
+      setLoadedSeason(season); setSummaries(summary); setSessions((data ?? []).map(row => ({ ...row, capacity: summary[row.id].capacity }))); setMessage('')
+    } catch {
+      if (request === loadSequence.current) setMessage('Actualisation du calendrier impossible. Les dernières données reçues sont conservées.')
     }
   }, [client, season])
   useSharedRefresh(load)
-  const session = sessions.find(item => item.id === selected)
+  const session = loadedSeason === season ? sessions.find(item => item.id === selected) : undefined
+  const visible = calendarSessions(sessions, filter, todayParis())
+  const next = nextSession(sessions, todayParis())
   async function saved(id: string | null) {
-    if (id) {
-      const result = await client.from('sessions').select('date').eq('id', id).single()
-      if (result.data) setSeason(seasonOf(result.data.date))
-    }
-    await load(); setSelected(id); setEditing(false)
+    await load(); setEntryTab('overview'); setSelected(id); setEditing(false)
   }
-  return <><section className="calendar-heading" hidden={editing || !!session}><PageHeading eyebrow="Le calendrier APSAP" title="Les séances" actions={member.role !== 'member' && <button className="primary" onClick={() => { setSelected(null); setEditing(true) }}>Nouvelle séance</button>}><p>Les prochains rendez-vous du club, de l’inscription au bilan.</p></PageHeading><div className="calendar-tools"><p>Mes fosses réalisées cette saison : <strong>{counts.find(row => row.member_id === member.id)?.completed_count ?? 0}</strong>. Seuls les bilans clôturés comptent.</p><label>Saison<select value={season} onChange={event => { setSeason(Number(event.target.value)); setSelected(null); setEditing(false) }}>{Array.from(new Set([season, seasonOf(todayParis()) - 1, seasonOf(todayParis()), ...sessions.map(item => seasonOf(item.date))])).sort((a, b) => b - a).map(year => <option key={year} value={year}>{year}–{year + 1}</option>)}</select></label><div className="actions"><button onClick={() => { setSeason(season - 1); setSelected(null); setEditing(false) }}>Saison précédente</button><button onClick={() => { setSeason(season + 1); setSelected(null); setEditing(false) }}>Saison suivante</button></div><div className="actions mt"><button aria-pressed={!history} onClick={() => { setHistory(false); setSelected(null); setEditing(false) }}>Toutes les séances</button><button aria-pressed={history} onClick={() => { setHistory(true); setSelected(null); setEditing(false) }}>Historique des bilans clôturés</button></div>{message && <p role="alert">{message}</p>}</div></section>
-    {editing && selected && !session ? <section className="card"><p>Cette séance n’est plus disponible dans le calendrier.</p><button onClick={() => { setSelected(null); setEditing(false) }}>Retour au calendrier</button></section> : editing ? <SessionEditor key={selected ?? 'new'} client={client} session={session} onSaved={saved} onCancel={() => setEditing(false)} /> : session ? <SessionDetail key={session.id} client={client} member={member} session={session} onEdit={() => setEditing(true)} onBack={() => { setSelected(null); window.scrollTo({ top: 0 }) }} onChanged={load} refreshMember={refreshMember} /> : loadedSeason !== season ? <div className="empty-state" role="status">Chargement du calendrier…</div> : <div className="session-grid">{sessions.filter(item => !history || item.status === 'closed').map(item => <article className="card session-card" key={item.id}><div className="session-card-top"><DateTile date={item.date} /><span className={`chip ${item.status === 'closed' ? 'neutral' : item.registration_open ? 'green' : 'amber'}`}>{item.status === 'closed' ? 'Bilan clôturé' : item.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées'}</span></div><h3>{item.title}</h3><p className="session-date">{formatDate(item.date)}</p><p className="meta"><Icon name="clock" />{item.start_time.slice(0, 5)} — {item.end_time.slice(0, 5)}</p><p className="meta"><Icon name="pin" />{item.venue || 'Lieu à préciser'}</p><PublishedOccupancy summary={summaries[item.id]} />{item.school_holiday && <p className="badge">Vacances scolaires</p>}<button className="session-open" onClick={() => { setSelected(item.id); window.scrollTo({ top: 0 }) }} aria-label={`Voir la séance du ${formatDate(item.date)}`}>Voir la séance</button></article>)}{!sessions.some(item => !history || item.status === 'closed') && <p className="empty-state">{history ? 'Aucun bilan clôturé dans cette saison.' : 'Aucune séance dans cette saison.'}</p>}</div>}
+  return <><section className="calendar-heading" hidden={editing || !!session}><PageHeading eyebrow="Le calendrier APSAP" title="Les séances" actions={member.role !== 'member' && <button className="primary" onClick={() => { setSelected(null); setEditing(true) }}>Nouvelle séance</button>}><p>Les prochains rendez-vous du club, de l’inscription au bilan.</p></PageHeading><div className="calendar-tools"><p>Mes fosses réalisées cette saison : <strong>{loadedSeason === season ? counts.find(row => row.member_id === member.id)?.completed_count ?? 0 : '…'}</strong>. Seuls les bilans clôturés comptent.</p><div className="actions mt" role="group" aria-label="Période des séances">{([['upcoming', 'À venir'], ['past', 'Passées'], ['all', 'Toutes']] as const).map(([value, label]) => <button key={value} className="secondary" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div>{message && <div role="alert"><p>{message}</p><button className="secondary" onClick={() => void load()}>Réessayer</button></div>}</div></section>
+    {editing && selected && !session ? <section className="card"><p>Cette séance n’est plus disponible dans le calendrier.</p><button onClick={() => { setSelected(null); setEditing(false) }}>Retour au calendrier</button></section> : editing ? <SessionEditor key={selected ?? 'new'} client={client} session={session} onSaved={saved} onCancel={() => setEditing(false)} /> : session ? <SessionDetail key={session.id} client={client} member={member} session={session} onEdit={() => setEditing(true)} onBack={() => { setSelected(null); window.scrollTo({ top: 0 }) }} onChanged={load} refreshMember={refreshMember} initialTab={entryTab} /> : loadedSeason !== season ? <div className="empty-state" role="status">{message ? 'Calendrier indisponible. Réessayez pour charger les séances.' : 'Chargement du calendrier…'}</div> : <div className="session-grid">{visible.map(item => {
+      const summary = summaries[item.id]
+      const action = calendarAction(item, summary)
+      return <article className={`card session-card${item.id === next ? ' next-session' : ''}`} key={item.id}>
+        {item.id === next && <p className="eyebrow">Prochaine séance</p>}
+        <div className="session-card-top"><DateTile date={item.date} /><span className={`chip ${item.status === 'closed' ? 'neutral' : item.registration_open ? 'green' : 'amber'}`}>{item.status === 'closed' ? 'Bilan clôturé' : item.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées'}</span></div>
+        <h3>{item.title}</h3><p className="meta"><Icon name="clock" />{item.start_time.slice(0, 5)} — {item.end_time.slice(0, 5)}</p><p className="meta"><Icon name="pin" />{item.venue || 'Lieu à préciser'}</p>
+        <PublishedOccupancy summary={summary} /><PersonalStatus summary={summary} />
+        {summary.my_rsvp !== 'yes' && item.status !== 'closed' && item.registration_open && summary.publication_version > 0 && summary.confirmed_count >= summary.capacity && <p className="calendar-hint">Vous pouvez encore répondre Oui</p>}
+        {item.school_holiday && <p className="badge">Vacances scolaires</p>}
+        <button className="session-open" onClick={() => { setEntryTab(action.tab); setSelected(item.id); window.scrollTo({ top: 0 }) }} aria-label={`${action.label} · séance du ${formatDate(item.date)}`}>{action.label}</button>
+      </article>
+    })}{!visible.length && <p className="empty-state">{filter === 'upcoming' ? 'Aucune séance à venir.' : filter === 'past' ? 'Aucune séance passée.' : 'Aucune séance.'}</p>}</div>}
   </>
 }

@@ -27,7 +27,7 @@ test('withdrawal confirmation preserves cancellations and participant tabs exclu
     expect(car.error).toBeNull()
     expect((await memberClient.rpc('join_car', { p_session_id: id, p_car_offer_id: car.data! })).error).toBeNull()
     for (const device of [page, other]) {
-      const open = device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` })
+      const open = device.getByRole('button', { name: new RegExp(`séance du ${formatDate(testSessionDate)}`) })
       await expect(open).toBeVisible({ timeout: 12000 }); await open.click()
       await expect(device.getByText('Ma place : Confirmé', { exact: true })).toBeVisible()
     }

@@ -53,7 +53,7 @@ test('admin validates actual attendance and reopens for correction; member sees 
       await openConfirmation(device, await requestMagicLink(device, fixture))
       await device.getByRole('button', { name: 'Se connecter', exact: true }).click()
       await expect(device.getByRole('heading', { name: 'Les séances', exact: true })).toBeVisible()
-      await device.getByRole('combobox', { name: 'Saison', exact: true }).selectOption(String(pastSeason))
+      await device.getByRole('button', { name: 'Passées', exact: true }).click()
     }
     client = await fixtureClient(admin)
     const memberClient = await fixtureClient(member)
@@ -67,7 +67,7 @@ test('admin validates actual attendance and reopens for correction; member sees 
     const counter = other.getByText('Mes fosses réalisées cette saison', { exact: false })
     await expect(counter).toContainText('0. Seuls')
     for (const device of [page, other]) {
-      const button = device.getByRole('button', { name: `Voir la séance du ${formatDate(pastDate)}` })
+      const button = device.getByRole('button', { name: new RegExp(`séance du ${formatDate(pastDate)}`) })
       await expect(button).toBeVisible({ timeout: 12000 }); await button.click()
       await device.getByRole('tab', { name: 'Bilan', exact: true }).click()
     }
@@ -75,7 +75,7 @@ test('admin validates actual attendance and reopens for correction; member sees 
       await other.getByRole('button', { name: 'Toutes les séances', exact: true }).click()
       await expect(counter).toBeVisible()
       await expect(counter).toContainText(`${count}. Seuls`, { timeout: 12000 })
-      await other.getByRole('button', { name: `Voir la séance du ${formatDate(pastDate)}` }).click()
+      await other.getByRole('button', { name: new RegExp(`séance du ${formatDate(pastDate)}`) }).click()
       await other.getByRole('tab', { name: 'Bilan', exact: true }).click()
     }
     const attendance = page.getByRole('combobox', { name: `Présence de ${member.firstName} Fictif`, exact: true })
@@ -84,7 +84,7 @@ test('admin validates actual attendance and reopens for correction; member sees 
     await page.getByRole('button', { name: 'Clôturer le bilan', exact: true }).click()
     await page.getByRole('button', { name: 'Confirmer la clôture', exact: true }).click()
     await expect(page.getByRole('button', { name: 'Rouvrir le bilan', exact: true })).toBeVisible()
-    await expectCalendarCount(1)
+    await expectCalendarCount(pastSeason === seasonOf(todayParis()) ? 1 : 0)
     await expect(other.locator('.attendance').getByText('A plongé', { exact: true })).toBeVisible({ timeout: 12000 })
     await expect(other.getByRole('combobox', { name: /Présence de/ })).toHaveCount(0)
     expect((await memberClient.rpc('set_attendance', { p_session_id: id, p_member_id: member.memberId, p_status: 'dived' })).error?.code).toBe('42501')
@@ -98,8 +98,8 @@ test('admin validates actual attendance and reopens for correction; member sees 
     await expect(other.locator('.attendance').getByText('Absent', { exact: true })).toBeVisible({ timeout: 12000 })
     await expectCalendarCount(0)
     await other.getByRole('button', { name: 'Toutes les séances', exact: true }).click()
-    await other.getByRole('button', { name: 'Historique des bilans clôturés', exact: true }).click()
-    await expect(other.getByRole('button', { name: `Voir la séance du ${formatDate(pastDate)}` })).toBeVisible()
+    await other.getByRole('button', { name: 'Passées', exact: true }).click()
+    await expect(other.getByRole('button', { name: new RegExp(`séance du ${formatDate(pastDate)}`) })).toBeVisible()
     await page.setViewportSize({ width: 390, height: 844 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
     await page.locator('.attendance').screenshot({ path: 'test-results/attendance-mobile.png' })

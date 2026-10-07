@@ -331,3 +331,22 @@ not use `updated_at`, which also changes for payment/transport/attendance. Earli
 registrations stay NULL because the original date cannot be recovered reliably.
 The existing permission-filtered `get_current_selection` projection adds this field;
 no private operational fields or draft data are exposed.
+
+### Calendrier personnel (#48)
+
+`get_session_card_summaries(p_start_year)` reste une projection groupée de la
+saison. Elle ajoute `my_rsvp`, `my_selection_state`, `my_transport_mode`,
+`my_transport_provisional` et `my_payment_status`. L’identité est exclusivement
+celle de `current_member_id()` : aucun identifiant cible n’est accepté, même pour
+un administrateur. Aucun CACI ni paiement d’un autre adhérent n’est renvoyé.
+Les comptes inactifs et les utilisateurs anonymes sont refusés.
+
+La sélection réutilise `get_current_selection`, l’occupation et la confirmation
+du conducteur réutilisent `current_selected_ids`, et le mode de trajet réutilise
+`get_session_transport`. Le brouillon privé n’intervient jamais. Conducteur et
+passager restent provisoires si le conducteur n’est pas confirmé dans la dernière
+publication effective. Le paiement est renvoyé uniquement pour Oui/Peut-être ;
+sinon il vaut NULL, sans modification de l’historique enregistré. Le type React
+corrige explicitement cette nullabilité omise par le générateur de types RPC.
+La migration remplace la signature de retour de la fonction, sans modifier de
+table, de politique RLS ou de règle transactionnelle.

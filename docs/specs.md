@@ -373,3 +373,31 @@ starts ascending. Old Inscription preferences fall back to the new default.
 For ties in every criterion: name ascending, then stable member UUID. Registration
 timestamps are not used in any sort. All sorts leave loaded records unchanged.
 No query, migration, search/filter or private draft visibility change is introduced.
+
+### Calendrier personnel
+
+Les cartes séparent ma réponse, ma sélection publiée effective, mon trajet
+(avec avertissement provisoire si le conducteur n’est pas confirmé) et mon
+paiement. Une réponse absente/Non ne crée pas une dette affichée : le paiement
+est alors « Non concerné ». Le brouillon administrateur ne change pas ces cartes.
+
+Le filtre initial est « À venir » : dates d’aujourd’hui et ultérieures à Paris.
+« Passées » contient toutes les dates strictement antérieures, bilan clôturé ou
+non. « Toutes » conserve l’ordre chronologique de toutes les saisons. La première séance
+à venir dont le bilan n’est pas clôturé est mise en évidence une seule fois.
+À la demande de la recette staging, le sélecteur de saison et les commandes précédente/suivante sont retirés. Les filtres couvrent toutes les saisons ; les
+compteurs restent basés sur les présences et les bilans clôturés de septembre à août.
+
+L’action principale est « Voir / répondre » sans réponse si les inscriptions
+sont ouvertes, « Organiser mon trajet » pour Oui avec trajet absent ou provisoire
+(sauf sélection Non retenu), sinon « Voir la séance ». Un bilan clôturé propose
+toujours la consultation. Organiser ouvre Covoiturage sans réserver ni modifier
+le trajet. Aucun paiement ne prend la priorité dans cette action.
+Une sélection pleine ne ferme pas les inscriptions : la carte rappelle
+« Vous pouvez encore répondre Oui » tant qu’elles sont ouvertes, uniquement si
+la réponse personnelle n’est pas déjà Oui (sans réponse, Peut-être ou Non).
+
+L’actualisation partagée conserve les dernières données valides lors d’un
+échec et signale qu’elles ne sont pas actualisées. Avant la première réponse du
+serveur, aucun statut personnel ou compteur n’est inventé. Les données d’une
+ancienne saison ne sont pas présentées comme celles d’une nouvelle saison.

@@ -82,3 +82,22 @@ it('keeps the dialog available to retry when logout fails',async()=>{
   fireEvent.click(within(dialog).getByRole('button',{name:'Annuler'}))
   expect(screen.queryByRole('dialog')).toBeNull()
 })
+
+it('ignores a delayed native close event after reopening logout confirmation', async()=>{
+  const app=await setup()
+  const trigger=screen.getByRole('button',{name:'Se déconnecter'})
+  fireEvent.click(trigger)
+  const dialog=screen.getByRole('dialog',{name:'Se déconnecter ?'})
+  fireEvent.click(within(dialog).getByRole('button',{name:'Annuler'}))
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+  fireEvent.click(trigger)
+  expect(screen.getByRole('dialog')).toBe(dialog)
+  // Browser close events can be delivered after the next keyboard activation.
+  fireEvent(dialog,new Event('close'))
+  expect(screen.getByRole('dialog')).toBe(dialog)
+  expect(app.signOut).not.toHaveBeenCalled()
+  fireEvent(dialog,new Event('cancel',{cancelable:true}))
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
