@@ -89,7 +89,7 @@ Un trajet passager ou conducteur reste **Provisoire** tant que le conducteur
 n’est pas confirmé. **Organiser mon trajet** ouvre directement Covoiturage sans
 réserver de place. Le paiement est « Non concerné » sans réponse ou avec Non.
 Une sélection pleine n’empêche pas de répondre Oui si les inscriptions restent
-ouvertes. En cas d’échec d’actualisation, lire l’avertissement : les données
+ouvertes. Le rappel disparaît lorsque votre réponse est déjà Oui. En cas d’échec d’actualisation, lire l’avertissement : les données
 précédentes restent affichées et **Réessayer** relance leur chargement.
 
 Recette locale avec identités fictives : observer les cartes sur deux appareils,

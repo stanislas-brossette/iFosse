@@ -72,7 +72,7 @@ test('realistic club volumes retain desktop/mobile layout, keyboard tabs and rol
     await expect(memberPage.locator('.session-card')).toHaveCount(4, { timeout: 12000 })
     await expect(memberPage.getByText('20 confirmés / 20 places', { exact: true })).toBeVisible({ timeout: 12000 })
     await expect(memberPage.getByRole('button', { name: 'Administration', exact: true })).toHaveCount(0)
-    await expect(memberPage.getByText('Vous pouvez encore répondre Oui', { exact: true })).toBeVisible()
+    await expect(memberPage.getByText('Vous pouvez encore répondre Oui', { exact: true })).toHaveCount(0)
     await expect(memberPage.locator('.personal-status')).toHaveCount(4)
     await expect(memberPage.getByText('Prochaine séance', { exact: true })).toHaveCount(1)
     await capture(memberPage, 'desktop-member-sessions')
