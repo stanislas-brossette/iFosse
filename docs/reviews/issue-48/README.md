@@ -17,7 +17,7 @@ Inspection : une seule prochaine séance, une seule date visible par carte
 (tuile jour/mois avec date complète accessible et au survol), quatre statuts personnels lisibles,
 occupation publiée, rappel des inscriptions possibles malgré la sélection pleine seulement sans
 réponse Oui préalable (absent sur ces captures),
-filtres séparés des saisons et action principale unique. La suite vérifie aussi
+filtres À venir / Passées / Toutes sans sélecteur ni commandes de saison, compteur de saison en cours et action principale unique. La suite vérifie aussi
 l’absence de débordement horizontal et les contrôles d’au moins 44 px ; les tests
 existants de focus et navigation clavier restent exécutés.
 
@@ -28,7 +28,7 @@ les republications, le paiement personnel et la séance passée non clôturée.
 Ces captures ne constituent pas une validation du pilote organisateur (#18),
 de l’Auth/SMTP hébergé ou de la production.
 
-Revalidation de la restauration : typecheck/lint/build et 138 tests unitaires,
+Revalidation de la restauration : typecheck/lint/build et 140 tests unitaires,
 560 assertions pgTAP, contrôle des types après reset isolé ; les deux scénarios
 navigateur calendrier/revue visuelle passent sur le schéma migré. Une base locale
 ancienne a été inspectée en lecture seule : seulement quatre champs d’occupation.

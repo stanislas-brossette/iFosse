@@ -383,9 +383,9 @@ est alors « Non concerné ». Le brouillon administrateur ne change pas ces car
 
 Le filtre initial est « À venir » : dates d’aujourd’hui et ultérieures à Paris.
 « Passées » contient toutes les dates strictement antérieures, bilan clôturé ou
-non. « Toutes » conserve l’ordre chronologique de la saison. La première séance
+non. « Toutes » conserve l’ordre chronologique de toutes les saisons. La première séance
 à venir dont le bilan n’est pas clôturé est mise en évidence une seule fois.
-Le sélecteur et les commandes de saisons adjacentes restent disponibles ; les
+À la demande de la recette staging, le sélecteur de saison et les commandes précédente/suivante sont retirés. Les filtres couvrent toutes les saisons ; les
 compteurs restent basés sur les présences et les bilans clôturés de septembre à août.
 
 L’action principale est « Voir / répondre » sans réponse si les inscriptions

@@ -64,7 +64,6 @@ test('personal calendar follows publication and transport across devices without
     await expect(card.getByText('Vous pouvez encore répondre Oui', { exact: true })).toBeVisible()
     await other.getByRole('button', { name: 'Passées', exact: true }).click()
     // The previous date may belong to the preceding season on September 1.
-    if (today.slice(5) === '09-01') await other.getByRole('button', { name: 'Saison précédente', exact: true }).click()
     await expect(other.getByText('Calendrier fictif passé non clôturé', { exact: true })).toBeVisible()
     expect(await other.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   } finally {

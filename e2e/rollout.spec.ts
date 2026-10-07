@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { formatDate, seasonOf, todayParis } from '../src/lib/dates.js'
+import { formatDate, todayParis } from '../src/lib/dates.js'
 
 test('fictitious organizer completes the session lifecycle through a phone viewport', async ({ page, browser }) => {
   test.setTimeout(90000)
@@ -16,7 +16,6 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
       await openConfirmation(device, await requestMagicLink(device, fixture))
       await device.getByRole('button', { name: 'Se connecter', exact: true }).click()
       await expect(device.getByRole('heading', { name: 'Les séances', exact: true })).toBeVisible()
-      await device.getByRole('combobox', { name: 'Saison', exact: true }).selectOption(String(seasonOf(past)))
       await device.getByRole('button', { name: 'Passées', exact: true }).click()
     }
     client = await fixtureClient(admin)

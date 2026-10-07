@@ -79,9 +79,8 @@ Netlify preview magic-link setup: use the exact staging Site URL and narrow `/au
 
 Le calendrier démarre sur **À venir** (aujourd’hui inclus, date de Paris).
 **Passées** donne aussi accès aux séances dont le bilan est encore ouvert ;
-**Toutes** affiche toute la saison choisie. Les commandes de saisons adjacentes
-permettent de retrouver les anciens bilans. **Prochaine séance** met en évidence
-la première séance future non clôturée, sans créer une seconde carte.
+**Toutes** affiche toutes les séances. Le sélecteur et les boutons de saison ont été retirés : **Passées** permet de retrouver les anciens bilans, toutes saisons confondues. Le compteur reste celui de la saison en cours. **Prochaine séance** met en évidence
+la première séance à venir non clôturée, sans créer une seconde carte.
 
 Chaque carte distingue **Ma réponse / Ma sélection / Mon trajet / Mon paiement**.
 La sélection et l’occupation viennent exclusivement de la publication effective.
