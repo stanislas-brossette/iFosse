@@ -14,7 +14,8 @@ Les autres séances n’ont pas encore de réponse/publication.
 - [Téléphone : viewport 390×844, page entière](mobile-calendar.png)
 
 Inspection : une seule prochaine séance, quatre statuts personnels lisibles,
-occupation publiée, rappel des inscriptions possibles malgré la sélection pleine,
+occupation publiée, rappel des inscriptions possibles malgré la sélection pleine seulement sans
+réponse Oui préalable (absent sur ces captures),
 filtres séparés des saisons et action principale unique. La suite vérifie aussi
 l’absence de débordement horizontal et les contrôles d’au moins 44 px ; les tests
 existants de focus et navigation clavier restent exécutés.

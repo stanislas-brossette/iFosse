@@ -45,7 +45,7 @@ test('personal calendar follows publication and transport across devices without
     ok(await client.rpc('publish_selection', { p_session_id: id }))
     await expect(card.getByText('Confirmé', { exact: true })).toBeVisible({ timeout: 12000 })
     await expect(card.getByText('Provisoire · conducteur non confirmé', { exact: true })).toBeVisible()
-    await expect(card.getByText('Vous pouvez encore répondre Oui', { exact: true })).toBeVisible()
+    await expect(card.getByText('Vous pouvez encore répondre Oui', { exact: true })).toHaveCount(0)
     ok(await client.rpc('set_draft_selection', { p_session_id: id, p_member_id: member.memberId, p_state: 'waiting' }))
     // A subsequent published payment update triggers a fresh snapshot; private selection still does not leak.
     ok(await client.rpc('set_payment_status', { p_session_id: id, p_member_id: member.memberId, p_status: 'paid' }))
@@ -61,6 +61,7 @@ test('personal calendar follows publication and transport across devices without
     ok(await own.rpc('set_session_rsvp', { p_session_id: id, p_member_id: member.memberId, p_rsvp: 'no' }))
     await expect(card.getByText('Non', { exact: true })).toBeVisible({ timeout: 12000 })
     await expect(card.getByText('Non concerné', { exact: true })).toBeVisible()
+    await expect(card.getByText('Vous pouvez encore répondre Oui', { exact: true })).toBeVisible()
     await other.getByRole('button', { name: 'Passées', exact: true }).click()
     // The previous date may belong to the preceding season on September 1.
     if (today.slice(5) === '09-01') await other.getByRole('button', { name: 'Saison précédente', exact: true }).click()

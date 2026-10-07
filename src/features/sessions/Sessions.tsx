@@ -149,7 +149,7 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
         <div className="session-card-top"><DateTile date={item.date} /><span className={`chip ${item.status === 'closed' ? 'neutral' : item.registration_open ? 'green' : 'amber'}`}>{item.status === 'closed' ? 'Bilan clôturé' : item.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées'}</span></div>
         <h3>{item.title}</h3><p className="session-date">{formatDate(item.date)}</p><p className="meta"><Icon name="clock" />{item.start_time.slice(0, 5)} — {item.end_time.slice(0, 5)}</p><p className="meta"><Icon name="pin" />{item.venue || 'Lieu à préciser'}</p>
         <PublishedOccupancy summary={summary} /><PersonalStatus summary={summary} />
-        {item.status !== 'closed' && item.registration_open && summary.publication_version > 0 && summary.confirmed_count >= summary.capacity && <p className="calendar-hint">Vous pouvez encore répondre Oui</p>}
+        {summary.my_rsvp !== 'yes' && item.status !== 'closed' && item.registration_open && summary.publication_version > 0 && summary.confirmed_count >= summary.capacity && <p className="calendar-hint">Vous pouvez encore répondre Oui</p>}
         {item.school_holiday && <p className="badge">Vacances scolaires</p>}
         <button className="session-open" onClick={() => { setEntryTab(action.tab); setSelected(item.id); window.scrollTo({ top: 0 }) }} aria-label={`${action.label} · séance du ${formatDate(item.date)}`}>{action.label}</button>
       </article>

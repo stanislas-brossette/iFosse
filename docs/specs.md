@@ -394,7 +394,8 @@ sont ouvertes, « Organiser mon trajet » pour Oui avec trajet absent ou proviso
 toujours la consultation. Organiser ouvre Covoiturage sans réserver ni modifier
 le trajet. Aucun paiement ne prend la priorité dans cette action.
 Une sélection pleine ne ferme pas les inscriptions : la carte rappelle
-« Vous pouvez encore répondre Oui » tant qu’elles sont ouvertes.
+« Vous pouvez encore répondre Oui » tant qu’elles sont ouvertes, uniquement si
+la réponse personnelle n’est pas déjà Oui (sans réponse, Peut-être ou Non).
 
 L’actualisation partagée conserve les dernières données valides lors d’un
 échec et signale qu’elles ne sont pas actualisées. Avant la première réponse du
