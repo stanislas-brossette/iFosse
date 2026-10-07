@@ -277,3 +277,21 @@ summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .personal-status dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .personal-status .chip { display: block; margin-top: 5px; white-space: normal; }
 .calendar-hint { color: #086267; font-size: 14px; }
+
+/* Personal published state precedes the global session information. */
+.participation-summary { margin-top: 18px; padding: 16px; background: var(--teal-tint, #e9f6f4); border: 1px solid #d5e9e6; border-radius: 14px; }
+.participation-summary p { margin: 0 0 10px; }
+.participation-summary p:last-child { margin-bottom: 0; }
+.participation-summary .personal-place { font-size: 17px; }
+.participation-summary .participation-explanation { max-width: 65ch; }
+.participation-facts { display: grid; gap: 8px 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 12px 0; }
+.participation-facts h3, .participation-facts p { margin: 0; font-size: 14px; font-weight: 400; }
+.participation-facts .chip { margin: 5px 0 0; display: table; white-space: normal; }
+.participation-summary.compact { padding: 12px 16px; }
+.participation-summary.compact .participation-facts { margin: 8px 0 0; }
+.booked-trip, .personal-group { margin-bottom: 16px; background: #f4f7f8; }
+@media (max-width: 600px) {
+  .participation-facts { grid-template-columns: minmax(0, 1fr); }
+}
+.participation-summary .personal-place .chip, .booked-trip > .chip, .own-car-summary > .chip { font-size: 14px; }
+.published-groups > .personal-group, .published-groups > h3 { grid-column: 1 / -1; }

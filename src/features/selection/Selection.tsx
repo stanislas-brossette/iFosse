@@ -82,10 +82,11 @@ export function Selection({ client, member, session, manage, participants = fals
   function draftState(person: CurrentSelection) { return hasDraft ? draft.find(row => row.member_id === person.member_id)?.state ?? 'waiting' : ['selected', 'declined'].includes(person.state) ? person.state : 'waiting' }
   const filtered = editable.filter(person => `${person.first_name} ${person.last_name}`.toLocaleLowerCase('fr').includes(search.toLocaleLowerCase('fr')))
   const draftCount = editable.filter(person => draftState(person) === 'selected').length
-  return <div className={`mt selection ${manage ? 'selection-management' : ''}`}><h3>Sélection publiée{publication && ` · version ${publication}`}</h3>
+  return <div className={`mt selection ${manage ? 'selection-management' : ''}`}>{manage && <><h3>Sélection publiée{publication && ` · version ${publication}`}</h3>
     <p>Ma place : <strong>{selectionLabels[own?.state ?? (publication ? 'none' : 'pending')]}</strong></p>
     <p>{selected.length} participants confirmés / {session.capacity} places.</p>
-    {!publication && <p>Aucune sélection publiée pour le moment.</p>}
+    {!publication && <p>Aucune sélection publiée pour le moment.</p>}</>}
+    {participants && <p className="published-total">{selected.length} participants confirmés / {session.capacity} places.{!publication && ' Sélection non publiée.'}</p>}
     {participants && <div className="participant-selection"><h3>Participants · {editable.length}</h3><p className="muted">Réponses Oui et Peut-être.</p>
       <div className="participant-sort"><label>Trier par<select value={sort.key} onChange={event => changeSort({ key: event.target.value as SortKey, descending: false })}>{Object.entries(sortLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><button type="button" aria-label={`Ordre ${sort.descending ? 'décroissant' : 'croissant'} : passer à l’ordre ${sort.descending ? 'croissant' : 'décroissant'}`} onClick={() => changeSort({ ...sort, descending: !sort.descending })}><span aria-hidden="true">{sort.descending ? '↓' : '↑'}</span> {sort.descending ? 'Décroissant' : 'Croissant'}</button></div>
       {!editable.length && <p>Aucune réponse Oui ou Peut-être.</p>}<ul className="member-list">{sortParticipants(editable, sort).map(person => <li key={person.member_id}><span>{person.first_name} {person.last_name} · {person.current_level || 'Niveau non renseigné'}{person.preparing_level && ` · prépare ${person.preparing_level}`}</span><strong className={`chip ${person.state === 'selected' ? 'green' : person.state === 'declined' ? 'red' : 'amber'}`}>{person.rsvp === 'yes' ? 'Oui' : 'Peut-être'} · {selectionLabels[person.state] ?? 'Statut inconnu'}</strong></li>)}</ul></div>}

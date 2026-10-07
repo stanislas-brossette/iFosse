@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '../../lib/database.types'
 import type { Member } from '../auth/AuthGate'
-import { caciLabels, caciStatus, formatDate, seasonOf, todayParis } from '../../lib/dates'
+import { caciStatus, formatDate, seasonOf, todayParis } from '../../lib/dates'
 import { SessionEditor } from './SessionEditor'
 import type { Session } from './SessionEditor'
 import { Selection } from '../selection/Selection'
@@ -18,12 +18,15 @@ import type { CalendarFilter } from './calendar'
 import { SessionTabs } from '../../components/SessionTabs'
 import { PublishedOccupancy } from './PublishedOccupancy'
 import type { CardSummary } from './PublishedOccupancy'
-import { attendanceLabels, paymentLabels, rsvpLabels } from '../../lib/labels'
+import { ParticipationSummary } from './ParticipationSummary'
+import { attendanceLabels, rsvpLabels } from '../../lib/labels'
 export type Response = Database['public']['Functions']['get_session_responses']['Returns'][number]
 export { rsvpLabels } from '../../lib/labels'
 export function SessionDetail({ client, member, session, onEdit, onBack, onChanged, refreshMember, initialTab = 'overview' }: { client: SupabaseClient<Database>; member: Member; session: Session; onEdit: () => void; onBack: () => void; onChanged: () => Promise<void>; refreshMember?: () => Promise<void>; initialTab?: SessionTab }) {
   const [responses, setResponses] = useState<Response[]>([])
   const [own, setOwn] = useState<Tables<'session_participations'> | null>(null)
+  const [summary, setSummary] = useState<CardSummary | null>(null)
+  const [summaryError, setSummaryError] = useState(false)
   const [directory, setDirectory] = useState<Pick<Member, 'id' | 'first_name' | 'last_name'>[]>([])
   const [tab, setTab] = useState<SessionTab>(initialTab)
   const [warning, setWarning] = useState(false)
@@ -34,18 +37,24 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
   const loadSequence = useRef(0)
   const load = useCallback(async () => {
     const request = ++loadSequence.current
-    const [publicResult, ownResult] = await Promise.all([
+    const [publicResult, ownResult, summaryResult] = await Promise.all([
       client.rpc(admin ? 'get_admin_session_responses' : 'get_session_responses', { p_session_id: session.id }),
       client.from('session_participations').select('*').eq('session_id', session.id).eq('member_id', member.id).maybeSingle(),
+      client.rpc('get_session_card_summaries', { p_start_year: seasonOf(session.date) }),
     ])
     if (request !== loadSequence.current) return
-    if (publicResult.error || ownResult.error) { setMessage('Actualisation impossible. Réessayez.'); return }
+    const personal = summaryResult.data?.find(row => row.session_id === session.id)
+    if (publicResult.error || ownResult.error || summaryResult.error || !personal || !validSummary(personal)) {
+      setSummaryError(true)
+      return
+    }
+    setSummaryError(false); setSummary(personal)
     setResponses(publicResult.data ?? []); setOwn(ownResult.data)
     if (admin) {
       const result = await client.from('members').select('id, first_name, last_name').is('disabled_at', null).order('last_name')
       if (request === loadSequence.current && !result.error) setDirectory(result.data ?? [])
     }
-  }, [client, member.id, admin, session.id])
+  }, [client, member.id, admin, session.id, session.date])
   useSharedRefresh(load)
   const caci = caciStatus(member.caci_expiry_date, session.date)
   async function respond(rsvp: 'yes' | 'maybe' | 'no', confirmed = false, target = member.id, withdrawalConfirmed = false) {
@@ -80,17 +89,17 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
     <p>{session.address}</p><p className="preserve-lines">{session.notes}</p></details><p className="session-registration">{session.status === 'closed' ? 'Bilan clôturé' : session.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées · un désistement reste possible.'}</p>
     <SessionTabs value={tab} admin={admin} onChange={setTab} />
     <div role="tabpanel" id="session-panel" aria-labelledby={`session-tab-${tab}`} className="tab-panel">
-    {tab === 'overview' && <div className="mt"><h3>Ma réponse : {rsvpLabels[own?.rsvp ?? 'unanswered']}</h3><p>{session.capacity} places pour la sélection finale. Dire Oui ne garantit pas une place.</p>
+    {tab === 'manage' && summaryError && <p role="alert">Actualisation impossible. Les dernières données reçues sont conservées. <button onClick={() => void load()}>Réessayer</button></p>}
+    {tab !== 'manage' && <ParticipationSummary summary={summary} stale={summaryError} caci={caci} session={session} detailed={tab === 'overview'} onTransport={() => { setTab('transport'); document.getElementById('session-tab-transport')?.focus() }} onRetry={() => void load()} />}
+    {tab === 'overview' && <div className="mt"><p>{session.capacity} places pour la sélection finale. Dire Oui ne garantit pas une place.</p>
       <div className="actions" role="group" aria-label="Ma réponse pour la séance">{(['yes', 'maybe', 'no'] as const).map(value => <button className={`rsvp-${value}`} key={value} aria-pressed={own?.rsvp === value} disabled={busy || session.status === 'closed' || (!session.registration_open && !admin && value !== 'no')} onClick={() => { setWarning(false); void respond(value) }}>{rsvpLabels[value]}</button>)}</div>
       {session.status === 'closed' && <p>Ma présence : <strong>{attendanceLabels[own?.attendance_status ?? 'unknown']}</strong></p>}
-      <p>Mon paiement : <strong>{paymentLabels[own?.payment_status ?? 'unpaid']}</strong></p>
-      <p>Mon CACI au jour de la fosse : {caciLabels[caci]}.</p>
       {warning && <div role="alert" className="mt"><p>Votre CACI sera expiré ou n’est pas renseigné pour cette fosse. Vous pourrez le renouveler avant la séance. Confirmer votre réponse Oui ?</p><div className="actions"><button disabled={busy} onClick={() => void respond('yes', true)}>Confirmer Oui malgré l’avertissement</button><button onClick={() => setWarning(false)}>Annuler la réponse</button></div></div>}
     </div>}
     {pendingResponse && <div role="alert" className="mt"><p>Changer la réponse de {pendingResponse.name} en {rsvpLabels[pendingResponse.rsvp]} ?</p>{pendingResponse.selected && <p>La place confirmée sera libérée. Un nouveau Oui nécessitera une nouvelle sélection publiée.</p>}{pendingResponse.passengers > 0 && <p>La voiture sera retirée. Ses passagers restent inscrits, mais devront retrouver un trajet.</p>}<div className="actions"><button disabled={busy} onClick={() => void respond(pendingResponse.rsvp, false, pendingResponse.target, true)}>Confirmer le changement de réponse</button><button disabled={busy} onClick={() => setPendingResponse(null)}>Conserver la réponse</button></div></div>}
-    <Selection client={client} member={member} session={session} manage={tab === 'manage'} participants={tab === 'participants'} />
+    {(tab === 'manage' || tab === 'participants') && <Selection client={client} member={member} session={session} manage={tab === 'manage'} participants={tab === 'participants'} />}
     {tab === 'manage' && admin && <details className="mt response-corrections"><summary>Corriger une réponse · {directory.length} adhérents</summary><ul className="member-list">{directory.map(person => <li key={person.id}><span>{person.first_name} {person.last_name}</span><label>Réponse de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed'} value={responses.find(response => response.member_id === person.id)?.rsvp ?? 'unanswered'} onChange={event => void respond(event.target.value as 'yes' | 'maybe' | 'no', false, person.id)}><option value="unanswered" disabled>Sans réponse</option>{(['yes', 'maybe', 'no'] as const).map(value => <option key={value} value={value}>{rsvpLabels[value]}</option>)}</select></label></li>)}</ul></details>}
-    {tab === 'transport' && <Carpooling client={client} member={member} session={session} onProfileSaved={refreshMember} />}
+    {tab === 'transport' && <Carpooling client={client} member={member} session={session} onProfileSaved={refreshMember} onChanged={load} />}
     {tab === 'groups' && <Palanquees client={client} member={member} session={session} />}
     {tab === 'bilan' && <Attendance client={client} member={member} session={session} onChanged={onChanged} />}
     {message && <p role="status">{message}</p>}</div>
