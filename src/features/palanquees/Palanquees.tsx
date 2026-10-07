@@ -101,7 +101,7 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
       {groups.filter(group => group !== ownGroup).map(renderGroup)}
     </div>
     {publication && <p className="muted">Palanquées publiées · version {publication.publication_version} · sélection version {publication.selection_version}.</p>}
-    <aside className="operational-note"><p>Palanquées informatives : aucune validation réglementaire ou des qualifications.</p><details><summary>En savoir plus</summary><p>Aucun contrôle des ratios ou des limites de profondeur. Cette vue ne remplace pas la fiche réglementaire ni les décisions du DP. La mention « Encadrant » est informative.</p></details></aside>
+    <aside className="operational-note"><p>Palanquées informatives : aucune validation réglementaire ou des qualifications.</p><details><summary>En savoir plus</summary><p>Aucun contrôle des qualifications, des ratios ou des limites de profondeur. Cette vue ne remplace pas la fiche réglementaire ni les décisions du DP. La mention « Encadrant » est informative.</p></details></aside>
     <h4>Niveaux de la sélection publiée actuelle</h4><Summary people={selected} />
     {!published.length && <p>{publication ? 'Aucun participant actuellement affecté dans cette publication.' : 'Aucune palanquée publiée.'}</p>}
     <p>{remaining} participant{remaining === 1 ? '' : 's'} confirmé{remaining === 1 ? '' : 's'} à répartir.</p>

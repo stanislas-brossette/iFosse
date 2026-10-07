@@ -82,6 +82,8 @@ test('published palanquées survive private editing, update live levels and repu
     await expect(other.getByRole('region', { name: 'Ma palanquée publiée', exact: true })).toContainText('Palanquée 2')
     await expect(published).toContainText('Encadrant')
     await expect(other.locator('.palanquee-editor')).toHaveCount(0)
+    await expect(other.getByText('Palanquées informatives : aucune validation réglementaire ou des qualifications.', { exact: true })).toBeVisible()
+    await other.getByText('En savoir plus', { exact: true }).click()
     await expect(other.getByText('Aucun contrôle des qualifications, des ratios ou des limites de profondeur', { exact: false })).toBeVisible()
     await page.setViewportSize({ width: 390, height: 844 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
