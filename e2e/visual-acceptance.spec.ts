@@ -179,6 +179,15 @@ test('realistic club volumes retain desktop/mobile layout, keyboard tabs and rol
     const bounds = await lastAction.boundingBox(); const nav = await page.getByRole('navigation', { name: 'Navigation principale' }).boundingBox()
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(nav!.y)
     await capture(page, 'phone-form-end', true)
+    ok(await (await client(1)).rpc('update_own_profile', { p_first_name: 'Alexandre-Léopold', p_last_name: 'Fictif de Montbrun-sur-Rivière', p_phone: '', p_current_level: 'N3', p_preparing_level: '', p_has_usual_car: false, p_usual_passenger_seats: 0, p_usual_meeting_point: '' }))
+    await memberPage.evaluate(() => window.dispatchEvent(new Event('focus')))
+    await expect(memberPage.getByRole('button', { name: 'Ouvrir mon profil' })).toContainText('Alexandre-Léopold Fictif de Montbrun-sur-Rivière')
+    for (const width of [390, 320]) {
+      await memberPage.setViewportSize({ width, height: 844 })
+      await memberPage.addStyleTag({ content: ':root { font-size: 20px; }' })
+      await capture(memberPage, `phone-${width}-long-name`, true)
+      await memberPage.evaluate(() => document.querySelectorAll('style').forEach(style => { if (style.textContent?.includes(':root { font-size: 20px; }')) style.remove() }))
+    }
   } finally {
     if (admin) for (const id of sessions) await admin.rpc('delete_session', { p_session_id: id })
     await context.close()
