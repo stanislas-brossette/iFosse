@@ -5,10 +5,10 @@ import type { Database, Tables } from '../../lib/database.types'
 import { readLoginCallback } from './callback'
 
 export type Member = Tables<'members'>
-type Props = { client: SupabaseClient<Database>; children: (member: Member, refresh: () => Promise<void>) => ReactNode }
+type Props = { client: SupabaseClient<Database>; children: (member: Member, refresh: () => Promise<void>) => ReactNode; onOpenProfile?: (member: Member) => void; onIdentityChange?: () => void }
 const invalidLink = 'Ce lien est expiré ou a déjà été utilisé. Demandez un nouveau lien.'
 
-export function AuthGate({ client, children }: Props) {
+export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: Props) {
   const [session, setSession] = useState<Session | null>(null)
   const [member, setMember] = useState<Member | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
@@ -32,6 +32,7 @@ export function AuthGate({ client, children }: Props) {
       const id = next?.user.id ?? null
       if (id !== identity.current.id) {
         identity.current = { id, generation: identity.current.generation + 1 }
+        onIdentityChange?.()
         setMember(null)
         setError('')
       }
@@ -44,7 +45,7 @@ export function AuthGate({ client, children }: Props) {
     // Avoid awaiting data queries inside the Auth SDK's session lock.
     const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) { authEvents++; acceptSession(next) } })
     return () => { active = false; identity.current.generation++; data.subscription.unsubscribe() }
-  }, [client])
+  }, [client, onIdentityChange])
 
   const userId = session?.user.id
   const refresh = useCallback(async () => {
@@ -102,14 +103,16 @@ export function AuthGate({ client, children }: Props) {
     try {
       const { error: signOutError } = await client.auth.signOut({ scope: 'local' })
       if (signOutError) setError('La déconnexion a échoué. Réessayez.')
-      else { setMember(null); setSession(null); setMessage('Vous êtes déconnecté.'); setCallback(null); window.history.replaceState(null, '', '/') }
+      else { onIdentityChange?.(); setMember(null); setSession(null); setMessage('Vous êtes déconnecté.'); setCallback(null); window.history.replaceState(null, '', '/') }
     } catch { setError('La déconnexion a échoué. Réessayez.') } finally { setBusy(false) }
   }
+
+  const identityContent = <><span className="avatar" aria-hidden="true">{member ? `${member.first_name.slice(0, 1)}${member.last_name.slice(0, 1)}` : '…'}</span><span><strong>{member ? `${member.first_name} ${member.last_name}` : 'Compte connecté'}</strong>{member && <span className="identity-role">{{ member: 'Adhérent', admin: 'Administrateur', president: 'Président' }[member.role]}</span>}</span></>
 
   if (loading) return <p role="status">Connexion en cours…</p>
   if (callback && 'tokenHash' in callback) return <section className="card login"><p className="eyebrow">Votre espace APSAP</p><h1>Confirmer la connexion</h1><p>Connectez-vous sur cet appareil avec le lien reçu par email.</p>{error && <p role="alert">{error}</p>}<button disabled={busy} onClick={() => void confirmLink()}>Se connecter</button></section>
   if (session) return <>
-    <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span><div className="identity"><span className="avatar" aria-hidden="true">{member ? `${member.first_name.slice(0, 1)}${member.last_name.slice(0, 1)}` : '…'}</span><div><strong>{member ? `${member.first_name} ${member.last_name}` : 'Compte connecté'}</strong>{member && <span className="identity-role">{{ member: 'Adhérent', admin: 'Administrateur', president: 'Président' }[member.role]}</span>}</div></div><button disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
+    <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span>{member && member.auth_user_id === session.user.id && onOpenProfile ? <button type="button" className="identity identity-link" aria-label="Ouvrir mon profil" onClick={() => onOpenProfile(member)}>{identityContent}</button> : <div className="identity">{identityContent}</div>}<button disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
     {error && <p role="alert">{error}</p>}
     {member && member.auth_user_id === session.user.id ? <Fragment key={member.auth_user_id}>{children(member, refresh)}</Fragment> : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre accès doit être actif et lié à un adhérent du club. Contactez le président si votre compte a été désactivé.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
   </>
