@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
-import type { ReactNode, SubmitEvent } from 'react'
+import type { KeyboardEvent, ReactNode, SubmitEvent } from 'react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '../../lib/database.types'
 import { readLoginCallback } from './callback'
@@ -62,6 +62,15 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
 
   function cancelLogout() {
     setConfirmLogout(false)
+  }
+
+  function trapLogoutFocus(event: KeyboardEvent<HTMLDialogElement>) {
+    if (event.key !== 'Tab') return
+    const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+    const first = buttons[0], last = buttons[buttons.length - 1]
+    if (!first) { event.preventDefault(); return }
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
 
   const userId = session?.user.id
@@ -130,7 +139,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   if (callback && 'tokenHash' in callback) return <section className="card login"><p className="eyebrow">Votre espace APSAP</p><h1>Confirmer la connexion</h1><p>Connectez-vous sur cet appareil avec le lien reçu par email.</p>{error && <p role="alert">{error}</p>}<button disabled={busy} onClick={() => void confirmLink()}>Se connecter</button></section>
   if (session) return <>
     <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span>{member && member.auth_user_id === session.user.id && onOpenProfile ? <button type="button" className="identity identity-link" aria-label="Ouvrir mon profil" onClick={() => onOpenProfile(member)}>{identityContent}</button> : <div className="identity">{identityContent}</div>}<button ref={logoutButton} disabled={busy} onClick={() => setConfirmLogout(true)}>Se déconnecter</button></div>
-    <dialog ref={logoutDialog} aria-labelledby="logout-title" aria-describedby="logout-description" onCancel={event => { event.preventDefault(); if (!busy) cancelLogout() }} onClose={() => setConfirmLogout(false)}>
+    <dialog ref={logoutDialog} onKeyDown={trapLogoutFocus} aria-labelledby="logout-title" aria-describedby="logout-description" onCancel={event => { event.preventDefault(); if (!busy) cancelLogout() }} onClose={() => setConfirmLogout(false)}>
       <h2 id="logout-title">Se déconnecter ?</h2>
       <p id="logout-description">Pour revenir sur iFosse, vous devrez demander un nouveau lien de connexion.</p>
       {error && <p role="alert">{error}</p>}
