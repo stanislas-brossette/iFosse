@@ -13,7 +13,8 @@ Les autres séances n’ont pas encore de réponse/publication.
 - [Ordinateur : viewport 1440×900, page entière](desktop-calendar.png)
 - [Téléphone : viewport 390×844, page entière](mobile-calendar.png)
 
-Inspection : une seule prochaine séance, quatre statuts personnels lisibles,
+Inspection : une seule prochaine séance, une seule date visible par carte
+(tuile jour/mois avec date complète accessible et au survol), quatre statuts personnels lisibles,
 occupation publiée, rappel des inscriptions possibles malgré la sélection pleine seulement sans
 réponse Oui préalable (absent sur ces captures),
 filtres séparés des saisons et action principale unique. La suite vérifie aussi
