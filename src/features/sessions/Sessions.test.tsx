@@ -5,7 +5,7 @@ import type { Database } from '../../lib/database.types'
 import type { Member } from '../auth/AuthGate'
 import type { Session } from './SessionEditor'
 import { Sessions } from './Sessions'
-import { todayParis } from '../../lib/dates'
+import { formatDate, todayParis } from '../../lib/dates'
 import type { CardSummary } from './PublishedOccupancy'
 afterEach(cleanup)
 const member = { id: 'self', role: 'member' } as Member
@@ -28,6 +28,9 @@ it('loads twenty personal cards in one batched request, highlights once and defa
   expect(app.rpc).toHaveBeenCalledTimes(2)
   expect(app.rpc).toHaveBeenCalledWith('get_session_card_summaries', expect.anything())
   expect(screen.getByText('Prochaine séance')).toBeTruthy()
+  expect(screen.getAllByLabelText(formatDate(todayParis()))).toHaveLength(20)
+  expect(screen.getAllByLabelText(formatDate(todayParis()))[0].getAttribute('datetime')).toBe(todayParis())
+  expect(screen.queryByText(formatDate(todayParis()))).toBeNull()
   expect(screen.getByRole('button', { name: 'À venir' }).getAttribute('aria-pressed')).toBe('true')
   expect(screen.queryByText('Vous pouvez encore répondre Oui')).toBeNull()
   fireEvent.click(screen.getByRole('button', { name: 'Passées' }))
