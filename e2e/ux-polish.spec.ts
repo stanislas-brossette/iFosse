@@ -7,7 +7,7 @@ import { formatDate } from '../src/lib/dates.js'
 async function layout(page: Page, name: string) {
   expect(new URL(page.url()).hash).toBe('')
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
-  expect(await page.locator('button:visible, input:visible:not([type=checkbox]), select:visible').evaluateAll(nodes => nodes.filter(node => node.getBoundingClientRect().height < 43).length)).toBe(0)
+  await expect.poll(() => page.locator('button:visible, input:visible:not([type=checkbox]), select:visible').evaluateAll(nodes => nodes.filter(node => node.getBoundingClientRect().height < 43).map(node => ({ tag: node.tagName, class: node.className, height: node.getBoundingClientRect().height })))).toEqual([])
   const section = name.startsWith('profile') ? '.usual-car' : name.startsWith('car-summary') ? '.own-car-summary' : '.directory li:has(form)'
   await page.locator(section).first().evaluate(element => window.scrollTo(0, element.getBoundingClientRect().top + scrollY - 100))
   await page.screenshot({ path: `test-results/ux-polish-${name}.png` })
