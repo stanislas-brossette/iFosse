@@ -295,3 +295,61 @@ summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 }
 .participation-summary .personal-place .chip, .booked-trip > .chip, .own-car-summary > .chip { font-size: 14px; }
 .published-groups > .personal-group, .published-groups > h3 { grid-column: 1 / -1; }
+
+/* Session navigation: compact context, discoverable overflowing rubrics. */
+.session-heading .toolbar { margin-bottom: 12px; }
+.session-heading h1 { font-size: 25px; margin-bottom: 6px; }
+.session-metadata { color: var(--muted); margin-bottom: 8px; }
+.session-heading-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.session-heading-actions .session-registration { margin: 0; }
+.session-information { margin: 8px 0 0; }
+.session-tabs-container { position: relative; margin-top: 12px; }
+.session-tabs { position: relative; margin: 0; scroll-padding-inline: 46px; padding-inline: 4px; }
+.tabs-scroll { position: absolute; top: 4px; z-index: 2; width: 44px; padding: 0; border-radius: 8px; box-shadow: 0 0 12px 7px white; font-size: 24px; }
+.tabs-scroll.before { left: -6px; }
+.tabs-scroll.after { right: -6px; }
+.compact-facts { border: 0; padding: 0; background: transparent; }
+.compact-facts summary { padding: 8px 0; min-height: 44px; }
+.compact-facts p { margin-bottom: 6px; }
+.operational-note { margin: 16px 0; padding: 12px; border-radius: 12px; background: #edf3fb; }
+.operational-note p { margin-bottom: 0; }
+.operational-note details { border: 0; background: transparent; padding: 0; }
+.operational-note summary { min-height: 44px; padding: 8px 0; }
+:is(label, .chip, .badge, .meta, .occupancy, .session-information, .session-registration, .readiness-score, .readiness-points, .readiness select, .level-summary, .usual-car > p, .member-actions details, .car-card p, .directory .member-list p, .selection-management > p, .selection-management > .mt > p, .member-preparation > p, .readiness > p:not(.readiness-score), .palanquee-editor .check) { font-size: 1rem; }
+@media (max-width: 760px) {
+  .auth-toolbar { position: static; padding: 8px 12px; min-height: 60px; }
+  .identity strong, .identity-role { font-size: 1rem; }
+  .auth-toolbar > button { font-size: 1rem; }
+  .app-content { padding-top: 12px; }
+  .session-detail { padding: 14px; }
+  .session-heading h1 { font-size: 22px; }
+  .session-heading .toolbar { gap: 8px; margin-bottom: 10px; }
+  .session-detail .toolbar button { font-size: 1rem; padding: 8px 10px; }
+  .session-tabs { margin: 0; }
+  .session-tabs button { font-size: 1rem; }
+  .tab-panel { padding-top: 12px; }
+  .participation-summary { margin-top: 0; }
+  .participation-summary.compact { padding: 8px 12px; }
+  .participation-summary.compact .personal-place { margin-bottom: 0; font-size: 1rem; }
+  .publish-actions { top: 0; font-size: 1rem; }
+  .publish-actions button { font-size: 1rem; }
+  .main-navigation button { font-size: 1rem; }
+}
+
+@media (max-width: 760px) {
+  .auth-toolbar > .identity-link { flex-shrink: 1; }
+  .identity-link > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+  .main-navigation button { min-width: 0; }
+  .main-navigation button span { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 760px) {
+  .auth-toolbar { flex-wrap: wrap; }
+  .auth-toolbar > .identity-link { flex: 1 1 160px; }
+  .auth-toolbar > button:not(.identity-link) { margin-left: auto; }
+}
+
+.compact-facts { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 4px; font-size: 1rem; }
+.compact-facts p { margin: 0; }
+.compact-facts .chip { flex-basis: 100%; }
+.auth-toolbar > .identity-link { justify-content: flex-start; }

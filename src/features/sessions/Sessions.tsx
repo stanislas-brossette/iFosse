@@ -83,11 +83,13 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
     else { setPendingResponse(null); setWarning(false); setMessage('Réponse enregistrée.'); await load() }
     setBusy(false)
   }
-  return <section className="card session-detail"><div className="toolbar"><button className="secondary" onClick={onBack}>Toutes les séances</button>{admin && <button onClick={onEdit}>Modifier la séance</button>}</div>
-    <p className="eyebrow">La séance du club</p><h1>{session.title} · {formatDate(session.date)}</h1><p>{session.start_time.slice(0, 5)} — {session.end_time.slice(0, 5)} · {session.venue || 'Lieu à préciser'}</p>
-    {session.school_holiday && <p className="badge">Vacances scolaires</p>}<details className="session-information" open={tab === 'overview'}><summary>Informations et accès</summary>{session.end_time_estimated && <p>Heure de fin à confirmer.</p>}
-    <p>{session.address}</p><p className="preserve-lines">{session.notes}</p></details><p className="session-registration">{session.status === 'closed' ? 'Bilan clôturé' : session.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées · un désistement reste possible.'}</p>
-    <SessionTabs value={tab} admin={admin} onChange={setTab} />
+  return <section className="card session-detail"><header className="session-heading">
+    <div className="toolbar"><button className="secondary" onClick={onBack}>Toutes les séances</button>{admin && <button className="secondary" onClick={onEdit}>Modifier la séance</button>}</div>
+    <h1>{session.title}</h1><p className="session-metadata">{formatDate(session.date)} · {session.start_time.slice(0, 5)} — {session.end_time.slice(0, 5)}<br />{session.venue || 'Lieu à préciser'}</p>
+    <div className="session-heading-actions"><p className="session-registration">{session.status === 'closed' ? 'Bilan clôturé' : session.registration_open ? 'Inscriptions ouvertes' : 'Inscriptions fermées · un désistement reste possible.'}</p>{admin && <button className="secondary" aria-label="Ouvrir Gestion de la séance" onClick={() => { setTab('manage'); document.getElementById('session-tab-manage')?.focus() }}>Gestion</button>}</div>
+    {session.school_holiday && <p className="badge">Vacances scolaires</p>}
+    {(session.address?.trim() || session.notes?.trim() || session.end_time_estimated) && <details className="session-information"><summary>Informations et accès</summary>{session.end_time_estimated && <p>Heure de fin à confirmer.</p>}{session.address?.trim() && <p>{session.address}</p>}{session.notes?.trim() && <p className="preserve-lines">{session.notes}</p>}</details>}
+    </header><SessionTabs value={tab} admin={admin} onChange={setTab} />
     <div role="tabpanel" id="session-panel" aria-labelledby={`session-tab-${tab}`} className="tab-panel">
     {tab === 'manage' && summaryError && <p role="alert">Actualisation impossible. Les dernières données reçues sont conservées. <button onClick={() => void load()}>Réessayer</button></p>}
     {tab !== 'manage' && <ParticipationSummary summary={summary} stale={summaryError} caci={caci} session={session} detailed={tab === 'overview'} onTransport={() => { setTab('transport'); document.getElementById('session-tab-transport')?.focus() }} onRetry={() => void load()} />}

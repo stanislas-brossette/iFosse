@@ -431,3 +431,14 @@ Le résumé personnel de détail réutilise la projection du calendrier pour la 
 de la séance (un appel groupé, sans requête par participant). Lors d’un échec,
 les derniers statuts valides sont conservés avec un avertissement ; avant le premier
 chargement, aucun état personnel n’est inventé.
+
+### Navigation mobile des séances (#50)
+
+Le détail conserve un contexte compact (titre, date/horaires, lieu et retour).
+Les accès/consignes sont dépliables et omis lorsqu’ils sont vides. Les onglets
+horizontaux disposent de commandes de continuation quand ils débordent ;
+flèches/Home/End déplacent le focus et rendent l’onglet actif visible.
+Un bouton Gestion explicite reste réservé aux Admin/Président, sans changer
+la rubrique personnelle ouverte par défaut. Hors participation, la place
+publiée reste visible et la répétition réponse/trajet tient sur une ligne compacte
+qui revient à la ligne si nécessaire.
