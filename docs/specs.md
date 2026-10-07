@@ -350,28 +350,26 @@ The prototype stores this as an explicit session flag rather than attempting to 
 ### Participant list sorting
 
 The Participants tab retains only Yes/Maybe responses and offers compact client-side
-sorting, separate from the management search. Default: **Inscription**, oldest
-first, even after publication. The preference (criterion/direction) lives only
-in browser session storage; it survives navigation/reload, with no server preference.
-Choosing another criterion starts ascending.
+sorting, separate from the management search. Default: **Réponse**, Oui before
+Peut-être, with French alphabetical last name then first name within each group.
+The response comparator orders Non after Peut-être wherever such rows are already
+available; this does not change the Participants tab's existing visibility rule (D007/D026).
+The preference (criterion/direction) lives only in browser session storage;
+it survives navigation/reload, with no server preference. Choosing another criterion
+starts ascending. Old Inscription preferences fall back to the new default.
 
-- **Nom**: French alphabetical last name, then first name.
+- **Réponse**: Oui, Peut-être, Non; unknown/missing responses last in either direction.
+  Reverse reverses response groups only, keeping alphabetical names within each.
+- **Nom**: French alphabetical last name, then first name; reverse reverses names.
 - **Niveau**: display order `Débutant/N0, N1, N2, N3, N4, N5, E1, E2, E3, MF1, E4, MF2`.
   Current level is free text; trim/case are normalized for sorting (Débutant/
-  Debutant uses the same rank as N0). This is a
-  deterministic display convention, not an equivalence of diving/teaching qualifications.
-  Level being prepared is ignored. Other/missing levels remain last in either direction.
+  Debutant uses the same rank as N0). This is a deterministic display convention,
+  not an equivalence of diving/teaching qualifications. Level being prepared is ignored.
+  Other/missing levels remain last in either direction.
 - **Sélection**: effective published status only: Confirmé, En attente,
   En attente de publication, Non retenu, Désisté, Sans participation; unknown status last.
-  Reverse reverses groups only, preserving oldest-first within each group.
-- **Inscription**: first Yes/Maybe timestamp, retained across response changes,
-  withdrawal/rejoin and operational edits. The new `registered_at` field is projected
-  by `get_current_selection` without broadening its existing visibility rules.
-  Existing registrations have no reliable historical timestamp and stay unknown;
-  unknown/invalid dates remain last in both directions and a note explains this.
+  Reverse reverses groups only, keeping alphabetical names within each.
 
-For ties: registration ascending, then name ascending, then stable member UUID.
-For name sorting, last/first name form the primary key. All sorts leave loaded
-records unchanged. No new search/filter or private draft visibility is introduced.
-Hosted deployments need migration `20261006020000_participant_registration.sql`
-before the frontend to enable chronological tracking; this task does not deploy it.
+For ties in every criterion: name ascending, then stable member UUID. Registration
+timestamps are not used in any sort. All sorts leave loaded records unchanged.
+No query, migration, search/filter or private draft visibility change is introduced.
