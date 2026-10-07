@@ -269,3 +269,12 @@ summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 
 .identity-link { font-weight: inherit; padding: 4px 6px; border-color: transparent; background: transparent; text-align: left; }
 .identity-link:hover { border-color: transparent; background: var(--teal-tint); }
+
+/* Personal calendar statuses remain distinct from the published occupancy. */
+.next-session { border-color: var(--teal, #087f82); }
+.personal-status { display: grid; gap: 10px; margin: 16px 0; padding: 14px; background: #f4f7f8; border-radius: 12px; font-size: 14px; }
+.personal-status > div { display: grid; grid-template-columns: 95px minmax(0, 1fr); gap: 8px; }
+.personal-status dt { color: #5d7380; }
+.personal-status dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.personal-status .chip { display: block; margin-top: 5px; white-space: normal; }
+.calendar-hint { color: #086267; font-size: 14px; }

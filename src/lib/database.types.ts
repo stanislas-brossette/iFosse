@@ -491,7 +491,7 @@ isOneToOne: false
                            },
 "get_session_card_summaries":
 { Args: { "p_start_year": number }; Returns: {
-              "capacity": number,"confirmed_count": number,"publication_version": number,"session_id": string
+              "capacity": number,"confirmed_count": number,"my_payment_status": Database["public"]['Enums']["payment_state"],"my_rsvp": Database["public"]['Enums']["rsvp_state"],"my_selection_state": string,"my_transport_mode": Database["public"]['Enums']["transport_state"],"my_transport_provisional": boolean,"publication_version": number,"session_id": string
             }[]
                            },
 "get_session_responses":

@@ -80,7 +80,7 @@ test('usual car prefills only an explicit offer; session summary reopens, retain
     id = await createSession(organizer, `UX voiture ${driver.firstName}`, 4)
     for (const person of [driver, ...passengers]) expect((await organizer.rpc('set_session_rsvp', { p_session_id: id, p_member_id: person.memberId, p_rsvp: 'yes' })).error).toBeNull()
     await page.getByRole('button', { name: 'Séances', exact: true }).click()
-    await page.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}`, exact: true }).click()
+    await page.getByRole('button', { name: new RegExp(`séance du ${formatDate(testSessionDate)}`), exact: true }).click()
     await page.getByRole('tab', { name: 'Covoiturage', exact: true }).click()
     const panel = page.locator('.carpool')
     await expect(panel.getByLabel('Places passagers proposées')).toHaveCount(0)

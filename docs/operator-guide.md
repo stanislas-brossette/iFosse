@@ -74,3 +74,31 @@ Le [workflow synthétique staging](staging-seed.md) fournit `npm run staging:see
 [Guide complet](member-management.md) : annuaire unique avec recherche nom/email, filtres et CACI pour admin; création, droits et désactivation/réactivation uniquement pour président. La suspension conserve l’historique. Déployer la fonction et activer le hook Auth sur staging avant utilisation; aucun déploiement production n’est inclus. Les scripts opérateur restent le chemin bootstrap/récupération.
 
 Netlify preview magic-link setup: use the exact staging Site URL and narrow `/auth/confirm` redirect entries in [Hosted Auth configuration](authentication.md#staging-and-netlify-deploy-preview-redirects). Ensure the hosted email template uses `.RedirectTo`, and keep preview redirect rules out of production Supabase.
+
+## Lire le calendrier personnel
+
+Le calendrier démarre sur **À venir** (aujourd’hui inclus, date de Paris).
+**Passées** donne aussi accès aux séances dont le bilan est encore ouvert ;
+**Toutes** affiche toute la saison choisie. Les commandes de saisons adjacentes
+permettent de retrouver les anciens bilans. **Prochaine séance** met en évidence
+la première séance future non clôturée, sans créer une seconde carte.
+
+Chaque carte distingue **Ma réponse / Ma sélection / Mon trajet / Mon paiement**.
+La sélection et l’occupation viennent exclusivement de la publication effective.
+Un trajet passager ou conducteur reste **Provisoire** tant que le conducteur
+n’est pas confirmé. **Organiser mon trajet** ouvre directement Covoiturage sans
+réserver de place. Le paiement est « Non concerné » sans réponse ou avec Non.
+Une sélection pleine n’empêche pas de répondre Oui si les inscriptions restent
+ouvertes. En cas d’échec d’actualisation, lire l’avertissement : les données
+précédentes restent affichées et **Réessayer** relance leur chargement.
+
+Recette locale avec identités fictives : observer les cartes sur deux appareils,
+modifier un brouillon (aucun changement côté adhérent), publier puis republier,
+retirer une réponse confirmée, rejoindre la voiture d’un conducteur non confirmé
+puis le confirmer par publication. Vérifier également aujourd’hui, une séance
+passée non clôturée, une saison vide et un bilan ancien ; couper le réseau doit
+conserver les statuts reçus et afficher l’avertissement. La suite Playwright
+`calendar-personal.spec.ts` couvre ces actions et `visual-acceptance.spec.ts`
+vérifie les captures 1440×900 et 390×844 avec 50 identités inventées et 20 confirmés.
+La migration du calendrier doit être appliquée sur staging avant le nouvel écran ;
+aucun déploiement hébergé n’est effectué par cette PR.

@@ -17,6 +17,7 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
       await device.getByRole('button', { name: 'Se connecter', exact: true }).click()
       await expect(device.getByRole('heading', { name: 'Les séances', exact: true })).toBeVisible()
       await device.getByRole('combobox', { name: 'Saison', exact: true }).selectOption(String(seasonOf(past)))
+      await device.getByRole('button', { name: 'Passées', exact: true }).click()
     }
     client = await fixtureClient(admin)
     await page.getByRole('button', { name: 'Nouvelle séance', exact: true }).click()
@@ -28,8 +29,8 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
     await expect(page.getByRole('heading', { name: `${title} · ${formatDate(past)}`, exact: true })).toBeVisible()
     const stored = await client.from('sessions').select('id').eq('title', title).single()
     expect(stored.error).toBeNull(); id = stored.data!.id
-    await expect(other.getByRole('button', { name: `Voir la séance du ${formatDate(past)}` })).toBeVisible({ timeout: 12000 })
-    await other.getByRole('button', { name: `Voir la séance du ${formatDate(past)}` }).click()
+    await expect(other.getByRole('button', { name: new RegExp(`séance du ${formatDate(past)}`) })).toBeVisible({ timeout: 12000 })
+    await other.getByRole('button', { name: new RegExp(`séance du ${formatDate(past)}`) }).click()
     for (const device of [page, other]) {
       await device.getByRole('button', { name: 'Oui', exact: true }).click()
       if (device === other) await device.getByRole('button', { name: 'Confirmer Oui malgré l’avertissement', exact: true }).click()

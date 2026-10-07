@@ -29,7 +29,7 @@ test('waiting-driver trips are provisional and car defaults stay explicitly opti
     expect((await client.rpc('set_draft_selection', { p_session_id: id, p_member_id: passenger.memberId, p_state: 'selected' })).error).toBeNull()
     expect((await client.rpc('publish_selection', { p_session_id: id })).error).toBeNull()
     for (const device of [page, other]) {
-      const open = device.getByRole('button', { name: `Voir la séance du ${formatDate(testSessionDate)}` })
+      const open = device.getByRole('button', { name: new RegExp(`séance du ${formatDate(testSessionDate)}`) })
       await expect(open).toBeVisible({ timeout: 12000 }); await open.click()
       await device.getByRole('tab', { name: 'Covoiturage', exact: true }).click()
     }
