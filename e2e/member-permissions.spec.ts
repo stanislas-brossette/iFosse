@@ -11,6 +11,7 @@ test('admin to member switch removes private UI and regular member API cannot ed
     await page.getByRole('button', { name: 'Administration', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Gestion des adhérents' })).toBeVisible()
     await page.getByRole('button', { name: 'Se déconnecter', exact: true }).click()
+    await page.getByRole('dialog', { name: 'Se déconnecter ?' }).getByRole('button', { name: 'Se déconnecter', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Gestion des adhérents' })).toHaveCount(0)
     await openConfirmation(page, await requestMagicLink(page, member)); await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
     const m = await fixtureClient(member)
