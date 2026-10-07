@@ -57,7 +57,7 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
     await page.getByRole('button', { name: 'Publier les palanquées', exact: true }).click()
     await page.getByRole('button', { name: 'Confirmer la publication des palanquées', exact: true }).click()
     await other.getByRole('tab', { name: 'Palanquées', exact: true }).click()
-    await expect(other.getByRole('heading', { name: 'Palanquées publiées · version 1', exact: true })).toBeVisible({ timeout: 12000 })
+    await expect(other.getByText('Palanquées publiées · version 1 · sélection version 1.', { exact: true })).toBeVisible({ timeout: 12000 })
     await page.getByRole('tab', { name: 'Bilan', exact: true }).click()
     for (const fixture of [admin, member]) await page.getByRole('combobox', { name: `Présence de ${fixture.firstName} Fictif`, exact: true }).selectOption('dived')
     await page.getByRole('button', { name: 'Clôturer le bilan', exact: true }).click()

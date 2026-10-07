@@ -15,6 +15,8 @@ function Summary({ people }: { people: { current_level: string; preparing_level:
 }
 export function Palanquees({ client, member, session }: { client: SupabaseClient<Database>; member: Member; session: Session }) {
   const admin = member.role !== 'member'
+  const [loaded, setLoaded] = useState(false)
+  const [ownState, setOwnState] = useState<string | null>(null)
   const [selected, setSelected] = useState<CurrentSelection[]>([])
   const [published, setPublished] = useState<Published[]>([])
   const [publication, setPublication] = useState<Publication | null>(null)
@@ -36,6 +38,8 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
     if (request !== sequence.current) return
     if (selection.error || groups.error || header.error) { setMessage('Palanquées indisponibles. Actualisez la séance.'); return }
     const current = selection.data ?? []
+    setLoaded(true)
+    setOwnState(current.find(person => person.member_id === member.id)?.state ?? null)
     setSelected(current.filter(person => person.state === 'selected'))
     setLatestSelection(current[0]?.publication_id ?? null)
     setPublished(groups.data ?? [])
@@ -51,7 +55,7 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
       if (rows.error || draftHeader.error) { setDraft([]); setSource(null); setMessage('Brouillon indisponible. Vérifiez vos droits.'); return }
       setDraft(rows.data ?? []); setSource(draftHeader.data?.selection_publication_id ?? null)
     }
-  }, [client, session.id, admin])
+  }, [client, session.id, admin, member.id])
   useSharedRefresh(load)
   const baseAssignments: Assignment[] = source ? draft : published
   const assignments = pending ? [...baseAssignments.filter(row => row.member_id !== pending.member_id), ...(pending.group_number ? [pending] : [])] : baseAssignments
@@ -81,12 +85,24 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
   const draftGroups = [...new Set(assignments.filter(row => selected.some(person => person.member_id === row.member_id)).map(row => row.group_number))].sort((a, b) => a - b)
   const remaining = selected.filter(person => !published.some(row => row.member_id === person.member_id)).length
   const draftRemaining = selected.filter(person => !assignment(person.member_id)).length
-  return <div className="mt palanquees"><h3>Palanquées publiées{publication && ` · version ${publication.publication_version}`}</h3>
-    <p>Organisation simple uniquement. Aucun contrôle des qualifications, des ratios ou des limites de profondeur. Cette vue ne remplace pas la fiche réglementaire ni les décisions du DP. La mention « Encadrant » est informative.</p>
-    {publication && <p>Organisation liée à la sélection publiée · version {publication.selection_version}.</p>}
+  const ownGroup = published.find(row => row.member_id === member.id)?.group_number
+  function renderGroup(group: number) {
+    return <section key={group} className={group === ownGroup ? 'card personal-group' : 'mt'} aria-label={group === ownGroup ? 'Ma palanquée publiée' : `Palanquée ${group}`}>
+      {group === ownGroup && <p className="eyebrow">Ma palanquée</p>}<h4>Palanquée {group}</h4><Summary people={published.filter(row => row.group_number === group)} /><ul className="member-list">{published.filter(row => row.group_number === group).map(row => <li key={row.member_id}>{row.first_name} {row.last_name}{row.member_id === member.id && ' · vous'} · {row.current_level}{row.preparing_level && ` · prépare ${row.preparing_level}`}{row.is_leader && ' · Encadrant'}</li>)}</ul>
+    </section>
+  }
+  return <div className="mt palanquees">
+    {!loaded && <p>Chargement de ma palanquée…</p>}
+    {loaded && !ownGroup && <section className="personal-group"><h3>Ma palanquée</h3><p>{ownState === 'withdrawn' ? 'Vous vous êtes désisté : aucune palanquée effective.' : !publication ? 'Les palanquées ne sont pas encore publiées.' : ownState !== 'selected' ? 'Vous n’avez pas de place confirmée : aucune palanquée effective.' : 'Vous n’êtes pas encore affecté à une palanquée publiée.'}</p></section>}
     {publication?.needs_review && <p role="alert">La sélection a changé depuis la publication des palanquées. Un administrateur doit les vérifier et les republier.</p>}
+    <div className="published-groups">
+      {ownGroup && renderGroup(ownGroup)}
+      <h3>{ownGroup ? 'Autres palanquées publiées' : 'Palanquées publiées'}</h3>
+      {groups.filter(group => group !== ownGroup).map(renderGroup)}
+    </div>
+    {publication && <p className="muted">Palanquées publiées · version {publication.publication_version} · sélection version {publication.selection_version}.</p>}
+    <p>Organisation simple uniquement. Aucun contrôle des qualifications, des ratios ou des limites de profondeur. Cette vue ne remplace pas la fiche réglementaire ni les décisions du DP. La mention « Encadrant » est informative.</p>
     <h4>Niveaux de la sélection publiée actuelle</h4><Summary people={selected} />
-    <div className="published-groups">{groups.map(group => <section key={group} className="mt"><h4>Palanquée {group}</h4><Summary people={published.filter(row => row.group_number === group)} /><ul className="member-list">{published.filter(row => row.group_number === group).map(row => <li key={row.member_id}>{row.first_name} {row.last_name} · {row.current_level}{row.preparing_level && ` · prépare ${row.preparing_level}`}{row.is_leader && ' · Encadrant'}</li>)}</ul></section>)}</div>
     {!published.length && <p>{publication ? 'Aucun participant actuellement affecté dans cette publication.' : 'Aucune palanquée publiée.'}</p>}
     <p>{remaining} participant{remaining === 1 ? '' : 's'} confirmé{remaining === 1 ? '' : 's'} à répartir.</p>
     {admin && <div className="palanquee-editor mt"><h3>Organisation de travail</h3><p>{source ? 'Brouillon privé en cours.' : 'La dernière publication sert de point de départ.'}</p>

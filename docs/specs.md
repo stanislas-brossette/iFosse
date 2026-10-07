@@ -401,3 +401,33 @@ L’actualisation partagée conserve les dernières données valides lors d’un
 échec et signale qu’elles ne sont pas actualisées. Avant la première réponse du
 serveur, aucun statut personnel ou compteur n’est inventé. Les données d’une
 ancienne saison ne sont pas présentées comme celles d’une nouvelle saison.
+
+### Situation personnelle dans une séance
+
+La participation présente d’abord la place dans la sélection publiée effective,
+puis la réponse, le trajet, le paiement personnel et le CACI au jour de la séance.
+Une réponse Oui reste une intention ; seule une place effectivement sélectionnée
+est confirmée. Avant publication, le résumé le dit explicitement, sans annoncer
+de date de décision. Un désistement puis un nouveau Oui ne restaure pas l’ancienne
+confirmation : une nouvelle sélection publiée est nécessaire.
+
+Participants, Covoiturage, Palanquées et Bilan utilisent une version compacte du
+même résumé, sans répéter le grand préambule de sélection ni les données privées.
+Gestion conserve le récapitulatif organisateur. Les totaux publics restent visibles
+dans Participants. Les boutons de réponse et leurs confirmations CACI/retrait
+conservent leurs règles et transactions existantes.
+
+Dans Covoiturage, la voiture personnelle ou le trajet réservé précède les autres
+offres. Le conducteur, le rendez-vous et le départ sont lisibles ; les informations
+absentes et le conducteur non confirmé sont explicités. La voiture réservée n’est
+pas répétée dans les alternatives. Dans Palanquées, le groupe publié de l’adhérent
+précède les autres groupes, sans remplacer la publication par le brouillon et sans
+réintroduire de personnes masquées par D026. Une absence d’affectation, de publication
+ou un désistement produit une explication explicite.
+
+Ces vues réutilisent les RPC existantes et leur actualisation partagée. Aucun
+nouveau statut, préférence persistante, schéma ou permission n’est introduit.
+Le résumé personnel de détail réutilise la projection du calendrier pour la saison
+de la séance (un appel groupé, sans requête par participant). Lors d’un échec,
+les derniers statuts valides sont conservés avec un avertissement ; avant le premier
+chargement, aucun état personnel n’est inventé.
