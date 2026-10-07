@@ -102,3 +102,32 @@ conserver les statuts reçus et afficher l’avertissement. La suite Playwright
 vérifie les captures 1440×900 et 390×844 avec 50 identités inventées et 20 confirmés.
 La migration du calendrier doit être appliquée sur staging avant le nouvel écran ;
 aucun déploiement hébergé n’est effectué par cette PR.
+
+### Restaurer / mettre en service le calendrier de la PR #54
+
+Le frontend et la base sont déployés séparément. Un merge Netlify ne lance pas
+les migrations Supabase ; un revert/force-push Git ne les annule pas non plus.
+Le calendrier exige les champs personnels de `get_session_card_summaries`.
+Une base ancienne est signalée explicitement, sans inventer de statuts personnels.
+
+Pour la recette **staging uniquement**, ouvrir le projet **ifosse-staging**
+(référence `btpojwwwsxrepsehmxbm`) et vérifier en lecture seule dans SQL Editor :
+
+```sql
+select pg_get_function_result('public.get_session_card_summaries(integer)'::regprocedure);
+```
+
+Le résultat doit inclure, en plus des quatre champs d’occupation,
+`my_rsvp`, `my_selection_state`, `my_transport_mode`,
+`my_transport_provisional` et `my_payment_status`.
+S’ils manquent, appliquer au projet staging les migrations revues manquantes dans
+l’ordre, jusqu’à `supabase/migrations/20261007010000_calendar_personal_status.sql`,
+avec le workflow opérateur de migration. Ne pas faire de reset ni de seed pour
+corriger le schéma : cette migration conserve les adhérents, séances et historiques.
+Si ces champs sont déjà présents, ne pas annuler la migration lors d’un revert UI.
+
+Après migration, tester le deploy preview avec un nouveau lien de connexion,
+un compte adhérent et un compte admin ; vérifier statuts personnels, Covoiturage,
+filtres/saisons et publication. Fusionner le frontend après cette recette.
+Les réglages Auth de la PR #55 restent requis et sont conservés. Aucun changement
+production n’est autorisé par cette procédure de recette staging.

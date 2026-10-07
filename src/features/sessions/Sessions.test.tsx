@@ -56,6 +56,7 @@ it('does not replace a valid snapshot with an outdated database projection', asy
   await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
   expect(screen.queryByText('Sans réponse')).toBeNull()
   expect(screen.getAllByText('Payé')).toHaveLength(20)
+  expect(screen.getByRole('alert').textContent).toContain('20261007010000_calendar_personal_status.sql')
 })
 
 it('never invents a personal status on initial failure or displays an old season as the new one', async () => {
@@ -78,4 +79,13 @@ it.each(['unanswered', 'maybe', 'no'] as const)('keeps the full-selection invita
   setup(false, summaries.map(row => ({ ...row, my_rsvp: rsvp, my_selection_state: 'none', my_payment_status: rsvp === 'maybe' ? 'unpaid' : null })))
   await waitFor(() => expect(screen.getAllByLabelText('Mes statuts pour cette séance')).toHaveLength(20))
   expect(screen.getAllByText('Vous pouvez encore répondre Oui')).toHaveLength(20)
+})
+
+it('identifies the missing calendar migration without inventing statuses on first load', async () => {
+  setup(false, summaries.map(row => ({ session_id: row.session_id, capacity: row.capacity, confirmed_count: row.confirmed_count, publication_version: row.publication_version })) as CardSummary[])
+  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('20261007010000_calendar_personal_status.sql'))
+  expect(screen.queryByLabelText('Mes statuts pour cette séance')).toBeNull()
+  expect(screen.queryByText('Sans réponse')).toBeNull()
+  expect(screen.queryByText('Payé')).toBeNull()
+  expect(screen.getByRole('button', { name: 'Réessayer' })).toBeTruthy()
 })

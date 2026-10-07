@@ -120,6 +120,11 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
       const { data, error } = calendar
       if (request !== loadSequence.current) return
       const summary = Object.fromEntries((occupancy.data ?? []).map(row => [row.session_id, row]))
+      const personalFields = ['my_rsvp', 'my_selection_state', 'my_transport_mode', 'my_transport_provisional', 'my_payment_status'] as const
+      const oldProjection = !occupancy.error && (occupancy.data ?? []).some(row => personalFields.some(field => row[field] === undefined))
+      if (oldProjection || occupancy.error?.code === 'PGRST202') {
+        setMessage('La base de données du calendrier doit être mise à jour. Contactez l’opérateur pour appliquer la migration 20261007010000_calendar_personal_status.sql. Les dernières données reçues sont conservées.'); return
+      }
       if (error || totals.error || occupancy.error || (data ?? []).some(row => !summary[row.id] || !validSummary(summary[row.id]))) {
         setMessage('Actualisation du calendrier impossible. Les dernières données reçues sont conservées.'); return
       }
