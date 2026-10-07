@@ -11,10 +11,10 @@ afterEach(cleanup)
 const member = { id: 'self', role: 'member' } as Member
 const sessions = Array.from({ length: 20 }, (_, index) => ({ id: `s${index}`, date: todayParis(), start_time: '20:00', end_time: '21:00', title: `Séance ${index}`, status: 'open', registration_open: true, capacity: 20 })) as Session[]
 const summaries: CardSummary[] = sessions.map(row => ({ session_id: row.id, capacity: 20, confirmed_count: 20, publication_version: 1, my_rsvp: 'yes', my_selection_state: 'selected', my_transport_mode: 'own', my_transport_provisional: false, my_payment_status: 'paid' }))
-function setup(initialFailure = false, cards = summaries) {
+function setup(initialFailure = false, cards = summaries, missingRpc = false) {
   let fail = initialFailure
   let oldSchema = false
-  const rpc = vi.fn(async (name: string) => ({ data: name === 'get_season_counts' ? [{ member_id: 'self', completed_count: 3 }] : oldSchema ? cards.map(row => ({ ...row, my_rsvp: undefined })) : cards, error: fail ? { message: 'offline' } : null }))
+  const rpc = vi.fn(async (name: string) => ({ data: name === 'get_season_counts' ? [{ member_id: 'self', completed_count: 3 }] : oldSchema ? cards.map(row => ({ ...row, my_rsvp: undefined })) : cards, error: missingRpc && name === 'get_session_card_summaries' ? { code: 'PGRST202', message: 'not found' } : fail ? { message: 'offline' } : null }))
   const query = { select: () => query, gte: () => query, lt: () => query, order: (field: string) => field === 'start_time' ? Promise.resolve({ data: sessions, error: null }) : query }
   const from = vi.fn(() => query)
   const client = { from, rpc } as unknown as SupabaseClient<Database>
@@ -56,7 +56,7 @@ it('does not replace a valid snapshot with an outdated database projection', asy
   await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy())
   expect(screen.queryByText('Sans réponse')).toBeNull()
   expect(screen.getAllByText('Payé')).toHaveLength(20)
-  expect(screen.getByRole('alert').textContent).toContain('20261007010000_calendar_personal_status.sql')
+  expect(screen.getByRole('alert').textContent).toContain('mise à jour du serveur')
 })
 
 it('never invents a personal status on initial failure or displays an old season as the new one', async () => {
@@ -83,9 +83,16 @@ it.each(['unanswered', 'maybe', 'no'] as const)('keeps the full-selection invita
 
 it('identifies the missing calendar migration without inventing statuses on first load', async () => {
   setup(false, summaries.map(row => ({ session_id: row.session_id, capacity: row.capacity, confirmed_count: row.confirmed_count, publication_version: row.publication_version })) as CardSummary[])
-  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('20261007010000_calendar_personal_status.sql'))
+  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('mise à jour du serveur'))
   expect(screen.queryByLabelText('Mes statuts pour cette séance')).toBeNull()
   expect(screen.queryByText('Sans réponse')).toBeNull()
   expect(screen.queryByText('Payé')).toBeNull()
   expect(screen.getByRole('button', { name: 'Réessayer' })).toBeTruthy()
+})
+
+it('identifies an unavailable calendar RPC without inventing statuses', async () => {
+  setup(false, summaries, true)
+  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('mise à jour du serveur'))
+  expect(screen.queryByLabelText('Mes statuts pour cette séance')).toBeNull()
+  expect(screen.queryByText('Payé')).toBeNull()
 })
