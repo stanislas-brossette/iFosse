@@ -51,6 +51,8 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     return () => { active = false; identity.current.generation++; data.subscription.unsubscribe() }
   }, [client, onIdentityChange])
 
+  // State drives every close path. Native close events may arrive after reopening
+  // and must not cancel a newer confirmation request.
   useEffect(() => {
     if (confirmLogout && session) {
       if (!logoutDialog.current?.open) logoutDialog.current?.showModal()
@@ -139,7 +141,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   if (callback && 'tokenHash' in callback) return <section className="card login"><p className="eyebrow">Votre espace APSAP</p><h1>Confirmer la connexion</h1><p>Connectez-vous sur cet appareil avec le lien reçu par email.</p>{error && <p role="alert">{error}</p>}<button disabled={busy} onClick={() => void confirmLink()}>Se connecter</button></section>
   if (session) return <>
     <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span>{member && member.auth_user_id === session.user.id && onOpenProfile ? <button type="button" className="identity identity-link" aria-label="Ouvrir mon profil" onClick={() => onOpenProfile(member)}>{identityContent}</button> : <div className="identity">{identityContent}</div>}<button ref={logoutButton} disabled={busy} onClick={() => setConfirmLogout(true)}>Se déconnecter</button></div>
-    <dialog ref={logoutDialog} onKeyDown={trapLogoutFocus} aria-labelledby="logout-title" aria-describedby="logout-description" onCancel={event => { event.preventDefault(); if (!busy) cancelLogout() }} onClose={() => setConfirmLogout(false)}>
+    <dialog ref={logoutDialog} onKeyDown={trapLogoutFocus} aria-labelledby="logout-title" aria-describedby="logout-description" onCancel={event => { event.preventDefault(); if (!busy) cancelLogout() }}>
       <h2 id="logout-title">Se déconnecter ?</h2>
       <p id="logout-description">Pour revenir sur iFosse, vous devrez demander un nouveau lien de connexion.</p>
       {error && <p role="alert">{error}</p>}
