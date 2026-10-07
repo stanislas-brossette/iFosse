@@ -38,6 +38,7 @@ test('a scanner cannot consume the link; a different browser signs in, logs out,
     await expect(page.getByLabel('Adresse email')).toBeVisible()
 
     await otherPage.getByRole('button', { name: 'Se déconnecter' }).click()
+    await otherPage.getByRole('dialog', { name: 'Se déconnecter ?' }).getByRole('button', { name: 'Se déconnecter', exact: true }).click()
     await expect(otherPage.getByLabel('Adresse email')).toBeVisible()
     const hasStoredSession = await otherPage.evaluate(() => Object.keys(localStorage).some(key => key.endsWith('-auth-token')))
     expect(hasStoredSession).toBe(false)
@@ -68,6 +69,7 @@ test('a real browser restart retains the refreshable member session', async () =
     await restored.goto(appOrigin)
     await expect(restored.locator('.auth-toolbar').getByText(`${fixture.firstName} Fictif`, { exact: true })).toBeVisible()
     await restored.getByRole('button', { name: 'Se déconnecter' }).click()
+    await restored.getByRole('dialog', { name: 'Se déconnecter ?' }).getByRole('button', { name: 'Se déconnecter', exact: true }).click()
     await expect(restored.getByLabel('Adresse email')).toBeVisible()
   } finally {
     await context.close()
@@ -96,6 +98,7 @@ test('real token refresh preserves unsaved profile and logout clears account sta
     await expect(page.getByText('Profil enregistré.', { exact: true })).toBeVisible()
     await page.getByLabel('Téléphone', { exact: true }).fill('0699999999')
     await page.getByRole('button', { name: 'Se déconnecter', exact: true }).click()
+    await page.getByRole('dialog', { name: 'Se déconnecter ?' }).getByRole('button', { name: 'Se déconnecter', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Mon profil', exact: true })).toHaveCount(0)
     await openConfirmation(page, await requestMagicLink(page, next))
     await page.getByRole('button', { name: 'Se connecter', exact: true }).click()

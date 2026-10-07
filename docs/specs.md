@@ -261,7 +261,7 @@ Rules:
 - arbitrary public sign-up is not required;
 - no password creation or password-reset flow is required;
 - authenticated sessions should persist across browser restarts on personal devices;
-- explicit logout ends the local session;
+- logout opens a confirmation dialog; Annuler/Escape preserves the session, and only explicit confirmation ends the local session;
 - administrator permissions must be enforced server-side / at the database boundary;
 - account support should remain minimal.
 

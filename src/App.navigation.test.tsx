@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { AuthChangeEvent, Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './lib/database.types'
@@ -10,6 +10,8 @@ vi.mock('./lib/supabase', () => ({ get supabase() { return dependencies.client }
 vi.mock('./features/sessions/Sessions', () => ({ Sessions: () => <h1>Les séances</h1> }))
 vi.mock('./features/profiles/Profile', () => ({ Profile: () => <h1>Mon profil</h1> }))
 vi.mock('./features/profiles/Directory', () => ({ Directory: () => <h1>Gestion des adhérents</h1> }))
+HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', '') }
+HTMLDialogElement.prototype.close = function () { this.removeAttribute('open') }
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 async function setup() {
   vi.spyOn(window,'scrollTo').mockImplementation(() => {})
@@ -40,6 +42,8 @@ it('keeps logout separate with local scope and resets navigation on same-account
   const logout=screen.getByRole('button',{name:'Se déconnecter'})
   expect(logout.closest('.identity')).toBeNull()
   await act(async()=>fireEvent.click(logout))
+  expect(app.signOut).not.toHaveBeenCalled()
+  await act(async()=>fireEvent.click(within(screen.getByRole('dialog')).getByRole('button',{name:'Se déconnecter'})))
   expect(app.signOut).toHaveBeenCalledWith({scope:'local'})
   expect(screen.getByRole('heading',{name:'Connexion à iFosse'})).toBeTruthy()
   expect(screen.queryByRole('button',{name:'Ouvrir mon profil'})).toBeNull()
@@ -52,4 +56,29 @@ it('starts another account on sessions rather than retaining the previous profil
   await app.signIn('b')
   await screen.findByRole('heading',{name:'Les séances'})
   expect(screen.queryByRole('heading',{name:'Mon profil'})).toBeNull()
+})
+
+it.each(['cancel','escape'])('preserves the session and restores focus on %s',async method=>{
+  const app=await setup()
+  const trigger=screen.getByRole('button',{name:'Se déconnecter'})
+  trigger.focus();fireEvent.click(trigger)
+  const dialog=screen.getByRole('dialog',{name:'Se déconnecter ?'})
+  expect(app.signOut).not.toHaveBeenCalled()
+  if(method==='cancel') fireEvent.click(within(dialog).getByRole('button',{name:'Annuler'}))
+  else fireEvent(dialog,new Event('cancel',{cancelable:true}))
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+  expect(screen.getByRole('heading',{name:'Les séances'})).toBeTruthy()
+  expect(app.signOut).not.toHaveBeenCalled()
+})
+it('keeps the dialog available to retry when logout fails',async()=>{
+  const app=await setup()
+  app.signOut.mockImplementationOnce(async()=>({error:{message:'unavailable'}} as never))
+  fireEvent.click(screen.getByRole('button',{name:'Se déconnecter'}))
+  const dialog=screen.getByRole('dialog')
+  await act(async()=>fireEvent.click(within(dialog).getByRole('button',{name:'Se déconnecter'})))
+  expect(within(dialog).getByRole('alert').textContent).toBe('La déconnexion a échoué. Réessayez.')
+  expect(screen.getByRole('heading',{name:'Les séances'})).toBeTruthy()
+  fireEvent.click(within(dialog).getByRole('button',{name:'Annuler'}))
+  expect(screen.queryByRole('dialog')).toBeNull()
 })

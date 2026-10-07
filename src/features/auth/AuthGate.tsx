@@ -16,6 +16,9 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   const [callback, setCallback] = useState(() => readLoginCallback(window.location.pathname, window.location.hash))
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false)
+  const logoutDialog = useRef<HTMLDialogElement>(null)
+  const logoutButton = useRef<HTMLButtonElement>(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const identity = useRef({ id: null as string | null, generation: 0 })
@@ -32,6 +35,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
       const id = next?.user.id ?? null
       if (id !== identity.current.id) {
         identity.current = { id, generation: identity.current.generation + 1 }
+        setConfirmLogout(false)
         onIdentityChange?.()
         setMember(null)
         setError('')
@@ -46,6 +50,19 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) { authEvents++; acceptSession(next) } })
     return () => { active = false; identity.current.generation++; data.subscription.unsubscribe() }
   }, [client, onIdentityChange])
+
+  useEffect(() => {
+    if (confirmLogout && session) {
+      if (!logoutDialog.current?.open) logoutDialog.current?.showModal()
+    } else if (logoutDialog.current?.open) {
+      logoutDialog.current.close()
+      logoutButton.current?.focus()
+    }
+  }, [confirmLogout, session])
+
+  function cancelLogout() {
+    setConfirmLogout(false)
+  }
 
   const userId = session?.user.id
   const refresh = useCallback(async () => {
@@ -103,7 +120,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     try {
       const { error: signOutError } = await client.auth.signOut({ scope: 'local' })
       if (signOutError) setError('La déconnexion a échoué. Réessayez.')
-      else { onIdentityChange?.(); setMember(null); setSession(null); setMessage('Vous êtes déconnecté.'); setCallback(null); window.history.replaceState(null, '', '/') }
+      else { setConfirmLogout(false); onIdentityChange?.(); setMember(null); setSession(null); setMessage('Vous êtes déconnecté.'); setCallback(null); window.history.replaceState(null, '', '/') }
     } catch { setError('La déconnexion a échoué. Réessayez.') } finally { setBusy(false) }
   }
 
@@ -112,8 +129,14 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   if (loading) return <p role="status">Connexion en cours…</p>
   if (callback && 'tokenHash' in callback) return <section className="card login"><p className="eyebrow">Votre espace APSAP</p><h1>Confirmer la connexion</h1><p>Connectez-vous sur cet appareil avec le lien reçu par email.</p>{error && <p role="alert">{error}</p>}<button disabled={busy} onClick={() => void confirmLink()}>Se connecter</button></section>
   if (session) return <>
-    <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span>{member && member.auth_user_id === session.user.id && onOpenProfile ? <button type="button" className="identity identity-link" aria-label="Ouvrir mon profil" onClick={() => onOpenProfile(member)}>{identityContent}</button> : <div className="identity">{identityContent}</div>}<button disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
-    {error && <p role="alert">{error}</p>}
+    <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span>{member && member.auth_user_id === session.user.id && onOpenProfile ? <button type="button" className="identity identity-link" aria-label="Ouvrir mon profil" onClick={() => onOpenProfile(member)}>{identityContent}</button> : <div className="identity">{identityContent}</div>}<button ref={logoutButton} disabled={busy} onClick={() => setConfirmLogout(true)}>Se déconnecter</button></div>
+    <dialog ref={logoutDialog} aria-labelledby="logout-title" aria-describedby="logout-description" onCancel={event => { event.preventDefault(); if (!busy) cancelLogout() }} onClose={() => setConfirmLogout(false)}>
+      <h2 id="logout-title">Se déconnecter ?</h2>
+      <p id="logout-description">Pour revenir sur iFosse, vous devrez demander un nouveau lien de connexion.</p>
+      {error && <p role="alert">{error}</p>}
+      <div className="actions"><button autoFocus disabled={busy} onClick={cancelLogout}>Annuler</button><button className="danger" disabled={busy} onClick={() => void logout()}>Se déconnecter</button></div>
+    </dialog>
+    {error && !confirmLogout && <p role="alert">{error}</p>}
     {member && member.auth_user_id === session.user.id ? <Fragment key={member.auth_user_id}>{children(member, refresh)}</Fragment> : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre accès doit être actif et lié à un adhérent du club. Contactez le président si votre compte a été désactivé.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
   </>
   return <section className="card login"><p className="eyebrow">Bienvenue au club</p><h1>Connexion à iFosse</h1><p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>
