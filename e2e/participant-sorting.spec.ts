@@ -3,7 +3,7 @@ import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation,
 import { createSession, testSessionDate } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
-test('participant sorting uses registration/publication, survives navigation, and fits 390px', async ({ page }) => {
+test('participant sorting uses response/name/publication, survives navigation, and fits 390px', async ({ page }) => {
   const fixtures = [await createMemberFixture(), await createMemberFixture(), await createMemberFixture()]
   const [admin, second, third] = fixtures
   makeFixtureAdmin(admin)
@@ -19,15 +19,18 @@ test('participant sorting uses registration/publication, survives navigation, an
       expect((await ownClient.rpc('update_own_profile', { p_first_name: ['Anne','Bob','Camille'][index], p_last_name:['Zulu','Alpha','Milieu'][index], p_current_level:['N3','N1','N2'][index], p_preparing_level:'', p_phone:'', p_has_usual_car:false, p_usual_meeting_point:'', p_usual_passenger_seats:3 })).error).toBeNull()
     }
     id = await createSession(client, `Tri ${admin.firstName}`, 20)
-    for (const fixture of fixtures) expect((await client.rpc('set_session_rsvp',{p_session_id:id,p_member_id:fixture.memberId,p_rsvp:'yes'})).error).toBeNull()
+    for (const fixture of fixtures) expect((await client.rpc('set_session_rsvp',{p_session_id:id,p_member_id:fixture.memberId,p_rsvp:fixture === admin ? 'maybe' : 'yes'})).error).toBeNull()
     await page.getByRole('button',{name:`Voir la séance du ${formatDate(testSessionDate)}`}).click()
     await page.getByRole('tab',{name:'Participants',exact:true}).click()
     const rows=page.locator('.participant-selection .member-list > li')
     const names=async()=>Promise.all((await rows.all()).map(async row=>(await row.locator('span').first().textContent())?.split(' · ')[0]))
     await expect(rows).toHaveCount(3)
-    expect(await names()).toEqual(['Anne Zulu','Bob Alpha','Camille Milieu'])
+    expect(await names()).toEqual(['Bob Alpha','Camille Milieu','Anne Zulu'])
     const sort=page.getByRole('combobox',{name:'Trier par'})
-    await expect(sort).toHaveValue('registration')
+    await expect(sort).toHaveValue('response')
+    await expect(sort.locator('option')).toHaveText(['Réponse','Nom','Niveau','Sélection'])
+    await page.getByRole('button',{name:'Ordre croissant : passer à l’ordre décroissant'}).click()
+    expect(await names()).toEqual(['Anne Zulu','Bob Alpha','Camille Milieu'])
     await sort.selectOption('name'); expect(await names()).toEqual(['Bob Alpha','Camille Milieu','Anne Zulu'])
     await page.getByRole('button',{name:'Ordre croissant : passer à l’ordre décroissant'}).click()
     expect(await names()).toEqual(['Anne Zulu','Camille Milieu','Bob Alpha'])
@@ -39,7 +42,7 @@ test('participant sorting uses registration/publication, survives navigation, an
     expect((await client.rpc('set_draft_selection',{p_session_id:id,p_member_id:third.memberId,p_state:'selected'})).error).toBeNull()
     expect((await client.rpc('set_draft_selection',{p_session_id:id,p_member_id:second.memberId,p_state:'declined'})).error).toBeNull()
     await sort.selectOption('selection')
-    expect(await names()).toEqual(['Anne Zulu','Bob Alpha','Camille Milieu']) // private draft is not a sorting source
+    expect(await names()).toEqual(['Bob Alpha','Camille Milieu','Anne Zulu']) // private draft is not a sorting source
     expect((await client.rpc('publish_selection',{p_session_id:id})).error).toBeNull()
     await expect(rows.first()).toContainText('Camille Milieu',{timeout:12000})
     expect(await names()).toEqual(['Camille Milieu','Anne Zulu','Bob Alpha'])
