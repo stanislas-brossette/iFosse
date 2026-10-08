@@ -5,6 +5,8 @@ import type { Member } from '../auth/AuthGate'
 import { caciLabels, caciStatus, formatDate, todayParis } from '../../lib/dates'
 import { protectScope } from '../../lib/navigation'
 import { CaciEditor } from './Profile'
+import { NotificationFeedback } from './NotificationFeedback'
+import type { NotificationReceipt } from './NotificationFeedback'
 import { MemberCreate } from './MemberCreate'
 import { PageHeading } from '../../components/Visual'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
@@ -19,6 +21,7 @@ export function Directory({ client, member: current }: { client: SupabaseClient<
   const [active, setActive] = useState('active')
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [notification,setNotification]=useState<NotificationReceipt|null>(null)
   const [actionError, setActionError] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
   const [create, setCreate] = useState(false)
@@ -39,22 +42,23 @@ export function Directory({ client, member: current }: { client: SupabaseClient<
   useEffect(() => { if (action && president) dialog.current?.showModal(); else dialog.current?.close() }, [action, president])
   async function confirm() {
     if (!action || !president) return
-    setBusy(true); setActionError(''); setMessage('')
+    setBusy(true); setActionError(''); setMessage('');setNotification(null)
     try {
       const result = action.kind === 'grant' || action.kind === 'revoke'
         ? await client.rpc('set_member_role', { p_member_id: action.member.id, p_role: action.kind === 'grant' ? 'admin' : 'member' })
         : await client.rpc('set_member_active', { p_member_id: action.member.id, p_active: action.kind === 'reactivate' })
       if (result.error) setActionError('Modification refusée. Vérifiez vos droits et actualisez l’annuaire.')
-      else { setAction(null); setMessage('Adhérent mis à jour.'); await load(); if (action.kind === 'deactivate' || action.kind === 'reactivate') accessFilter.current?.focus() }
+      else { setAction(null); setMessage('Adhérent mis à jour.');setNotification({memberId:action.member.id,eventType:action.kind==='grant'||action.kind==='revoke'?'member_role_changed':action.kind==='reactivate'?'member_reactivated':'member_deactivated'}); await load(); if (action.kind === 'deactivate' || action.kind === 'reactivate') accessFilter.current?.focus() }
     } catch { setActionError('Modification indisponible. Réessayez.') }
     finally { setBusy(false) }
   }
   function resetFilters(){setSearch('');setRole('all');setCaci('all');setActive('active')}
   const visible = members.filter(member => `${member.first_name} ${member.last_name} ${member.email}`.toLocaleLowerCase('fr').includes(search.trim().toLocaleLowerCase('fr')) && (role === 'all' || member.role === role) && (caci === 'all' || caciStatus(member.caci_expiry_date) === caci) && (active === 'all' || (member.disabled_at ? 'inactive' : 'active') === active))
   return <section className="card directory"><PageHeading eyebrow="Administration" title="Gestion des adhérents" actions={president && <button className="primary" aria-expanded={create} onClick={() => {protectScope('member-create',()=>{setCreate(!create);setMessage('')})}}>Ajouter un adhérent</button>}><p>Un annuaire partagé pour les informations du club{president ? ', les droits et les accès.' : '.'}</p></PageHeading>
-    {create && president && <MemberCreate client={client} onCancel={() => { setCreate(false); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} onSaved={async () => { await load(); setCreate(false); setSearch(''); setRole('all'); setCaci('all'); setActive('active'); setMessage('Adhérent créé. Il peut demander son lien de connexion.'); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} />}
+    {create && president && <MemberCreate client={client} onCancel={() => { setCreate(false); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} onSaved={async memberId => {setNotification({memberId,eventType:"member_created_by_president"}); await load(); setCreate(false); setSearch(''); setRole('all'); setCaci('all'); setActive('active'); setMessage('Adhérent créé. Il peut demander son lien de connexion.'); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} />}
     <div className="directory-filters"><label className="directory-search">Rechercher un adhérent<input type="search" placeholder="Nom ou email" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Rôle<select value={role} onChange={event => setRole(event.target.value)}><option value="all">Tous les rôles</option>{Object.entries(roleLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>CACI<select value={caci} onChange={event => setCaci(event.target.value)}><option value="all">Tous les CACI</option>{Object.entries(caciLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="directory-access">Accès<select ref={accessFilter} value={active} onChange={event => setActive(event.target.value)}><option value="active">Actifs</option><option value="inactive">Inactifs</option><option value="all">Tous les accès</option></select></label></div>
     <div className="directory-results"><p className="muted" role="status">{visible.length} adhérent{visible.length !== 1 && 's'} affiché{visible.length !== 1 && 's'}{message && ` · ${message}`}</p><button className="secondary" type="button" onClick={resetFilters}>Réinitialiser les filtres</button></div>{error && !action && <p role="alert">{error}</p>}
+    {notification && <NotificationFeedback key={`${notification.memberId}:${notification.eventType}`} client={client} receipt={notification} />}
     {!visible.length && <p className="empty-state">Aucun adhérent ne correspond à ces critères.</p>}
     <ul className="member-list">{members.filter(member=>visible.some(row=>row.id===member.id)||selected===member.id).map(member => { const name = `${member.first_name} ${member.last_name}`; const status = caciStatus(member.caci_expiry_date); return <li key={member.id} hidden={!visible.some(row=>row.id===member.id)}>
       <div className="member-information"><div className="member-title"><strong>{name}</strong><span className={`chip ${member.role === 'member' ? 'neutral' : 'teal'}`}>{roleLabels[member.role]}</span>{member.disabled_at && <span className="chip amber">Inactif</span>}</div><p>{member.email}{member.phone && ` · ${member.phone}`}</p><p>{member.current_level || 'Niveau non renseigné'}{member.preparing_level && ` · Prépare ${member.preparing_level}`}</p><p><span className={`chip ${status === 'valid' ? 'green' : status === 'expired' ? 'red' : 'amber'}`}>CACI {caciLabels[status]}</span>{member.caci_expiry_date && <span> · valable jusqu’au {formatDate(member.caci_expiry_date)}</span>}</p>{member.disabled_at && <p>Désactivé le {formatDate(todayParis(new Date(member.disabled_at)))} · historique conservé</p>}</div>

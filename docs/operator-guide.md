@@ -163,3 +163,7 @@ Le président dispose d’un parcours distinct en bas de Mon profil : successeur
 ### Installation PWA facultative (D031)
 
 La PWA est une livraison frontend, sans migration ni configuration Auth supplémentaire. Manifest/icônes restent sur l’origine installée ; recommander l’adresse staging principale aux testeurs plutôt qu’une preview temporaire. Aucun service worker ni cache métier ; les documents et métadonnées sont revalidés, les assets hashés gardent leur cache existant. Valider installation, connexion (y compris collage du lien si l’email ouvre un navigateur séparé), réouverture et version A → B sur de vrais Android/iPhone avant de déclarer le parcours opérationnel. [Guide et checklist](pwa.md).
+
+### Notifications de compte : activation séparée
+
+Appliquer `20261008150000_member_notifications.sql`, déployer `member-notifications` et configurer secrets Edge/Brevo, allowlist staging exacte et cron/Vault. `npm run staging:notifications` est un dry-run ; `-- --apply` active la configuration DB staging seulement, `-- --disable` l’arrête. Aucun secret Netlify/frontend, email synthétique, backfill ou activation production. [Procédure complète et revue des résultats incertains](member-notifications.md).

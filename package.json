@@ -22,7 +22,8 @@
     "db:restore-check": "node scripts/check-restore.mjs",
     "calendar:import": "node scripts/import-calendar.mjs",
     "local:setup": "node scripts/setup-local-acceptance.mjs",
-    "staging:seed": "node scripts/staging-seed.mjs"
+    "staging:seed": "node scripts/staging-seed.mjs",
+    "staging:notifications": "node scripts/configure-notifications.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.2",

@@ -180,3 +180,7 @@ La [boîte de notifications interne](docs/in-app-notifications.md) couvre les
 publications de sélection, changements de covoiturage et CACI modifié par un admin.
 Elle est désactivée par défaut : recette et activation opérateur staging séparées,
 sans email ni push, sans changer les permissions métier.
+
+## Emails de notification de compte
+
+Une file serveur prépare les notifications de création, accès, droits admin et transfert de présidence. Activation hébergée distincte via Brevo/Edge/cron, désactivée par défaut, sans email aux comptes synthétiques. `npm run staging:notifications` prévalide sans écrire ; `npm run staging:notifications -- --apply` active uniquement le staging autorisé. [Guide opérateur](docs/member-notifications.md).
