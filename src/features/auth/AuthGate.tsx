@@ -18,6 +18,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   const [loading, setLoading] = useState(true)
   const [callback, setCallback] = useState(() => readLoginCallback(window.location.pathname, window.location.hash))
   const [email, setEmail] = useState('')
+  const [requestedEmail,setRequestedEmail] = useState<string|null>(null)
   const [busy, setBusy] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
   const logoutDialog = useRef<HTMLDialogElement>(null)
@@ -39,7 +40,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
       if (id !== identity.current.id) {
         const previous = identity.current.id
         identity.current = { id, generation: identity.current.generation + 1 }
-        setConfirmLogout(false)
+        setConfirmLogout(false);setRequestedEmail(null)
         onIdentityChange?.(previous,id)
         setMember(null)
         setError('')
@@ -111,14 +112,17 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   }, [refresh])
 
   async function requestLink(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault(); if(busy)return; rememberReturnPath(); setBusy(true); setError(''); setMessage('')
+    event.preventDefault(); await sendLink()
+  }
+  async function sendLink() {
+    if(busy)return; rememberReturnPath(); setBusy(true); setError(''); setMessage('')
     try {
       const emailRedirectTo = loginRedirectUrl(window.location.origin, publicConfig?.environment ?? 'local')
       if (!emailRedirectTo) { setError('Cette adresse n’est pas autorisée pour la connexion à iFosse.'); return }
       const { error: requestError } = await client.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { shouldCreateUser: false, emailRedirectTo } })
-      if (requestError?.status === 429) setError('Patientez une minute avant de demander un nouveau lien.')
+      if (requestError?.status === 429) setError('Trop de demandes. Patientez avant de demander un nouveau lien.')
       else if (requestError && (requestError.status ?? 0) >= 500) setError('Connexion au service impossible. Réessayez.')
-      else setMessage('Si cette adresse est connue du club, vous recevrez un lien de connexion. Vérifiez aussi les courriers indésirables.')
+      else {const address=email.trim().toLowerCase();setEmail(address);setRequestedEmail(address);setMessage('Si cette adresse est connue du club, vous recevrez un lien de connexion.')}
     } catch { setError('Connexion au service impossible. Réessayez.') } finally { setBusy(false) }
   }
 
@@ -128,7 +132,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     try {
       const { error: verifyError } = await client.auth.verifyOtp({ token_hash: callback.tokenHash, type: 'email' })
       setCallback(null)
-      if (verifyError) { clearReturnPath(); window.history.replaceState(null,'','/'); syncNavigation(); setError(invalidLink) }
+      if (verifyError) { setRequestedEmail(null);clearReturnPath(); window.history.replaceState(null,'','/'); syncNavigation(); setError(invalidLink) }
       else replaceNavigation(consumeReturnPath())
     } catch { setError('Connexion au service impossible. Réessayez.') } finally { setBusy(false) }
   }
@@ -157,9 +161,9 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     {error && !confirmLogout && <p role="alert">{error}</p>}
     {member && member.auth_user_id === session.user.id ? <Fragment key={member.auth_user_id}>{children(member, refresh)}</Fragment> : profileLoading ? <p role="status">Chargement du profil…</p> : <section className="card"><h1>Profil indisponible</h1><p>Votre accès doit être actif et lié à un adhérent du club. Contactez le président si votre compte a été désactivé.</p><button onClick={() => void refresh()}>Réessayer</button></section>}
   </>
-  return <section className="card login"><p className="eyebrow">Bienvenue au club</p><h1>Connexion à iFosse</h1><p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>
+  return <section className="card login"><p className="eyebrow">Bienvenue au club</p><h1>{requestedEmail ? 'Consultez votre messagerie' : 'Connexion à iFosse'}</h1>{!requestedEmail && <p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>}
     {(error || callback) && <p role="alert">{error || invalidLink}</p>}
     {message && <p role="status">{message}</p>}
-    <form onSubmit={event => void requestLink(event)}><label>Adresse email<input type="email" autoComplete="email" required value={email} onChange={event => setEmail(event.target.value)} /></label><button disabled={busy} type="submit">Recevoir un lien de connexion</button></form>
+    {requestedEmail ? <><p>Adresse saisie : <strong>{requestedEmail}</strong></p><p>Vérifiez aussi vos courriers indésirables. Ouvrez le lien reçu puis confirmez la connexion sur votre appareil.</p><div className="actions"><button className="secondary" disabled={busy} onClick={()=>{setRequestedEmail(null);setMessage('');setError('')}}>Corriger mon adresse</button><button disabled={busy} onClick={()=>void sendLink()}>{busy?'Demande en cours…':'Demander un nouveau lien'}</button></div></> : <form onSubmit={event => void requestLink(event)}><label>Adresse email<input type="email" autoComplete="email" autoFocus required value={email} onChange={event => setEmail(event.target.value)} /></label><button disabled={busy} type="submit">{busy?'Demande en cours…':'Recevoir un lien de connexion'}</button></form>}
   </section>
 }

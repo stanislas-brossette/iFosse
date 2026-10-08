@@ -30,5 +30,7 @@ it('sends the original value to the locked compare-and-write RPC and retains inp
   expect(rpc).toHaveBeenCalledWith('set_member_caci_if_current', { p_member_id: 'member', p_expiry_date: '2028-12-31', p_expected_expiry_date: '2027-12-31' })
   expect(saved).not.toHaveBeenCalled()
   expect(input().value).toBe('2028-12-31')
-  expect(screen.getByRole('status').textContent).toContain('modifié ailleurs')
+  expect(input().getAttribute('aria-invalid')).toBe('true')
+  expect(input().getAttribute('aria-describedby')).toBe(screen.getByRole('alert').id)
+  expect(screen.getByRole('alert').textContent).toContain('modifié ailleurs')
 })

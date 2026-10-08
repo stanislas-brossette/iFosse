@@ -35,7 +35,7 @@ test('a scanner cannot consume the link; a different browser signs in, logs out,
     await otherPage.setViewportSize({ width: 390, height: 844 })
     expect(await otherPage.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
     await otherPage.screenshot({ path: 'test-results/auth-member-mobile.png', fullPage: true })
-    await expect(page.getByLabel('Adresse email')).toBeVisible()
+    await expect(page.getByRole('heading',{name:'Consultez votre messagerie'})).toBeVisible()
 
     await otherPage.getByRole('button', { name: 'Se déconnecter' }).click()
     await otherPage.getByRole('dialog', { name: 'Se déconnecter ?' }).getByRole('button', { name: 'Se déconnecter', exact: true }).click()

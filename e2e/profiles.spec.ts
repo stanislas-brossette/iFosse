@@ -1,3 +1,4 @@
+import {formatDate} from '../src/lib/dates.js'
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
 test('member updates ordinary fields and optional defaults without directory or CACI edit access', async ({ page }) => {
@@ -11,7 +12,7 @@ test('member updates ordinary fields and optional defaults without directory or 
     await expect(page.getByRole('heading',{name:'Gestion des adhérents'})).toHaveCount(0)
     await expect(page.getByLabel('Fin de validité CACI')).toHaveCount(0)
     await page.getByLabel('Téléphone').fill('0612345678')
-    await page.getByLabel('Niveau actuel').fill('N2')
+    await page.getByLabel('Niveau actuel').fill('Qualification libre fictive')
     await page.getByLabel('J’ai habituellement une voiture disponible').check()
     await page.getByLabel('Places passagers habituelles').fill('3')
     await page.getByLabel('Point de rendez-vous habituel').fill('Parking du club')
@@ -20,7 +21,7 @@ test('member updates ordinary fields and optional defaults without directory or 
     await page.reload()
     await page.getByRole('button',{name:'Mon profil',exact:true}).click()
     await expect(page.getByLabel('Téléphone')).toHaveValue('0612345678')
-    await expect(page.getByLabel('Niveau actuel')).toHaveValue('N2')
+    await expect(page.getByLabel('Niveau actuel')).toHaveValue('Qualification libre fictive')
     await expect(page.getByLabel('Places passagers habituelles')).toHaveValue('3')
     await page.setViewportSize({width:390,height:844})
     expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false)
@@ -46,7 +47,7 @@ test('administrator maintains CACI for self and another member in the private di
     await directory.getByLabel('Fin de validité CACI').fill('2027-11-30')
     await directory.getByRole('button',{name:'Enregistrer le CACI'}).click()
     await expect(directory.getByLabel('Fin de validité CACI')).toHaveCount(0)
-    await expect(directory.getByText('valable jusqu’au 2027-11-30', { exact: false })).toBeVisible()
+    await expect(directory.getByText(`valable jusqu’au ${formatDate('2027-11-30')}`, { exact: false })).toBeVisible()
     await page.reload()
     await page.getByRole('button',{name:'Mon profil',exact:true}).click()
     await expect(profile.getByLabel('Fin de validité CACI')).toHaveValue('2027-12-31')

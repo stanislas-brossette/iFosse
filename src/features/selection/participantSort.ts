@@ -1,3 +1,4 @@
+import { levelSuggestions } from '../../lib/levels'
 export const sortLabels = { response: 'Réponse', name: 'Nom', level: 'Niveau', selection: 'Sélection' } as const
 export type SortKey = keyof typeof sortLabels
 export type SortPreference = { key: SortKey; descending: boolean }
@@ -5,11 +6,11 @@ export const defaultSort: SortPreference = { key: 'response', descending: false 
 const storageKey = 'ifosse:participant-sort'
 const collator = new Intl.Collator('fr', { sensitivity: 'base', numeric: true })
 // Display ordering only: teaching qualifications are not diving equivalences.
-const levels = ['N0', 'N1', 'N2', 'N3', 'N4', 'N5', 'E1', 'E2', 'E3', 'MF1', 'E4', 'MF2']
+const levels = levelSuggestions
 const responses = ['YES', 'MAYBE', 'NO']
 const states = ['SELECTED', 'WAITING', 'PENDING', 'DECLINED', 'WITHDRAWN', 'NONE']
 type Participant = { member_id: string; first_name: string; last_name: string; current_level?: string | null; state?: string | null; rsvp?: string | null }
-function rank(value: string | null | undefined, order: string[]) {
+function rank(value: string | null | undefined, order: readonly string[]) {
   const result = order.indexOf(value?.trim().toUpperCase() ?? '')
   return result < 0 ? null : result
 }

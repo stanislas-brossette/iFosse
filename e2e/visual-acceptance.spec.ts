@@ -28,6 +28,14 @@ test('realistic club volumes retain desktop/mobile layout, keyboard tabs and rol
     await mkdir('test-results/visual-acceptance', { recursive: true })
     await page.goto('/'); await expect(page.getByRole('heading', { name: 'Connexion à iFosse' })).toBeVisible()
     await capture(page, 'desktop-login')
+    await page.getByLabel('Adresse email').fill('visuel-fictif@example.test')
+    await page.getByRole('button',{name:'Recevoir un lien de connexion'}).click()
+    await expect(page.getByRole('heading',{name:'Consultez votre messagerie'})).toBeVisible()
+    await capture(page,'desktop-inbox')
+    await page.setViewportSize({width:390,height:844});await capture(page,'phone-inbox')
+    await page.getByRole('button',{name:'Corriger mon adresse'}).click()
+    await expect(page.getByLabel('Adresse email')).toHaveValue('visuel-fictif@example.test')
+    await page.setViewportSize({width:1440,height:900})
     for (let i = 0; i < 50; i++) fixtures.push(await createMemberFixture())
     const names = ['Camille','Alex','Louise','Nicolas','Sophie','Laurent','Élodie','Marc','Nathalie','Julien']
     const levels = ['MF1','N3','N2','N1','E2','N4','N2','N3','N1','N2']

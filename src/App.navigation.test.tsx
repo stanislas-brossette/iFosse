@@ -30,7 +30,7 @@ it.each(['avatar','name','role'])('opens the current profile when clicking the %
   const app=await setup()
   const identity=screen.getByRole('button',{name:'Ouvrir mon profil'})
   fireEvent.click(target==='avatar'?identity.querySelector('.avatar')!:target==='name'?screen.getByText('Anne Fictif'):screen.getByText('Adhérent'))
-  expect(screen.getByRole('heading',{name:'Mon profil'})).toBeTruthy()
+  expect(await screen.findByRole('heading',{name:'Mon profil'})).toBeTruthy()
   expect(screen.getByRole('button',{name:'Mon profil'}).getAttribute('aria-current')).toBe('page')
   expect(identity.getAttribute('type')).toBe('button')
   expect(app.signOut).not.toHaveBeenCalled()

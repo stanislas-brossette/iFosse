@@ -449,6 +449,9 @@ isOneToOne: false
               "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"rsvp": Database["public"]['Enums']["rsvp_state"]
             }[]
                            },
+"get_attendance_batch_preview":
+{ Args: { "p_session_id": string }; Returns: Json
+                           },
 "get_bilan_state":
 { Args: { "p_session_id": string }; Returns: {
               "dived_count": number,"session_ended": boolean,"unknown_selected_count": number
@@ -523,6 +526,9 @@ isOneToOne: false
                            },
 "lock_transport_session":
 { Args: { "p_session_id": string }; Returns: string
+                           },
+"mark_confirmed_attendance":
+{ Args: { "p_expected_fingerprint": string,"p_session_id": string }; Returns: number
                            },
 "member_access_token_hook":
 { Args: { "event": Json }; Returns: Json
