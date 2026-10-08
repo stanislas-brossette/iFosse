@@ -134,3 +134,9 @@ production n’est autorisé par cette procédure de recette staging.
 #### Gestion et récapitulatif de publication
 
 Les détails opérationnels/paiement sont dépliables par personne. Les filtres sont combinables et n’affectent jamais la comparaison de publication : vérifiez les noms ajoutés/retirés, même si l’effectif reste identique. Si une autre modification rend le récapitulatif périmé, relisez le nouveau récapitulatif avant de confirmer à nouveau. Le site nécessite la migration `20261007210000_selection_comparison.sql` sur son projet Supabase correspondant ; les validations de développement n’appliquent rien aux projets hébergés.
+
+#### Liens de séance et travail en cours
+
+Copier l’URL de la séance conserve l’onglet. Retour/Avancer et rechargement restituent cette URL. Les paramètres ne contiennent aucune identité ni jeton. Sur ce navigateur, une demande de connexion depuis un lien de séance propose la reprise après confirmation ; dans un autre navigateur, le calendrier s’ouvre. Les contrôles privés restent réservés aux rôles autorisés.
+
+Les saisies locales sont conservées entre Profil/Administration/Séances lorsqu’elles restent montées. Lorsqu’une sortie les détruirait, choisissez Rester ou Quitter sans enregistrer. Le navigateur avertit aussi avant un rechargement avec saisie en cours. Les brouillons déjà enregistrés en base restent durables. Abandonner un brouillon nécessite confirmation et ne touche pas la publication.

@@ -19,19 +19,25 @@ import { SessionTabs } from '../../components/SessionTabs'
 import { PublishedOccupancy } from './PublishedOccupancy'
 import type { CardSummary } from './PublishedOccupancy'
 import { ParticipationSummary } from './ParticipationSummary'
+import type { Route } from '../../lib/navigation'
+import { businessError } from '../../lib/businessErrors'
 import { attendanceLabels, rsvpLabels } from '../../lib/labels'
 export type Response = Database['public']['Functions']['get_session_responses']['Returns'][number]
 export { rsvpLabels } from '../../lib/labels'
-export function SessionDetail({ client, member, session, onEdit, onBack, onChanged, refreshMember, initialTab = 'overview' }: { client: SupabaseClient<Database>; member: Member; session: Session; onEdit: () => void; onBack: () => void; onChanged: () => Promise<void>; refreshMember?: () => Promise<void>; initialTab?: SessionTab }) {
+export function SessionDetail({ client, member, session, onEdit, onBack, onChanged, refreshMember, initialTab = 'overview', currentTab, onTabChange }: { client: SupabaseClient<Database>; member: Member; session: Session; onEdit: () => void; onBack: () => void; onChanged: () => Promise<void>; refreshMember?: () => Promise<void>; initialTab?: SessionTab; currentTab?:SessionTab; onTabChange?:(tab:SessionTab)=>void }) {
   const [responses, setResponses] = useState<Response[]>([])
   const [own, setOwn] = useState<Tables<'session_participations'> | null>(null)
   const [summary, setSummary] = useState<CardSummary | null>(null)
   const [summaryError, setSummaryError] = useState(false)
   const [directory, setDirectory] = useState<Pick<Member, 'id' | 'first_name' | 'last_name'>[]>([])
-  const [tab, setTab] = useState<SessionTab>(initialTab)
+  const [localTab, setLocalTab] = useState<SessionTab>(initialTab)
+  const tab = currentTab ?? localTab
+  function setTab(next:SessionTab) { if(onTabChange)onTabChange(next);else setLocalTab(next) }
   const [warning, setWarning] = useState(false)
   const [pendingResponse, setPendingResponse] = useState<{ rsvp: 'maybe' | 'no'; target: string; name: string; selected: boolean; passengers: number } | null>(null)
+  const [messageFor,setMessageFor] = useState<string|null>(null)
   const [message, setMessage] = useState('')
+  const [messageError,setMessageError] = useState(false)
   const [busy, setBusy] = useState(false)
   const admin = member.role !== 'member'
   const loadSequence = useRef(0)
@@ -58,8 +64,9 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
   useSharedRefresh(load)
   const caci = caciStatus(member.caci_expiry_date, session.date)
   async function respond(rsvp: 'yes' | 'maybe' | 'no', confirmed = false, target = member.id, withdrawalConfirmed = false) {
+    if(busy)return;setMessage('');setMessageFor(target)
     if (target === member.id && !admin && rsvp === 'yes' && !confirmed && (caci === 'missing' || caci === 'expired')) { setWarning(true); return }
-    setBusy(true); setMessage('')
+    setBusy(true);setMessageFor(target);setMessageError(false);setMessage('Enregistrement de la réponse…')
     const person = target === member.id ? member : directory.find(row => row.id === target)
     const name = person ? `${person.first_name} ${person.last_name}` : 'l’adhérent concerné'
     async function consequences() {
@@ -79,7 +86,7 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
       const impact = await consequences()
       if (impact) setPendingResponse({ rsvp, target, name, selected: impact.selected, passengers: impact.passengers })
     }
-    else if (error) setMessage('Réponse refusée. Actualisez la séance et vérifiez si les inscriptions sont ouvertes.')
+    else if (error) {setMessageError(true);setMessage(businessError(error,'Réponse refusée. Actualisez la séance et vérifiez si les inscriptions sont ouvertes.'))}
     else { setPendingResponse(null); setWarning(false); setMessage('Réponse enregistrée.'); await load() }
     setBusy(false)
   }
@@ -97,27 +104,36 @@ export function SessionDetail({ client, member, session, onEdit, onBack, onChang
       <div className="actions" role="group" aria-label="Ma réponse pour la séance">{(['yes', 'maybe', 'no'] as const).map(value => <button className={`rsvp-${value}`} key={value} aria-pressed={own?.rsvp === value} disabled={busy || session.status === 'closed' || (!session.registration_open && !admin && value !== 'no')} onClick={() => { setWarning(false); void respond(value) }}>{rsvpLabels[value]}</button>)}</div>
       {session.status === 'closed' && <p>Ma présence : <strong>{attendanceLabels[own?.attendance_status ?? 'unknown']}</strong></p>}
       {warning && <div role="alert" className="mt"><p>Votre CACI sera expiré ou n’est pas renseigné pour cette fosse. Vous pourrez le renouveler avant la séance. Confirmer votre réponse Oui ?</p><div className="actions"><button disabled={busy} onClick={() => void respond('yes', true)}>Confirmer Oui malgré l’avertissement</button><button onClick={() => setWarning(false)}>Annuler la réponse</button></div></div>}
+      {message && messageFor === member.id && <p role={messageError?'alert':'status'}>{message}</p>}
     </div>}
     {pendingResponse && <div role="alert" className="mt"><p>Changer la réponse de {pendingResponse.name} en {rsvpLabels[pendingResponse.rsvp]} ?</p>{pendingResponse.selected && <p>La place confirmée sera libérée. Un nouveau Oui nécessitera une nouvelle sélection publiée.</p>}{pendingResponse.passengers > 0 && <p>La voiture sera retirée. Ses passagers restent inscrits, mais devront retrouver un trajet.</p>}<div className="actions"><button disabled={busy} onClick={() => void respond(pendingResponse.rsvp, false, pendingResponse.target, true)}>Confirmer le changement de réponse</button><button disabled={busy} onClick={() => setPendingResponse(null)}>Conserver la réponse</button></div></div>}
     {(tab === 'manage' || tab === 'participants') && <Selection client={client} member={member} session={session} manage={tab === 'manage'} participants={tab === 'participants'} />}
-    {tab === 'manage' && admin && <details className="mt response-corrections"><summary>Corriger une réponse · {directory.length} adhérents</summary><ul className="member-list">{directory.map(person => <li key={person.id}><span>{person.first_name} {person.last_name}</span><label>Réponse de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed'} value={responses.find(response => response.member_id === person.id)?.rsvp ?? 'unanswered'} onChange={event => void respond(event.target.value as 'yes' | 'maybe' | 'no', false, person.id)}><option value="unanswered" disabled>Sans réponse</option>{(['yes', 'maybe', 'no'] as const).map(value => <option key={value} value={value}>{rsvpLabels[value]}</option>)}</select></label></li>)}</ul></details>}
+    {tab === 'manage' && admin && <details className="mt response-corrections"><summary>Corriger une réponse · {directory.length} adhérents</summary><ul className="member-list">{directory.map(person => <li key={person.id}><span>{person.first_name} {person.last_name}</span><label>Réponse de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed'} value={responses.find(response => response.member_id === person.id)?.rsvp ?? 'unanswered'} onChange={event => void respond(event.target.value as 'yes' | 'maybe' | 'no', false, person.id)}><option value="unanswered" disabled>Sans réponse</option>{(['yes', 'maybe', 'no'] as const).map(value => <option key={value} value={value}>{rsvpLabels[value]}</option>)}</select></label>{messageFor === person.id && message && <p role={messageError?'alert':'status'}>{message}</p>}</li>)}</ul></details>}
     {tab === 'transport' && <Carpooling client={client} member={member} session={session} onProfileSaved={refreshMember} onChanged={load} />}
     {tab === 'groups' && <Palanquees client={client} member={member} session={session} />}
     {tab === 'bilan' && <Attendance client={client} member={member} session={session} onChanged={onChanged} />}
-    {message && <p role="status">{message}</p>}</div>
+    {!messageFor && message && <p role={messageError?'alert':'status'}>{message}</p>}</div>
   </section>
 }
-export function Sessions({ client, member, refreshMember }: { client: SupabaseClient<Database>; member: Member; refreshMember?: () => Promise<void> }) {
-  const season = seasonOf(todayParis())
+export function Sessions({ client, member, refreshMember, route, onNavigate }: { client: SupabaseClient<Database>; member: Member; refreshMember?: () => Promise<void>; route?:Route; onNavigate?:(route:Route,options?:{bypass?:boolean;scroll?:boolean})=>void }) {
+  const season = route?.season ?? seasonOf(todayParis())
   const [counts, setCounts] = useState<Database['public']['Functions']['get_season_counts']['Returns']>([])
-  const [filter, setFilter] = useState<CalendarFilter>('upcoming')
+  const [localFilter, setLocalFilter] = useState<CalendarFilter>('upcoming')
   const [entryTab, setEntryTab] = useState<SessionTab>('overview')
   const [loadedSeason, setLoadedSeason] = useState<number | null>(null)
   const [sessions, setSessions] = useState<Session[]>([])
   const [summaries, setSummaries] = useState<Record<string, CardSummary>>({})
-  const [selected, setSelected] = useState<string | null>(null)
-  const [editing, setEditing] = useState(false)
+  const [localSelected, setLocalSelected] = useState<string | null>(null)
+  const [localEditing, setLocalEditing] = useState(false)
   const [message, setMessage] = useState('')
+  const filter = route?.view ?? localFilter
+  const selected = route?.sessionId ?? (route ? null : localSelected)
+  const editing = route?.editing ?? (route ? false : localEditing)
+  function move(id:string|null,tab:SessionTab='overview',edit=false,bypass=false) {
+    if(onNavigate) onNavigate({...route,area:'sessions',view:filter,tab,sessionId:id??undefined,editing:edit},{bypass})
+    else {setLocalSelected(id);setEntryTab(tab);setLocalEditing(edit)}
+  }
+  function setFilter(value:CalendarFilter) { if(onNavigate)onNavigate({...route,area:'sessions',tab:'overview',view:value});else setLocalFilter(value) }
   const loadSequence = useRef(0)
   const load = useCallback(async () => {
     const request = ++loadSequence.current
@@ -150,13 +166,13 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
   }, [client, season])
   useSharedRefresh(load)
   const session = loadedSeason === season ? sessions.find(item => item.id === selected) : undefined
-  const visible = calendarSessions(sessions, filter, todayParis())
+  const visible = calendarSessions(route?.season ? sessions.filter(row=>seasonOf(row.date)===route.season) : sessions, filter, todayParis())
   const next = nextSession(sessions, todayParis())
   async function saved(id: string | null) {
-    await load(); setEntryTab('overview'); setSelected(id); setEditing(false)
+    await load(); move(id,'overview',false,true)
   }
-  return <><section className="calendar-heading" hidden={editing || !!session}><PageHeading eyebrow="Le calendrier APSAP" title="Les séances" actions={member.role !== 'member' && <button className="primary" onClick={() => { setSelected(null); setEditing(true) }}>Nouvelle séance</button>}><p>Les prochains rendez-vous du club, de l’inscription au bilan.</p></PageHeading><div className="calendar-tools"><p>Mes fosses réalisées cette saison : <strong>{loadedSeason === season ? counts.find(row => row.member_id === member.id)?.completed_count ?? 0 : '…'}</strong>. Seuls les bilans clôturés comptent.</p><div className="actions mt" role="group" aria-label="Période des séances">{([['upcoming', 'À venir'], ['past', 'Passées'], ['all', 'Toutes']] as const).map(([value, label]) => <button key={value} className="secondary" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div>{message && <div role="alert"><p>{message}</p><button className="secondary" onClick={() => void load()}>Réessayer</button></div>}</div></section>
-    {editing && selected && !session ? <section className="card"><p>Cette séance n’est plus disponible dans le calendrier.</p><button onClick={() => { setSelected(null); setEditing(false) }}>Retour au calendrier</button></section> : editing ? <SessionEditor key={selected ?? 'new'} client={client} session={session} onSaved={saved} onCancel={() => setEditing(false)} /> : session ? <SessionDetail key={session.id} client={client} member={member} session={session} onEdit={() => setEditing(true)} onBack={() => { setSelected(null); window.scrollTo({ top: 0 }) }} onChanged={load} refreshMember={refreshMember} initialTab={entryTab} /> : loadedSeason !== season ? <div className="empty-state" role="status">{message ? 'Calendrier indisponible. Réessayez pour charger les séances.' : 'Chargement du calendrier…'}</div> : <div className="session-grid">{visible.map(item => {
+  return <><section className="calendar-heading" hidden={editing || !!session}><PageHeading eyebrow="Le calendrier APSAP" title="Les séances" actions={member.role !== 'member' && <button className="primary" onClick={() => move(null,'overview',true)}>Nouvelle séance</button>}><p>Les prochains rendez-vous du club, de l’inscription au bilan.</p></PageHeading><div className="calendar-tools">{route?.season && <p className="muted">Saison affichée : {route.season}–{route.season+1}.</p>}<p>Mes fosses réalisées cette saison : <strong>{loadedSeason === season ? counts.find(row => row.member_id === member.id)?.completed_count ?? 0 : '…'}</strong>. Seuls les bilans clôturés comptent.</p><div className="actions mt" role="group" aria-label="Période des séances">{([['upcoming', 'À venir'], ['past', 'Passées'], ['all', 'Toutes']] as const).map(([value, label]) => <button key={value} className="secondary" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div>{message && <div role="alert"><p>{message}</p><button className="secondary" onClick={() => void load()}>Réessayer</button></div>}</div></section>
+    {selected && !session && loadedSeason === season ? <section className="card"><p>Cette séance n’est plus disponible dans le calendrier.</p><button onClick={() => move(null)}>Retour au calendrier</button></section> : editing ? <SessionEditor key={selected ?? 'new'} client={client} session={session} onSaved={saved} onCancel={() => move(selected,route?.tab??entryTab)} /> : session ? <SessionDetail key={session.id} client={client} member={member} session={session} onEdit={() => move(session.id,route?.tab??entryTab,true)} onBack={() => move(null)} onChanged={load} refreshMember={refreshMember} initialTab={entryTab} currentTab={route?.tab} onTabChange={onNavigate ? next=>onNavigate({...route,area:'sessions',sessionId:session.id,view:filter,tab:next},{scroll:false}) : undefined} /> : loadedSeason !== season ? <div className="empty-state" role="status">{message ? 'Calendrier indisponible. Réessayez pour charger les séances.' : 'Chargement du calendrier…'}</div> : <div className="session-grid">{visible.map(item => {
       const summary = summaries[item.id]
       const action = calendarAction(item, summary)
       return <article className={`card session-card${item.id === next ? ' next-session' : ''}`} key={item.id}>
@@ -166,7 +182,7 @@ export function Sessions({ client, member, refreshMember }: { client: SupabaseCl
         <PublishedOccupancy summary={summary} /><PersonalStatus summary={summary} />
         {summary.my_rsvp !== 'yes' && item.status !== 'closed' && item.registration_open && summary.publication_version > 0 && summary.confirmed_count >= summary.capacity && <p className="calendar-hint">Vous pouvez encore répondre Oui</p>}
         {item.school_holiday && <p className="badge">Vacances scolaires</p>}
-        <button className="session-open" onClick={() => { setEntryTab(action.tab); setSelected(item.id); window.scrollTo({ top: 0 }) }} aria-label={`${action.label} · séance du ${formatDate(item.date)}`}>{action.label}</button>
+        <button className="session-open" onClick={() => { move(item.id,action.tab) }} aria-label={`${action.label} · séance du ${formatDate(item.date)}`}>{action.label}</button>
       </article>
     })}{!visible.length && <p className="empty-state">{filter === 'upcoming' ? 'Aucune séance à venir.' : filter === 'past' ? 'Aucune séance passée.' : 'Aucune séance.'}</p>}</div>}
   </>

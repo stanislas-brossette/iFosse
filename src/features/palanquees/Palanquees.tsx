@@ -4,6 +4,8 @@ import type { Database, Tables } from '../../lib/database.types'
 import type { Member } from '../auth/AuthGate'
 import type { Session } from '../sessions/SessionEditor'
 import type { CurrentSelection } from '../selection/Selection'
+import { Confirmation } from '../../components/Confirmation'
+import { businessError } from '../../lib/businessErrors'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
 import { levelCategories, levelSummary } from './levels'
 type Published = Database['public']['Functions']['get_current_palanquees']['Returns'][number]
@@ -26,7 +28,10 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
   const [pending, setPending] = useState<Assignment | null>(null)
   const [busy, setBusy] = useState(false)
   const [confirmation, setConfirmation] = useState(false)
+  const [discardConfirm,setDiscardConfirm] = useState(false)
+  const [messageFor,setMessageFor] = useState<string|null>(null)
   const [message, setMessage] = useState('')
+  const [messageError,setMessageError] = useState(false)
   const sequence = useRef(0)
   const load = useCallback(async () => {
     const request = ++sequence.current
@@ -36,7 +41,7 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
       client.rpc('get_palanquee_state', { p_session_id: session.id }),
     ])
     if (request !== sequence.current) return
-    if (selection.error || groups.error || header.error) { setMessage('Palanquées indisponibles. Actualisez la séance.'); return }
+    if (selection.error || groups.error || header.error) { setMessageFor(null);setMessageError(true);setMessage('Palanquées indisponibles. Actualisez la séance.'); return }
     const current = selection.data ?? []
     setLoaded(true)
     setOwnState(current.find(person => person.member_id === member.id)?.state ?? null)
@@ -52,7 +57,7 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
         client.from('palanquee_drafts').select('*').eq('session_id', session.id).maybeSingle(),
       ])
       if (request !== sequence.current) return
-      if (rows.error || draftHeader.error) { setDraft([]); setSource(null); setMessage('Brouillon indisponible. Vérifiez vos droits.'); return }
+      if (rows.error || draftHeader.error) { setDraft([]); setSource(null); setMessageFor(null);setMessageError(true);setMessage('Brouillon indisponible. Vérifiez vos droits.'); return }
       setDraft(rows.data ?? []); setSource(draftHeader.data?.selection_publication_id ?? null)
     }
   }, [client, session.id, admin, member.id])
@@ -62,24 +67,25 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
   const staleDraft = !!source && (source !== latestSelection || draft.some(row => !selected.some(person => person.member_id === row.member_id)))
   function assignment(id: string) { return assignments.find(row => row.member_id === id) }
   async function change(id: string, group: number, leader: boolean) {
+    if(busy)return;setMessageFor(id)
     setPending({ member_id: id, group_number: group, is_leader: leader })
-    setBusy(true); setMessage(''); setConfirmation(false)
+    setBusy(true); setMessageError(false);setMessage('Enregistrement…'); setConfirmation(false)
     const result = await client.rpc('set_draft_palanquee', { p_session_id: session.id, p_member_id: id, p_group_number: group || undefined, p_is_leader: leader })
-    setMessage(result.error ? 'Affectation refusée. Vérifiez la sélection publiée et abandonnez un brouillon périmé.' : 'Brouillon enregistré. La publication visible reste inchangée.')
+    setMessageError(!!result.error);setMessage(result.error ? businessError(result.error,'Affectation refusée. Vérifiez la sélection publiée et abandonnez un brouillon périmé.') : 'Brouillon enregistré. La publication visible reste inchangée.')
     await load(); setPending(null); setBusy(false)
   }
   async function publish() {
-    setBusy(true); setMessage('')
+    if(busy)return;setBusy(true);setMessageFor(null);setMessageError(false);setMessage('Publication en cours…')
     const result = await client.rpc('publish_palanquees', { p_session_id: session.id })
-    setMessage(result.error ? 'Publication refusée. Actualisez la sélection et vérifiez le brouillon.' : 'Palanquées publiées.')
+    setMessageError(!!result.error);setMessage(result.error ? businessError(result.error,'Publication refusée. Actualisez la sélection et vérifiez le brouillon.') : 'Palanquées publiées.')
     if (!result.error) setConfirmation(false)
     await load(); setBusy(false)
   }
   async function discard() {
-    setBusy(true); setMessage(''); setConfirmation(false)
+    if(busy)return;setBusy(true);setMessageFor(null);setMessageError(false);setMessage('Abandon en cours…');setConfirmation(false)
     const result = await client.rpc('discard_palanquee_draft', { p_session_id: session.id })
-    setMessage(result.error ? 'Abandon du brouillon refusé.' : 'Brouillon abandonné.')
-    await load(); setBusy(false)
+    setMessageError(!!result.error);setMessage(result.error ? businessError(result.error,'Abandon du brouillon refusé.') : 'Brouillon abandonné.')
+    await load();setDiscardConfirm(false);setBusy(false)
   }
   const groups = [...new Set(published.map(row => row.group_number))].sort((a, b) => a - b)
   const draftGroups = [...new Set(assignments.filter(row => selected.some(person => person.member_id === row.member_id)).map(row => row.group_number))].sort((a, b) => a - b)
@@ -107,15 +113,17 @@ export function Palanquees({ client, member, session }: { client: SupabaseClient
     <p>{remaining} participant{remaining === 1 ? '' : 's'} confirmé{remaining === 1 ? '' : 's'} à répartir.</p>
     {admin && <div className="palanquee-editor mt"><h3>Organisation de travail</h3><p>{source ? 'Brouillon privé en cours.' : 'La dernière publication sert de point de départ.'}</p>
       {staleDraft && <p role="alert">Le brouillon ne correspond plus à la sélection. Abandonnez-le, puis reprenez les affectations.</p>}
+      {messageFor && !selected.some(person=>person.member_id===messageFor) && message && <p role={messageError?'alert':'status'}>{message}</p>}
       <ul className="member-list">{selected.map(person => {
         const row = assignment(person.member_id)
-        return <li key={person.member_id}><strong>{person.first_name} {person.last_name} · {person.current_level}</strong><label>Palanquée de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed' || staleDraft} value={row?.group_number ?? 0} onChange={event => void change(person.member_id, Number(event.target.value), row?.is_leader ?? false)}><option value={0}>Non affecté</option>{Array.from({ length: 8 }, (_, index) => <option key={index} value={index + 1}>Palanquée {index + 1}</option>)}</select></label><label className="check"><input type="checkbox" disabled={busy || session.status === 'closed' || staleDraft || !row} checked={row?.is_leader ?? false} onChange={event => void change(person.member_id, row!.group_number, event.target.checked)} />{person.first_name} {person.last_name} est encadrant</label></li>
+        return <li key={person.member_id}><strong>{person.first_name} {person.last_name} · {person.current_level}</strong><label>Palanquée de {person.first_name} {person.last_name}<select disabled={busy || session.status === 'closed' || staleDraft} value={row?.group_number ?? 0} onChange={event => void change(person.member_id, Number(event.target.value), row?.is_leader ?? false)}><option value={0}>Non affecté</option>{Array.from({ length: 8 }, (_, index) => <option key={index} value={index + 1}>Palanquée {index + 1}</option>)}</select></label><label className="check"><input type="checkbox" disabled={busy || session.status === 'closed' || staleDraft || !row} checked={row?.is_leader ?? false} onChange={event => void change(person.member_id, row!.group_number, event.target.checked)} />{person.first_name} {person.last_name} est encadrant</label>{messageFor === person.member_id && message && <p role={messageError?'alert':'status'}>{message}</p>}</li>
       })}</ul>
       <h4>Répartition de travail</h4><div className="draft-summaries">{draftGroups.map(group => <div key={group}><h4>Palanquée {group}</h4><Summary people={selected.filter(person => assignment(person.member_id)?.group_number === group)} /></div>)}</div>
       <p>{draftRemaining} participant{draftRemaining === 1 ? '' : 's'} non affecté{draftRemaining === 1 ? '' : 's'} dans le brouillon.</p>
-      <div className="actions"><button disabled={busy || session.status === 'closed' || staleDraft || !latestSelection} className="primary" onClick={() => setConfirmation(true)}>Publier les palanquées</button>{source && <button disabled={busy || session.status === 'closed'} onClick={() => void discard()}>Abandonner le brouillon des palanquées</button>}</div>
+      <div className="actions"><button disabled={busy || session.status === 'closed' || staleDraft || !latestSelection} className="primary" onClick={() => setConfirmation(true)}>Publier les palanquées</button>{source && <button disabled={busy || session.status === 'closed'} onClick={() => setDiscardConfirm(true)}>Abandonner le brouillon des palanquées</button>}</div>
       {confirmation && <div className="mt"><p>Publier cette organisation ? Elle remplacera la version visible aux adhérents. Les participants non affectés restent à répartir.</p><div className="actions"><button disabled={busy} className="primary" onClick={() => void publish()}>Confirmer la publication des palanquées</button><button disabled={busy} onClick={() => setConfirmation(false)}>Continuer le brouillon</button></div></div>}
     </div>}
-    {message && <p role="status">{message}</p>}
+    <Confirmation open={discardConfirm} title="Abandonner le brouillon des palanquées ?" confirmLabel="Confirmer l’abandon des palanquées" onConfirm={()=>void discard()} onCancel={()=>setDiscardConfirm(false)} busy={busy}><p>Seul le travail privé est supprimé. Les palanquées publiées restent inchangées.</p></Confirmation>
+    {!messageFor && message && <p role={messageError?'alert':'status'}>{message}</p>}
   </div>
 }

@@ -379,3 +379,4 @@ summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .preparation-details { padding:0; border:0; background:transparent; }
 .preparation-details summary { padding:0; min-height:44px; }
 @media (max-width:700px) { .selection-management .member-list > .management-row { grid-template-columns:minmax(0,1fr); } }
+.management-row > [role=status], .management-row > [role=alert], .palanquee-editor .member-list > li > [role=status], .attendance .member-list > li > [role=status] { grid-column:1/-1; width:100%; margin:0; }
