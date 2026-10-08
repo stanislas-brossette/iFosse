@@ -175,4 +175,4 @@ Administration now uses one searchable directory. Admins maintain CACI; the Pres
 
 ## Emails de notification de compte
 
-Une file serveur prépare les notifications de création, accès, droits admin et transfert de présidence. Activation hébergée distincte via Brevo/Edge/cron, désactivée par défaut, sans email aux comptes synthétiques. `npm run staging:notifications` prévalide sans écrire ; `npm run staging:notifications -- --apply` active uniquement le staging autorisé. [Guide opérateur](docs/member-notifications.md).
+Une file serveur prépare les notifications de création, accès, droits admin et transfert de présidence. Activation hébergée distincte via Brevo/Edge/cron, désactivée par défaut, sans email aux comptes synthétiques. `npm run staging:notifications:install` guide la prévalidation sans écrire ; `npm run staging:notifications:install -- --apply` installe migrations, secrets serveur, worker et Cron uniquement sur le staging fixé. Deux clés masquées, un expéditeur vérifié et une liste exacte de testeurs sont demandés. [Guide opérateur](docs/member-notifications.md).

@@ -20,7 +20,33 @@ Les comptes réservés `.invalid`, `.test`, `.example`, `.localhost`, `example.c
 
 Pas de rattrapage historique : configuration désactivée au départ, reçus `disabled` jamais rejoués. Les messages en attente datant de plus de sept jours sont exclus ; les reçus terminaux sont retirés après 90 jours lors d’une exécution du worker, sans supprimer l’audit métier. Les incertitudes restent disponibles pour revue opérateur. Désactiver l’envoi bloque les nouveaux claims et suspend les tâches encore en attente ; un lot déjà réclamé peut terminer ses envois (au maximum deux minutes de bail). réactiver peut reprendre celles-ci si elles restent éligibles. Les nouveaux événements intervenus pendant la désactivation ne sont pas rejoués.
 
-## Activer en staging uniquement
+## Installation guidée recommandée — staging uniquement
+
+Depuis le checkout de cette PR, avec Node 22 :
+
+```bash
+npm run staging:notifications:install
+npm run staging:notifications:install -- --apply
+```
+
+La première commande vérifie les accès et affiche le plan **sans écriture ni envoi**. La seconde installe et active. À chaque lancement, quatre informations sont demandées :
+
+1. Un **jeton personnel Supabase** créé dans [Account → Access tokens](https://supabase.com/dashboard/account/tokens), ayant accès au seul projet staging si votre configuration le permet. Il permet de lire le projet, exécuter les migrations, gérer ses secrets et déployer la fonction. Ce n’est ni la clé publique ni le service-role.
+2. Une **clé API Brevo** transactionnelle ; le mot de passe SMTP utilisé par Auth ne convient pas.
+3. L’**adresse expéditeur vérifiée** dans Brevo.
+4. Les **emails exacts des testeurs volontaires**, séparés par des virgules.
+
+Les deux clés sont saisies sans écho dans le terminal et ne sont jamais sauvegardées sur disque. Les adresses ne figurent pas dans le bilan. Pour un terminal non interactif, fournir les variables opérateur `SUPABASE_ACCESS_TOKEN`, `BREVO_API_KEY`, `NOTIFICATION_SENDER_EMAIL`, `NOTIFICATION_STAGING_RECIPIENTS`, via votre gestionnaire de secrets ; jamais dans Netlify, `VITE_*` ou le dépôt. Le jeton Supabase reste uniquement en mémoire de l’installateur ; la clé Brevo est enregistrée dans les secrets serveur nécessaires au worker. Révoquer le jeton personnel temporaire après installation si vous l’avez créé pour cette opération.
+
+La cible est **fixée dans le code** à `ifosse-staging` / `btpojwwwsxrepsehmxbm`, puis son identité, son nom et son état sont vérifiés via Supabase avant toute écriture. Une variable `SUPABASE_URL`, `SUPABASE_PROJECT_REF` ou `SUPABASE_PROJECT_ENV` contradictoire provoque un refus. Aucun autre projet, notamment production, ne peut être choisi. L’expéditeur doit apparaître comme vérifié dans Brevo. Les domaines fictifs et les wildcards sont refusés.
+
+L’installateur applique uniquement les deux migrations de notifications dont le contenu est vérifié par SHA-256, inscrit chaque nouvelle migration dans l’historique Supabase dans la même transaction, active les extensions nécessaires, crée/réutilise le secret Vault, configure les secrets serveur, déploie `member-notifications` et programme **une seule** tâche par minute. Les migrations métier antérieures doivent déjà être présentes. Il ne change ni Auth/SMTP, ni Netlify, ni comptes, ni fichiers frontend. Il n’envoie pas d’email de test et ne rejoue pas les événements intervenus lorsque les notifications étaient désactivées. Après activation, la tâche planifiée peut traiter les événements encore en attente et éligibles.
+
+Relancer la même commande réutilise la file, son historique, le secret Vault et la tâche reconnue. Aucune suppression de données. Une tâche différente ou plusieurs tâches correspondantes interrompent l’installation plutôt que remplacer une configuration manuelle inconnue. Ne pas lancer deux installations simultanément. En cas d’échec après le début des modifications, les deux interrupteurs d’envoi sont désactivés ; les étapes déjà réussies restent en place et la commande peut être relancée. Si cette désactivation ne peut être confirmée, le message demande explicitement de suspendre Cron et de vérifier le secret serveur `NOTIFICATION_ENABLED=false`.
+
+Limites : l’API Management SQL de Supabase est expérimentale ; la vérification locale utilise une base jetable (`npm run db:notification-install-check`, changements intégralement annulés) et des réponses fournisseur simulées, et ne prouve pas l’installation hébergée. Un ancien schéma incohérent ou une migration déjà appliquée manuellement avec un historique contradictoire nécessite une revue opérateur. L’installateur n’est pas un outil de réparation générale ni d’activation production.
+
+## Procédure manuelle avancée / arrêt
 
 Cette PR ne modifie aucun projet hébergé. Appliquer `20261008150000_member_notifications.sql` sur **ifosse-staging** (`btpojwwwsxrepsehmxbm`). Appliquer ensuite `20261008160000_caci_notifications.sql` pour l’avis CACI. Ces migrations n’activent rien et ne migrent aucun ancien audit en email.
 
