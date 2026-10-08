@@ -10,6 +10,7 @@ export function notificationConfig(env){
   return {...pin,environment:env.NOTIFICATION_ENV,allowed,key:env.BREVO_API_KEY,secret:env.NOTIFICATION_DISPATCH_SECRET,sender:env.NOTIFICATION_SENDER_EMAIL}
 }
 const templates={
+ caci_updated:['Votre information CACI a été mise à jour','Votre information CACI a été mise à jour par un administrateur. Consultez Mon profil sur iFosse pour vérifier votre date de validité.'],
  welcome:['Bienvenue sur iFosse','Votre compte adhérent a été créé. Pour vous connecter, ouvrez iFosse, saisissez votre adresse email et demandez votre lien de connexion. Aucun mot de passe n’est nécessaire.'],
  deactivated:['Votre accès iFosse a été désactivé','Votre accès a été désactivé par le président. Les historiques du club sont conservés. Pour toute question, contactez le président du club.'],
  reactivated:['Votre accès iFosse a été réactivé','Votre accès a été réactivé. Vous pouvez demander un nouveau lien de connexion depuis iFosse.'],
@@ -21,8 +22,9 @@ const templates={
 export function notificationMessage(row,config){
  const template=templates[row.kind]
  if(!template)throw new Error('UNKNOWN_NOTIFICATION')
+ const current=row.kind==='caci_updated' ? 'Cet email signale la modification ; consultez Mon profil pour vérifier l’information à jour.' : 'Cet email décrit cette modification ; vos droits actuels sont ceux affichés dans l’application.'
  // Text only: no HTML injection, medical details, login token or password.
- return {sender:{name:'iFosse — APSAP',email:config.sender},to:[{email:row.recipient_email}],subject:template[0],textContent:`Bonjour ${row.first_name},\n\n${template[1]}\n\nModification enregistrée le ${new Date(row.occurred_at).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})} (heure de Paris). Cet email décrit cette modification ; vos droits actuels sont ceux affichés dans l’application.\n\niFosse : ${config.site}\n\nSi cette modification vous semble inattendue, contactez le président du club.`,headers:{idempotencyKey:row.id}}
+ return {sender:{name:'iFosse — APSAP',email:config.sender},to:[{email:row.recipient_email}],subject:template[0],textContent:`Bonjour ${row.first_name},\n\n${template[1]}\n\nModification enregistrée le ${new Date(row.occurred_at).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})} (heure de Paris). ${current}\n\niFosse : ${config.site}\n\nSi cette modification vous semble inattendue, contactez le président du club.`,headers:{idempotencyKey:row.id}}
 }
 const response=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})
 export function notificationHandler({env,serviceClient,fetcher=fetch}){

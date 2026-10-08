@@ -63,7 +63,7 @@ Dans **Mon profil > Ma voiture habituelle**, cocher « J’ai habituellement une
 
 Dans **Covoiturage**, une offre existante apparaît en résumé **Ma voiture** avec places libres, rendez-vous/départ et passagers. **Modifier ma voiture** ouvre les valeurs actuelles; enregistrer avec succès referme le formulaire. Un refus conserve la saisie; annuler revient au résumé. **Retirer ma voiture** conserve la confirmation lorsqu’elle transporte des passagers, qui restent inscrits à la fosse. Une nouvelle offre se crée toujours avec **Proposer une voiture**.
 
-Dans l’annuaire, enregistrer un CACI avec succès actualise immédiatement son statut/date et referme l’éditeur. Un conflit ou refus le laisse ouvert avec la saisie et les options de reprise existantes. L’éditeur de son propre profil reste ouvert après sauvegarde.
+Dans l’annuaire, enregistrer un CACI avec succès actualise immédiatement son statut/date et referme l’éditeur. Un conflit ou refus le laisse ouvert avec la saisie et les options de reprise existantes. L’éditeur de son propre profil reste ouvert après sauvegarde. Une modification effective prépare un avis email sobre si les [notifications](member-notifications.md) sont activées et le destinataire autorisé : consulter Mon profil, sans date ni document dans le message. Une valeur identique ou un refus ne crée pas d’avis.
 
 ## Peupler uniquement le staging avec des données inventées
 

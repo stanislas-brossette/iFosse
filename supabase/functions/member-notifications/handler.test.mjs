@@ -29,6 +29,16 @@ describe('internal notification dispatcher',()=>{
   const [url,options]=app.fetcher.mock.calls[0];expect(url).toBe('https://api.brevo.com/v3/smtp/email');const message=JSON.parse(options.body);expect(message.to).toEqual([{email:row.recipient_email}]);expect(message.headers.idempotencyKey).toBe(row.id)
   expect(app.rpc).toHaveBeenCalledWith('complete_member_notification',expect.objectContaining({p_id:row.id,p_lease_token:row.lease_token,p_outcome:'accepted',p_message_id:'<fictitious-receipt>'}))
  })
+ it('renders the CACI change notice without current/previous validity dates, documents or other profile data',()=>{
+  const message=notificationMessage({...row,kind:'caci_updated',caci_expiry_date:'2099-12-31',previous_date:'2020-01-01',phone:'PRIVATE_PHONE',document:'PRIVATE_DOCUMENT'},notificationConfig(env))
+  expect(message.subject).toBe('Votre information CACI a été mise à jour')
+  expect(message.textContent).toContain('Votre information CACI a été mise à jour par un administrateur. Consultez Mon profil sur iFosse pour vérifier votre date de validité.')
+  expect(message.textContent).toContain('https://ifosse-staging.netlify.app')
+  expect(JSON.stringify(message)).not.toMatch(/2099-12-31|2020-01-01|PRIVATE_PHONE|PRIVATE_DOCUMENT|token_hash|\/auth\/confirm/)
+  expect(message.htmlContent).toBeUndefined()
+  expect(message.to).toEqual([{email:row.recipient_email}])
+  expect(message.headers.idempotencyKey).toBe(row.id)
+ })
  it.each(['fake@ifosse-seed.invalid','fake@example.test','fake@example.com','other@club-fictif.fr'])('rechecks recipient %s before sending',async email=>{
   const app=setup({rows:[{...row,recipient_email:email}]});const result=await app.request();expect((await result.json()).suppressed).toBe(1);expect(app.fetcher).not.toHaveBeenCalled()
  })

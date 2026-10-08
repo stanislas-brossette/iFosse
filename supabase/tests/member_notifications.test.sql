@@ -53,7 +53,6 @@ select public.set_member_role((select id from notification_people where label='r
 select public.set_member_role((select id from notification_people where label='seed'),'admin');
 select public.create_member_from_identity('08150000-0000-4000-8000-000000000005','08150000-0000-4000-8000-000000000099','Créé','Fictif');
 select public.create_member_from_identity('08150000-0000-4000-8000-000000000005','08150000-0000-4000-8000-000000000099','Créé','Fictif');
-select public.set_member_caci((select id from notification_people where label='member'),'2099-10-01');
 select is(public.member_notification_status((select id from notification_people where label='member'),'member_reactivated'),'pending','Operation receipt distinguishes pending from business success');
 select public.transfer_presidency((select id from notification_people where label='member'));
 select is(public.member_notification_status((select id from notification_people where label='member'),'presidency_transferred'),'pending','Former President can still read own handover receipt');
@@ -65,7 +64,7 @@ select is((select count(*) from public.member_notifications where kind='welcome'
 select is((select count(*) from public.member_notifications where kind in ('presidency_received','presidency_departed')),2::bigint,'Handover notifies both people, not the whole club');
 select is((select status from public.member_notifications where member_id=(select id from notification_people where label='reserved')),'suppressed','Reserved synthetic address excluded');
 select is((select status from public.member_notifications where member_id=(select id from notification_people where label='seed')),'suppressed','Seed ownership excluded even with a non-reserved address');
-select ok(not exists(select 1 from public.member_notifications where kind like '%caci%'),'No medical data in scope');
+select ok(not exists(select 1 from public.member_notifications where kind like '%caci%'),'Unrelated account operations do not emit CACI notifications');
 select ok(not exists(select 1 from public.member_notifications where first_name like '%2099%'),'Snapshot contains no CACI payload');
 set local role authenticated;
 select set_config('request.jwt.claim.sub','08150000-0000-4000-8000-000000000002',true);

@@ -1,14 +1,14 @@
 # Notifications de compte par email
 
-Première tranche demandée par le propriétaire : création depuis l’interface Président, désactivation/réactivation, attribution/retrait admin, transfert de présidence (un email à chacun des deux intéressés). Pas de CACI, paiement, séance ou modification personnelle dans cette tranche. Pas de newsletter ni de préférences transversales.
+Première tranche demandée par le propriétaire : création depuis l’interface Président, désactivation/réactivation, attribution/retrait admin, transfert de présidence (un email à chacun des deux intéressés). Une modification effective du CACI par admin/président prépare également un avis au seul adhérent concerné, y compris pour son propre CACI. Pas de paiement, séance ou autre modification personnelle dans cette tranche. Pas de newsletter ni de préférences transversales.
 
-Le bienvenue explique comment demander le magic link habituel ; il n’est ni une invitation Auth, ni un lien de connexion, ni une création de mot de passe. Le signup reste fermé. Les changements conservent leurs autorisations SQL actuelles. Les imports, bootstrap/récupération opérateur et seed ne déclenchent aucun email.
+Le bienvenue explique comment demander le magic link habituel ; il n’est ni une invitation Auth, ni un lien de connexion, ni une création de mot de passe. Le signup reste fermé. Les changements conservent leurs autorisations SQL actuelles. Les imports, bootstrap/récupération opérateur et seed ne déclenchent aucun email. Un changement CACI réussi utilise son audit existant : valeurs identiques (y compris absent → absent), refus, conflit ou rollback ne créent pas de nouvel avis. Le texte demande de consulter Mon profil ; aucune date de validité ni document ne quitte la base. Le statut email reste visible après fermeture de l’éditeur de l’annuaire ; une sauvegarde sans changement ne reprend pas un ancien reçu.
 
 ## Architecture et garanties
 
 Le nouvel audit d’une opération réussie crée sa notification dans **la même transaction**. Aucun réseau dans SQL, aucun envoi depuis React ou `create-member`. Une transaction annulée ne laisse pas d’email ; les no-op et le rejeu d’une création n’en créent pas deux. La contrainte `(audit_id,kind)` déduplique chaque événement ; une nouvelle modification légitime est un nouvel événement.
 
-`member_notifications` conserve une adresse et un prénom figés, le type, la date et un reçu minimal. Aucun CACI, token, donnée médicale ou réponse fournisseur brute. La date dans le texte précise l’événement concerné ; les droits actuels restent ceux de l’application. Une adresse modifiée/non liée depuis l’événement n’est pas utilisée et n’est pas remplacée automatiquement par une nouvelle.
+`member_notifications` conserve une adresse et un prénom figés, le type, la date et un reçu minimal. Aucune date CACI, document médical, token ou réponse fournisseur brute. La date dans le texte précise l’événement concerné ; les droits actuels restent ceux de l’application. Une adresse modifiée/non liée depuis l’événement n’est pas utilisée et n’est pas remplacée automatiquement par une nouvelle.
 
 Tables sous RLS, aucun SELECT/INSERT/UPDATE navigateur. Seul le service interne peut réclamer/accuser les tâches. Un admin actif peut lire uniquement un statut borné de **sa propre opération**, sans corps, adresse ou secret. Après transfert, l’ancien président devenu admin conserve son reçu. L’interface n’annonce jamais une livraison en boîte : `accepted` signifie accepté par Brevo.
 
@@ -22,7 +22,7 @@ Pas de rattrapage historique : configuration désactivée au départ, reçus `di
 
 ## Activer en staging uniquement
 
-Cette PR ne modifie aucun projet hébergé. Appliquer `20261008150000_member_notifications.sql` sur **ifosse-staging** (`btpojwwwsxrepsehmxbm`). Elle n’active rien et ne migre aucun ancien audit en email.
+Cette PR ne modifie aucun projet hébergé. Appliquer `20261008150000_member_notifications.sql` sur **ifosse-staging** (`btpojwwwsxrepsehmxbm`). Appliquer ensuite `20261008160000_caci_notifications.sql` pour l’avis CACI. Ces migrations n’activent rien et ne migrent aucun ancien audit en email.
 
 Configurer **les secrets de la Supabase Edge Function**, jamais Netlify, `VITE_*`, le dépôt ou une fixture :
 
