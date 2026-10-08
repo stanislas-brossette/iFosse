@@ -130,3 +130,7 @@ un compte adhérent et un compte admin ; vérifier statuts personnels, Covoitura
 filtres/saisons et publication. Fusionner le frontend après cette recette.
 Les réglages Auth de la PR #55 restent requis et sont conservés. Aucun changement
 production n’est autorisé par cette procédure de recette staging.
+
+#### Gestion et récapitulatif de publication
+
+Les détails opérationnels/paiement sont dépliables par personne. Les filtres sont combinables et n’affectent jamais la comparaison de publication : vérifiez les noms ajoutés/retirés, même si l’effectif reste identique. Si une autre modification rend le récapitulatif périmé, relisez le nouveau récapitulatif avant de confirmer à nouveau. Le site nécessite la migration `20261007210000_selection_comparison.sql` sur son projet Supabase correspondant ; les validations de développement n’appliquent rien aux projets hébergés.

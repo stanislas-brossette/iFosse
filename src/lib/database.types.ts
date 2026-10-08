@@ -484,6 +484,9 @@ isOneToOne: false
               "completed_count": number,"first_name": string,"last_name": string,"member_id": string
             }[]
                            },
+"get_selection_publish_preview":
+{ Args: { "p_session_id": string }; Returns: Json
+                           },
 "get_session_attendance":
 { Args: { "p_session_id": string }; Returns: {
               "attendance_status": Database["public"]['Enums']["attendance_state"],"first_name": string,"last_name": string,"member_id": string
@@ -535,6 +538,9 @@ isOneToOne: false
                            },
 "publish_selection":
 { Args: { "p_session_id": string }; Returns: string
+                           },
+"publish_selection_checked":
+{ Args: { "p_expected_fingerprint": string,"p_session_id": string }; Returns: string
                            },
 "recover_president":
 { Args: { "p_member_id": string,"p_reason": string }; Returns: undefined
