@@ -106,7 +106,7 @@ test('usual car prefills only an explicit offer; session summary reopens, retain
     await expect(panel.getByLabel('Note pour les passagers')).toHaveValue('Note de cette séance')
     await panel.getByLabel('Places passagers proposées').fill('1')
     await panel.getByRole('button', { name: 'Enregistrer ma voiture', exact: true }).click()
-    await expect(panel.getByText('Offre refusée.', { exact: false })).toBeVisible()
+    await expect(panel.getByRole('alert')).toHaveText('Le nombre de places ne peut pas être inférieur aux passagers déjà à bord.')
     await expect(panel.getByLabel('Places passagers proposées')).toHaveValue('1')
     await panel.getByLabel('Places passagers proposées').fill('3')
     await panel.getByLabel('Point de rendez-vous', { exact: true }).fill('Autre parking pour cette séance')
