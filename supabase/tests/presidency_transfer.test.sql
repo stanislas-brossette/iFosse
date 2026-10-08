@@ -5,9 +5,11 @@ select no_plan();
 create temp table people(label text,id uuid,auth_id uuid);
 grant select on people to authenticated,service_role,anon;
 insert into auth.users(id,email,email_confirmed_at)
-select ('10000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid,'presidency-'||i||'@example.test',now() from generate_series(1,9) i;
-insert into people select 'person'||i,public.provision_member(('10000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid,'Personne '||i,'Fictive'),('10000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid from generate_series(1,9) i;
+select ('10000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid,'presidency-'||i||'@example.test',now() from generate_series(1,10) i;
+insert into people select 'person'||i,public.provision_member(('10000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid,'Personne '||i,'Fictive'),('10000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid from generate_series(1,10) i;
 select public.bootstrap_president((select id from people where label='person1'));
+update auth.users set email='fictif@ifosse-seed.invalid' where id=(select auth_id from people where label='person10');
+update public.members set email='fictif@ifosse-seed.invalid' where id=(select id from people where label='person10');
 update public.members set role='admin' where id=(select id from people where label='person3');
 update public.members set disabled_at=now() where id=(select id from people where label='person4');
 update auth.users set banned_until=now()+interval '1 day' where id=(select auth_id from people where label='person5');
@@ -38,6 +40,7 @@ select throws_ok($$select public.transfer_presidency((select id from people wher
 select throws_ok($$select public.transfer_presidency((select id from people where label='person5'))$$,'22023',null,'Auth banned target refused');
 select throws_ok($$select public.transfer_presidency((select id from people where label='person6'))$$,'22023',null,'Auth deleted target refused');
 select throws_ok($$select public.transfer_presidency((select id from people where label='person7'))$$,'22023',null,'Unconfirmed Auth target refused');
+select throws_ok($$select public.transfer_presidency((select id from people where label='person10'))$$,'22023',null,'Reserved fictitious .invalid successor refused without modifying seed ownership');
 select throws_ok($$select public.transfer_presidency((select id from people where label='person9'))$$,'22023',null,'Mismatched Auth/profile email refused');
 select throws_ok($$select public.transfer_presidency((select id from people where label='person8'))$$,'22023',null,'Unlinked target refused');
 select throws_ok($$select public.transfer_presidency_if_current((select id from people where label='person2'),(select updated_at-interval '1 second' from snapshot))$$,'40001','SUCCESSOR_CHANGED','Stale snapshot refused');

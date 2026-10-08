@@ -9,7 +9,7 @@ HTMLDialogElement.prototype.close=function(){this.removeAttribute('open')}
 afterEach(cleanup)
 const person=(id:string,role:Member['role']='member')=>({id,auth_user_id:`auth-${id}`,first_name:id,last_name:'Fictif',email:`${id.toLowerCase()}@example.test`,role,disabled_at:null,updated_at:'2026-10-08T10:00:00.123456+00:00'}) as Member
 const current=person('Président','president'),successor=person('Camille')
-function setup(members=[current,successor,person('Admin','admin'),{...person('Inactif'),disabled_at:'2026-10-01'},{...person('Sans compte'),auth_user_id:null}]) {
+function setup(members=[current,successor,person('Admin','admin'),{...person('Inactif'),disabled_at:'2026-10-01'},{...person('Sans compte'),auth_user_id:null},{...person('Seed'),email:'fictif@ifosse-seed.invalid'}]) {
  const rpc=vi.fn(async()=>({data:null,error:null}));const onReload=vi.fn(async()=>{}),onTransferred=vi.fn(async()=>{}),onAccessChanged=vi.fn(async()=>{})
  const props={client:{rpc} as unknown as SupabaseClient<Database>,current,members,onReload,onTransferred,onAccessChanged,onStart:(action:()=>void)=>action()}
  const view=render(<PresidencyTransfer {...props}/>);fireEvent.click(screen.getByText('Présidence du club · transfert exceptionnel'));fireEvent.click(screen.getByRole('button',{name:'Transférer la présidence'}))

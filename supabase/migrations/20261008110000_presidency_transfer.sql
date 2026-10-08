@@ -14,7 +14,7 @@ begin
     raise exception using errcode='22023',message='Choisissez un autre adhérent.';
   end if;
   select m.role into v_previous_role from public.members m join auth.users u on u.id=m.auth_user_id
-    where m.id=p_member_id and m.email=lower(btrim(u.email)) and m.disabled_at is null and u.deleted_at is null
+    where m.id=p_member_id and m.email=lower(btrim(u.email)) and m.email not like '%.invalid' and m.disabled_at is null and u.deleted_at is null
       and u.email_confirmed_at is not null and (u.banned_until is null or u.banned_until<=now())
     for update of m,u;
   if not found then raise exception using errcode='22023',message='SUCCESSOR_UNAVAILABLE'; end if;
