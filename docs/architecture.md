@@ -188,3 +188,8 @@ These can be revisited after the fosse workflow is running reliably in productio
 ## Member lifecycle boundary
 
 President-managed access suspension uses `members.disabled_at` and the required Custom Access Token hook; existing JWTs lose RLS/RPC access immediately. Creation verifies the current President before Auth Admin and again in a transactional SQL finalizer. No custom API server, passwords, public signup or client-side service keys are introduced. [Deployment/security details](member-management.md).
+
+
+## Account notification boundary (D030)
+
+Application identity audit events and effective admin CACI changes transactionally populate a private-by-permission outbox. CACI notifications ask the affected member to check Mon profil, without a validity date or medical document. A scheduled Supabase Edge Function uses Brevo's transactional API with a server-only key and an internal scheduler secret. No browser email sending, SMTP/auth redesign or custom API server. Recipient/environment guards apply independently at enqueue and dispatch; uncertain provider acceptance requires operator review. [Deployment and failure semantics](member-notifications.md).

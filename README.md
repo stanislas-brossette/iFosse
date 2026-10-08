@@ -171,3 +171,8 @@ Default is a read-only target/ownership preflight and plan. Apply sends no email
 ## Member management
 
 Administration now uses one searchable directory. Admins maintain CACI; the President can add ordinary members (normal magic-link login), manage admin rights, and deactivate/reactivate access without deleting history. Operator bootstrap/recovery remains available. [Deployment and security guide](docs/member-management.md) documents the required staging Edge Function and Auth token hook; neither is installed by a Netlify frontend deploy. Hard deletion is intentionally excluded.
+
+
+## Emails de notification de compte
+
+Une file serveur prépare les notifications de création, accès, droits admin et transfert de présidence. Activation hébergée distincte via Brevo/Edge/cron, désactivée par défaut, sans email aux comptes synthétiques. `npm run staging:notifications:install` guide la prévalidation sans écrire ; `npm run staging:notifications:install -- --apply` installe migrations, secrets serveur, worker et Cron uniquement sur le staging fixé. Deux clés masquées, un expéditeur vérifié et une liste exacte de testeurs sont demandés. [Guide opérateur](docs/member-notifications.md).

@@ -7,10 +7,12 @@ import { useUnsavedChanges } from '../../lib/navigation'
 import { businessError } from '../../lib/businessErrors'
 import { levelSuggestions } from '../../lib/levels'
 import { PageHeading } from '../../components/Visual'
+import { NotificationFeedback } from './NotificationFeedback'
+import type { NotificationReceipt } from './NotificationFeedback'
 import { ProfilePresidency } from './ProfilePresidency'
 import { caciLabels, caciStatus, formatDate } from '../../lib/dates'
 
-export function CaciEditor({ client, member, onRefresh, onSaved }: { client: SupabaseClient<Database>; member: Member; onRefresh: () => Promise<void>; onSaved?: (date: string | null) => Promise<void> }) {
+export function CaciEditor({ client, member, onRefresh, onSaved }: { client: SupabaseClient<Database>; member: Member; onRefresh: () => Promise<void>; onSaved?: (date: string | null, changed: boolean) => Promise<void> }) {
   const [date, setDate] = useState(member.caci_expiry_date ?? '')
   const errorId=useId()
   const [dateError,setDateError]=useState(false)
@@ -18,6 +20,7 @@ export function CaciEditor({ client, member, onRefresh, onSaved }: { client: Sup
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const original = useRef(member.caci_expiry_date)
+  const [notification,setNotification]=useState<NotificationReceipt|null>(null)
   const dirty = useRef(false)
   useEffect(() => {
     if (!dirty.current) { original.current = member.caci_expiry_date; setDate(member.caci_expiry_date ?? '') }
@@ -25,15 +28,16 @@ export function CaciEditor({ client, member, onRefresh, onSaved }: { client: Sup
   const guard = useUnsavedChanges(date !== (original.current ?? ''), () => false, `caci:${onSaved ? 'directory' : 'profile'}:${member.id}`)
   const changedElsewhere = original.current !== member.caci_expiry_date
   async function save(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault();if(busy || changedElsewhere)return; setBusy(true); setMessage('')
+    event.preventDefault();if(busy || changedElsewhere)return; setBusy(true); setMessage('');setNotification(null)
+    const changed = (date || null) !== (original.current ?? null)
     const { error } = await client.rpc('set_member_caci_if_current', { p_member_id: member.id, p_expiry_date: date || undefined, p_expected_expiry_date: original.current ?? undefined })
     setFailed(!!error);setDateError(!!error && ['40001','22007','22008','23514'].includes(error.code))
     if (error?.code === '40001') { setMessage('Le CACI a été modifié ailleurs. Rechargez la date enregistrée avant de réessayer.'); await onRefresh() }
     else if (error) setMessage(businessError(error,'Modification du CACI refusée. Vérifiez vos droits et la date.'))
-    else { guard.markClean(); original.current = date || null; dirty.current = false; setMessage('Date CACI enregistrée.'); if (onSaved) await onSaved(date || null); else await onRefresh() }
+    else { guard.markClean(); original.current = date || null; dirty.current = false; setMessage('Date CACI enregistrée.'); if (onSaved) await onSaved(date || null, changed); else { if(changed)setNotification({memberId:member.id,eventType:'caci_date_changed'});await onRefresh() } }
     setBusy(false)
   }
-  return <form onSubmit={event => void save(event)}><label>Fin de validité CACI<input type="date" aria-invalid={changedElsewhere || dateError || undefined} aria-describedby={message && dateError ? errorId : changedElsewhere ? `${errorId}-stale` : undefined} value={date} onChange={event => { dirty.current = true;setDateError(false); setMessage(''); setDate(event.target.value) }} /></label>{changedElsewhere && <p id={`${errorId}-stale`} role="alert">La date enregistrée a changé. Votre saisie est conservée; rechargez la date avant de poursuivre.</p>}<button disabled={busy || changedElsewhere}>Enregistrer le CACI</button>{(changedElsewhere || message.includes('modifié ailleurs')) && <button type="button" disabled={busy} onClick={() => { original.current = member.caci_expiry_date; dirty.current = false;setDateError(false);setFailed(false); setDate(member.caci_expiry_date ?? ''); setMessage('') }}>Recharger la date enregistrée</button>}{message && <p id={errorId} role={failed?'alert':'status'}>{message}</p>}</form>
+  return <form onSubmit={event => void save(event)}><label>Fin de validité CACI<input type="date" aria-invalid={changedElsewhere || dateError || undefined} aria-describedby={message && dateError ? errorId : changedElsewhere ? `${errorId}-stale` : undefined} value={date} onChange={event => { dirty.current = true;setDateError(false); setMessage(''); setDate(event.target.value) }} /></label>{changedElsewhere && <p id={`${errorId}-stale`} role="alert">La date enregistrée a changé. Votre saisie est conservée; rechargez la date avant de poursuivre.</p>}<button disabled={busy || changedElsewhere}>Enregistrer le CACI</button>{(changedElsewhere || message.includes('modifié ailleurs')) && <button type="button" disabled={busy} onClick={() => { original.current = member.caci_expiry_date; dirty.current = false;setDateError(false);setFailed(false); setDate(member.caci_expiry_date ?? ''); setMessage('') }}>Recharger la date enregistrée</button>}{message && <p id={errorId} role={failed?'alert':'status'}>{message}</p>}{notification && <NotificationFeedback client={client} receipt={notification} />}</form>
 }
 
 export function Profile({ client, member, refresh }: { client: SupabaseClient<Database>; member: Member; refresh: () => Promise<void> }) {
@@ -45,6 +49,7 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
   const [failed,setFailed]=useState(false)
   const baseline = useRef(JSON.stringify(values))
   const guard = useUnsavedChanges(JSON.stringify(values) !== baseline.current)
+  const [notification,setNotification]=useState<NotificationReceipt|null>(null)
   const carDefaultsDirty = useRef(false)
   const saveButton = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -68,6 +73,7 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
       </fieldset><button ref={saveButton} type="submit" disabled={busy}>Enregistrer mon profil</button>{message && <p id={errorId} role={failed?'alert':'status'}>{message}</p>}
     </form>
     {member.role !== 'member' && <div className="mt"><h3>Mettre à jour mon CACI</h3><CaciEditor client={client} member={member} onRefresh={refresh} /></div>}
-    {member.role === 'president' && <ProfilePresidency client={client} member={member} refresh={refresh} onTransferred={async successor=>{setFailed(false);setMessage(`Présidence transférée à ${successor.first_name} ${successor.last_name}. Vous êtes désormais administrateur.`);await refresh();saveButton.current?.focus()}} />}
+    {member.role === 'president' && <ProfilePresidency client={client} member={member} refresh={refresh} onTransferred={async successor=>{setNotification({memberId:successor.id,eventType:'presidency_transferred'});setFailed(false);setMessage(`Présidence transférée à ${successor.first_name} ${successor.last_name}. Vous êtes désormais administrateur.`);await refresh();saveButton.current?.focus()}} />}
+    {notification && <NotificationFeedback client={client} receipt={notification} />}
   </section>
 }
