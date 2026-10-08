@@ -5,9 +5,10 @@ import type { Database, Tables } from '../../lib/database.types'
 import { readLoginCallback } from './callback'
 import { publicConfig } from '../../lib/publicConfig'
 import { loginRedirectUrl } from './redirect'
+import { clearReturnPath, consumeReturnPath, rememberReturnPath, replaceNavigation, syncNavigation } from '../../lib/navigation'
 
 export type Member = Tables<'members'>
-type Props = { client: SupabaseClient<Database>; children: (member: Member, refresh: () => Promise<void>) => ReactNode; onOpenProfile?: (member: Member) => void; onIdentityChange?: () => void }
+type Props = { client: SupabaseClient<Database>; children: (member: Member, refresh: () => Promise<void>) => ReactNode; onOpenProfile?: (member: Member) => void; onIdentityChange?: (previous:string|null,next:string|null) => void }
 const invalidLink = 'Ce lien est expiré ou a déjà été utilisé. Demandez un nouveau lien.'
 
 export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: Props) {
@@ -36,9 +37,10 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     function acceptSession(next: Session | null) {
       const id = next?.user.id ?? null
       if (id !== identity.current.id) {
+        const previous = identity.current.id
         identity.current = { id, generation: identity.current.generation + 1 }
         setConfirmLogout(false)
-        onIdentityChange?.()
+        onIdentityChange?.(previous,id)
         setMember(null)
         setError('')
       }
@@ -109,7 +111,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   }, [refresh])
 
   async function requestLink(event: SubmitEvent<HTMLFormElement>) {
-    event.preventDefault(); setBusy(true); setError(''); setMessage('')
+    event.preventDefault(); if(busy)return; rememberReturnPath(); setBusy(true); setError(''); setMessage('')
     try {
       const emailRedirectTo = loginRedirectUrl(window.location.origin, publicConfig?.environment ?? 'local')
       if (!emailRedirectTo) { setError('Cette adresse n’est pas autorisée pour la connexion à iFosse.'); return }
@@ -125,8 +127,9 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     setBusy(true); setError('')
     try {
       const { error: verifyError } = await client.auth.verifyOtp({ token_hash: callback.tokenHash, type: 'email' })
-      setCallback(null); window.history.replaceState(null, '', '/')
-      if (verifyError) setError(invalidLink)
+      setCallback(null)
+      if (verifyError) { clearReturnPath(); window.history.replaceState(null,'','/'); syncNavigation(); setError(invalidLink) }
+      else replaceNavigation(consumeReturnPath())
     } catch { setError('Connexion au service impossible. Réessayez.') } finally { setBusy(false) }
   }
 
@@ -135,7 +138,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
     try {
       const { error: signOutError } = await client.auth.signOut({ scope: 'local' })
       if (signOutError) setError('La déconnexion a échoué. Réessayez.')
-      else { setConfirmLogout(false); onIdentityChange?.(); setMember(null); setSession(null); setMessage('Vous êtes déconnecté.'); setCallback(null); window.history.replaceState(null, '', '/') }
+      else { setConfirmLogout(false); onIdentityChange?.(session?.user.id ?? null,null); clearReturnPath(); setMember(null); setSession(null); setMessage('Vous êtes déconnecté.'); setCallback(null); window.history.replaceState(null, '', '/'); syncNavigation() }
     } catch { setError('La déconnexion a échoué. Réessayez.') } finally { setBusy(false) }
   }
 

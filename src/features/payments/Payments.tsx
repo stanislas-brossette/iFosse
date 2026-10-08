@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../lib/database.types'
+import { businessError } from '../../lib/businessErrors'
 import { caciLabels } from '../../lib/dates'
 import type { CaciStatus } from '../../lib/dates'
 import { selectionLabels, transportLabels, paymentLabels } from '../../lib/labels'
@@ -8,6 +9,7 @@ import { selectionLabels, transportLabels, paymentLabels } from '../../lib/label
 export type Readiness = Database['public']['Functions']['get_admin_readiness']['Returns'][number]
 type Payment = Database['public']['Enums']['payment_state']
 type Props = {
+  onFeedback?: (text:string,error:boolean)=>void
   compact?: boolean
   readiness?: Readiness
   client: SupabaseClient<Database>
@@ -17,20 +19,22 @@ type Props = {
   onSaved: () => Promise<void>
 }
 
-export function PaymentSummary({ readiness, client, sessionId, firstName, lastName, onSaved, compact = false }: Props) {
+export function PaymentSummary({ readiness, client, sessionId, firstName, lastName, onSaved, compact = false, onFeedback }: Props) {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageError,setMessageError] = useState(false)
   if (!readiness) return <p>Préparation en cours d’actualisation.</p>
   const memberId = readiness.member_id
   const count = [readiness.selection_ready, readiness.caci_ready, readiness.transport_ready, readiness.payment_ready].filter(Boolean).length
   const draft = readiness.selection_basis === 'draft'
 
   async function change(value: Payment) {
+    if(busy)return
     setBusy(true)
-    setMessage('')
+    setMessageError(false);setMessage('Enregistrement du paiement…')
     const result = await client.rpc('set_payment_status', { p_session_id: sessionId, p_member_id: memberId, p_status: value })
-    if (result.error) setMessage('Paiement non enregistré. Vérifiez vos droits et actualisez la séance.')
-    else setMessage('Paiement enregistré.')
+    const feedback = result.error ? businessError(result.error,'Paiement non enregistré. Vérifiez vos droits et actualisez la séance.') : 'Paiement enregistré.'
+    setMessageError(!!result.error);setMessage(feedback);onFeedback?.(feedback,!!result.error)
     await onSaved()
     setBusy(false)
   }
@@ -49,7 +53,7 @@ export function PaymentSummary({ readiness, client, sessionId, firstName, lastNa
         {(['unpaid', 'paid', 'free'] as const).map(value => <option key={value} value={value}>{paymentLabels[value]}</option>)}
       </select>
     </label>
-    {message && <p role="status">{message}</p>}
+    {message && <p role={messageError?'alert':'status'}>{message}</p>}
   </div>
   return <div className="readiness">{compact ? <><div className="readiness-indicators"><span className={`chip ${readiness.caci_status === 'valid' ? 'green' : 'amber'}`}>CACI {caciLabels[readiness.caci_status as CaciStatus]}</span><span className={`chip ${readiness.transport_ready && !readiness.transport_provisional ? 'green' : 'amber'}`}>{readiness.transport_provisional ? 'Trajet provisoire' : readiness.transport_ready ? 'Trajet organisé' : 'Trajet à organiser'}</span><span className={`chip ${readiness.payment_ready ? 'green' : 'amber'}`}>{paymentLabels[readiness.payment_status]}</span></div><details className="preparation-details"><summary>Détails et paiement de {firstName} {lastName}</summary>{details}</details></> : details}</div>
 }

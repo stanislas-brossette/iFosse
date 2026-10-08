@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './lib/database.types'
 import type { Member } from './features/auth/AuthGate'
@@ -11,9 +11,18 @@ import { Sessions } from './features/sessions/Sessions'
 import { Brand, Icon } from './components/Visual'
 import { seasonOf, todayParis } from './lib/dates'
 
+import { allowedRoute, clearReturnPath, navigate as navigateRoute, NavigationPrompt, replaceNavigation, routePath, useRoute } from './lib/navigation'
+import type { Route } from './lib/navigation'
+
 type Area = 'sessions' | 'profile' | 'admin'
-function MemberApp({ client, member, refresh, area, navigate }: { client: SupabaseClient<Database>; member: Member; refresh: () => Promise<void>; area: Area; navigate: (next: Area) => void }) {
-  const active = area === 'admin' && member.role === 'member' ? 'sessions' : area
+function MemberApp({ client, member, refresh }: { client: SupabaseClient<Database>; member: Member; refresh: () => Promise<void> }) {
+  const requested = useRoute()
+  const route = allowedRoute(requested, member.role !== 'member')
+  const active = route.area
+  const [lastSessionRoute, setLastSessionRoute] = useState<Route>({area:'sessions',tab:'overview',view:'upcoming'})
+  useEffect(() => { if (routePath(route) !== window.location.pathname + window.location.search) navigateRoute(route, {replace:true,bypass:true,scroll:false}) }, [route.area,route.sessionId,route.tab,route.editing,route.view,route.season])
+  useEffect(() => { if (route.area === 'sessions') setLastSessionRoute(route) }, [route.area,route.sessionId,route.tab,route.editing,route.view,route.season])
+  function navigate(next:Area) { navigateRoute(next === 'sessions' ? allowedRoute(lastSessionRoute,member.role !== 'member') : {area:next,tab:'overview',view:'upcoming'}) }
   return <div className="app-layout">
     <aside className="sidebar"><Brand /><p className="club-label">APSAP · Plongée</p><p className="nav-label">Votre club</p>
       <nav className="main-navigation" aria-label="Navigation principale">
@@ -24,7 +33,7 @@ function MemberApp({ client, member, refresh, area, navigate }: { client: Supaba
       <div className="sidebar-bottom"><p className="eyebrow">La saison du club</p><strong>{seasonOf(todayParis())}–{seasonOf(todayParis()) + 1}</strong><p>De septembre à août</p></div>
     </aside>
     <div className="app-content">
-      <div hidden={active !== 'sessions'}><Sessions client={client} member={member} refreshMember={refresh} /></div>
+      <div hidden={active !== 'sessions'}><Sessions client={client} member={member} refreshMember={refresh} route={active === 'sessions' ? route : allowedRoute(lastSessionRoute,member.role !== 'member')} onNavigate={navigateRoute} /></div>
       <div hidden={active !== 'profile'}><Profile client={client} member={member} refresh={refresh} /></div>
       {member.role !== 'member' && <div hidden={active !== 'admin'}><Directory client={client} member={member} /></div>}
       <footer className="app-footer">APSAP · Les fosses, simplement.</footer>
@@ -34,14 +43,13 @@ function MemberApp({ client, member, refresh, area, navigate }: { client: Supaba
 
 export default function App() {
   const client = supabase
-  const [navigation, setNavigation] = useState<{ memberId: string; area: Area } | null>(null)
-  const resetNavigation = useCallback(() => setNavigation(null), [])
-  function navigate(memberId: string, area: Area) { setNavigation({ memberId, area }); window.scrollTo({ top: 0 }) }
+  const resetNavigation = useCallback((previous:string|null,next:string|null) => { if(previous || next === null) { clearReturnPath(); replaceNavigation('/seances') } }, [])
   return <main className="shell">
     <header className="app-brand"><Brand /><p>Les fosses, simplement.</p></header>
-    {client ? <AuthGate client={client} onOpenProfile={member => navigate(member.id, 'profile')} onIdentityChange={resetNavigation}>{(member, refresh) => <MemberApp client={client} member={member} refresh={refresh} area={navigation?.memberId === member.id ? navigation.area : 'sessions'} navigate={next => navigate(member.id, next)} />}</AuthGate> : <section className="card" aria-labelledby="welcome"><h1 id="welcome">Les séances du club APSAP</h1>
+    {client ? <AuthGate client={client} onOpenProfile={() => navigateRoute({area:'profile',tab:'overview',view:'upcoming'})} onIdentityChange={resetNavigation}>{(member, refresh) => <MemberApp client={client} member={member} refresh={refresh} />}</AuthGate> : <section className="card" aria-labelledby="welcome"><h1 id="welcome">Les séances du club APSAP</h1>
       <p>La nouvelle application partagée est en préparation.</p>
       <p role="status">{config ? 'Connexion au service configurée.' : 'Configuration locale à compléter.'}</p>
     </section>}
+    <NavigationPrompt />
   </main>
 }

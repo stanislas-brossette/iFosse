@@ -1,3 +1,4 @@
+import { useUnsavedChanges } from '../../lib/navigation'
 import { useState } from 'react'
 import type { SubmitEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -13,6 +14,7 @@ export function MemberCreate({ client, onSaved, onCancel }: { client: SupabaseCl
   const [first, setFirst] = useState('')
   const [last, setLast] = useState('')
   const [email, setEmail] = useState('')
+  const guard = useUnsavedChanges(!!(first || last || email),()=>false,'member-create')
   const [requestId] = useState(() => crypto.randomUUID())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -29,9 +31,9 @@ export function MemberCreate({ client, onSaved, onCancel }: { client: SupabaseCl
         try { code = (await result.error.context?.json())?.code } catch { /* Network/gateway error. */ }
       }
       if (result.error || !result.data?.member_id) setError(messages[code ?? ''] || 'Ajout indisponible. Réessayez ; conservez ce formulaire pour reprendre la création.')
-      else await onSaved()
+      else {guard.markClean();await onSaved()}
     } catch { setError('Ajout indisponible. Réessayez avec ce formulaire.') }
     finally { setBusy(false) }
   }
-  return <form className="member-create" onSubmit={event => void save(event)} aria-labelledby="member-create-title"><h2 id="member-create-title">Ajouter un adhérent</h2><p>Le compte sera actif, avec le rôle Adhérent. Aucun email n’est envoyé ici : la personne demandera son lien de connexion habituel sur iFosse.</p><div className="grid"><label>Prénom<input required maxLength={100} value={first} onChange={event => setFirst(event.target.value)} autoComplete="given-name" autoFocus /></label><label>Nom<input required maxLength={100} value={last} onChange={event => setLast(event.target.value)} autoComplete="family-name" /></label></div><label>Email du nouvel adhérent<input type="email" required maxLength={254} value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" /></label>{error && <p role="alert">{error}</p>}<div className="actions"><button type="submit" disabled={busy}>Créer l’adhérent</button><button type="button" disabled={busy} onClick={onCancel}>Annuler l’ajout</button></div></form>
+  return <form className="member-create" onChangeCapture={()=>setError('')} onSubmit={event => void save(event)} aria-labelledby="member-create-title"><h2 id="member-create-title">Ajouter un adhérent</h2><p>Le compte sera actif, avec le rôle Adhérent. Aucun email n’est envoyé ici : la personne demandera son lien de connexion habituel sur iFosse.</p><div className="grid"><label>Prénom<input required maxLength={100} value={first} onChange={event => setFirst(event.target.value)} autoComplete="given-name" autoFocus /></label><label>Nom<input required maxLength={100} value={last} onChange={event => setLast(event.target.value)} autoComplete="family-name" /></label></div><label>Email du nouvel adhérent<input type="email" required maxLength={254} value={email} onChange={event => setEmail(event.target.value)} autoComplete="email" /></label>{error && <p role="alert">{error}</p>}<div className="actions"><button type="submit" disabled={busy}>Créer l’adhérent</button><button type="button" disabled={busy} onClick={()=>guard.protect(()=>{guard.markClean();onCancel()})}>Annuler l’ajout</button></div></form>
 }

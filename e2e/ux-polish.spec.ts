@@ -45,7 +45,7 @@ test('directory CACI collapses only on success, updates date/status and retains 
     // Inject a permission response to verify UI recovery without changing account permissions.
     await page.route('**/rest/v1/rpc/set_member_caci_if_current', route => route.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ code: '42501', message: 'permission denied' }) }), { times: 1 })
     await date.fill('2096-12-31'); await row.getByRole('button', { name: 'Enregistrer le CACI', exact: true }).click()
-    await expect(row.getByText('Modification du CACI refusée.', { exact: false })).toBeVisible()
+    await expect(row.getByText('Vos droits ne permettent plus cette action. Actualisez votre accès.', { exact: true })).toBeVisible()
     await expect(date).toHaveValue('2096-12-31')
     await layout(page, 'directory-desktop-error')
     await page.setViewportSize({ width: 390, height: 844 }); await layout(page, 'directory-phone-error')
@@ -106,7 +106,7 @@ test('usual car prefills only an explicit offer; session summary reopens, retain
     await expect(panel.getByLabel('Note pour les passagers')).toHaveValue('Note de cette séance')
     await panel.getByLabel('Places passagers proposées').fill('1')
     await panel.getByRole('button', { name: 'Enregistrer ma voiture', exact: true }).click()
-    await expect(panel.getByText('Offre refusée.', { exact: false })).toBeVisible()
+    await expect(panel.getByRole('alert')).toHaveText('Le nombre de places ne peut pas être inférieur aux passagers déjà à bord.')
     await expect(panel.getByLabel('Places passagers proposées')).toHaveValue('1')
     await panel.getByLabel('Places passagers proposées').fill('3')
     await panel.getByLabel('Point de rendez-vous', { exact: true }).fill('Autre parking pour cette séance')

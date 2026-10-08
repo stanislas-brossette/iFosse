@@ -106,8 +106,8 @@ export async function removeMemberFixture(fixture: MemberFixture) {
   if (memberError || authError) throw new Error('A fictitious browser-test account could not be cleaned up.')
 }
 
-export async function requestMagicLink(page: Page, fixture: MemberFixture): Promise<string> {
-  await page.goto('/')
+export async function requestMagicLink(page: Page, fixture: MemberFixture, initialPath = '/'): Promise<string> {
+  await page.goto(initialPath)
   await page.getByLabel('Adresse email').fill(fixture.email)
   await page.getByRole('button', { name: 'Recevoir un lien de connexion' }).click()
   // A recipient unique to this test avoids touching or reading other mailboxes.
