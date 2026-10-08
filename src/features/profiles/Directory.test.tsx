@@ -24,6 +24,7 @@ describe('unified member management', () => {
     expect(screen.queryByText('Droits administrateur')).toBeNull()
     expect(screen.getAllByText('Camille Fictif')).toHaveLength(1)
     expect(screen.queryByRole('button', { name: 'Ajouter un adhérent' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Transférer la présidence' })).toBeNull()
     expect(screen.queryByText(/Gérer les droits/)).toBeNull()
     expect(screen.getByRole('button', { name: 'Modifier le CACI de Camille Fictif' })).toBeTruthy()
     expect(screen.queryByText('Inactif Fictif')).toBeNull()
@@ -44,6 +45,7 @@ describe('unified member management', () => {
     expect(screen.getAllByText(/Gérer les droits et l’accès/)).toHaveLength(2)
     fireEvent.click(screen.getByRole('button', { name: 'Ajouter un adhérent' }))
     expect(screen.getByLabelText('Prénom')).toBeTruthy()
+    expect(screen.queryByText('Présidence du club · transfert exceptionnel')).toBeNull()
     expect(screen.queryByLabelText('Mot de passe')).toBeNull()
   })
   it('requires confirmation, keeps a refused lifecycle dialog open and never changes the row', async () => {

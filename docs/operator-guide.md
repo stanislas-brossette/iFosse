@@ -155,3 +155,7 @@ Pour un bilan ouvert après la fin de séance :
 4. Vérifier/corriger individuellement les absents et les remplacements. Clôturer séparément après contrôle de la capacité ; aucun compteur n’augmente tant que le bilan reste ouvert.
 
 La migration `20261008070000_attendance_batch.sql` doit être appliquée au projet Supabase de staging avant cette recette hébergée. Sans les deux RPC, l’action indique qu’une mise à jour serveur est nécessaire. Aucun changement d’Auth, RLS, signup, seed ou configuration Netlify n’est requis. Cette livraison valide le fonctionnement local ; elle n’applique aucune migration hébergée et ne vaut pas validation du pilote organisateur.
+
+#### Transfert de présidence depuis l’interface
+
+Le président dispose d’un parcours distinct en bas de Mon profil : successeur actif, nom/email à vérifier, email à recopier, droits perdus à reconnaître, puis confirmation. L’ancien président reste admin. Une fiche modifiée demande actualisation/reconfirmation ; un résultat réseau ambigu demande de vérifier les rôles. Retour possible par le nouveau président ou récupération opérateur existante. Appliquer `20261008110000_presidency_transfer.sql` en staging avant recette ; aucune modification hébergée n’est réalisée par la validation locale. [Parcours et protections](member-management.md#transférer-la-présidence).

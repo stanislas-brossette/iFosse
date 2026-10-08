@@ -52,3 +52,15 @@ npm run test:e2e
 ```
 
 Le hook local est déclaré dans `supabase/config.toml`; redémarrer la stack après modification de ce fichier. Les tests utilisent uniquement des comptes fictifs `example.test`, Mailpit et des endpoints locaux. Le CI démarre la fonction avant le navigateur et vérifie les vrais refus Auth, pas seulement un mock de la connexion. Ne pas réinitialiser une stack contenant des essais à conserver; démarrer un projet local distinct pour ces tests.
+
+## Transférer la présidence
+
+Dans **Mon profil (en bas de page) → Présidence du club · transfert exceptionnel**, déplier la section dédiée, puis le président clique sur le bouton rouge **Transférer la présidence**. Choisir un autre adhérent actif, vérifier son nom et son email, recopier cet email et cocher la reconnaissance des droits perdus. Les modifications personnelles non enregistrées restent conservées pendant le transfert. Annuler/Escape ne modifie rien et rend le focus au bouton.
+
+Après confirmation, le successeur est l’unique président et l’ancien président reste administrateur : il conserve les fonctions opérationnelles mais perd création, suspension/réactivation et gestion des droits. Le serveur applique immédiatement ces règles, sans déconnexion ni nouveau magic link. Pour revenir en arrière, le nouveau président peut retransférer ; `npm run president:manage -- recover …` reste le recours opérateur documenté. Aucun email n’est envoyé par le transfert.
+
+La fiche du successeur peut changer pendant la confirmation : **Actualiser le choix**, vérifier à nouveau puis ressaisir la confirmation. Un compte suspendu, sans Auth utilisable/confirmé, banni ou dont l’adresse Auth ne correspond pas à la fiche est refusé côté serveur. En cas de résultat réseau ambigu, vérifier les rôles après rafraîchissement avant de réessayer ; l’ancien président ne peut pas rejouer un transfert après son succès. L’audit enregistre acteur, successeur et rôles ; aucun historique de séance, paiement, présence, voiture, palanquée ou marqueur seed n’est modifié.
+
+**Staging :** appliquer `20261008110000_presidency_transfer.sql` avant d’utiliser ce bouton. La migration durcit la RPC historique (disponibilité Auth/profil) et ajoute `transfer_presidency_if_current(uuid,timestamptz)` avec comparaison de la fiche affichée. Aucun nouveau secret, hook ou Edge Function n’est nécessaire. Bootstrap/récupération opérateur restent disponibles ; production reste une opération distincte.
+
+Précaution de transfert : les adresses fictives en `.invalid` sont exclues des choix et refusées par les deux RPC ; aucun marqueur ou enregistrement seed n’est modifié. La confirmation demande d’avoir vérifié que le successeur peut se connecter avec son lien habituel. Ce contrôle humain ne prétend pas garantir la délivrabilité de tout email. `.invalid` est réservé aux noms volontairement invalides ([RFC 2606](https://www.rfc-editor.org/rfc/rfc2606#section-2)). Les fixtures locales `example.test` restent utilisables via Mailpit ; elles ne doivent pas être utilisées comme successeurs réels hébergés.

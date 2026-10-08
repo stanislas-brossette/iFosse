@@ -599,6 +599,9 @@ isOneToOne: false
 "transfer_presidency":
 { Args: { "p_member_id": string }; Returns: undefined
                            },
+"transfer_presidency_if_current":
+{ Args: { "p_expected_updated_at": string,"p_member_id": string }; Returns: undefined
+                           },
 "transport_eligible":
 { Args: { "p_member_id": string,"p_session_id": string }; Returns: boolean
                            },

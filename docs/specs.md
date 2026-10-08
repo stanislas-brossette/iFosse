@@ -108,7 +108,8 @@ The president has all admin capabilities and can additionally:
 - promote a regular member to admin;
 - remove admin rights from an admin;
 - create an ordinary member (first name, last name, email) who subsequently uses normal magic-link login;
-- deactivate/reactivate access with confirmation, while preserving all historical records (D028).
+- deactivate/reactivate access with confirmation, while preserving all historical records (D028);
+- explicitly transfer the sole presidency to another active linked member/admin, becoming an admin themselves (D029).
 
 Regular admins cannot change application roles or create/deactivate/reactivate members. Administration uses one searchable directory with row-level actions; members cannot access it. Hard deletion is excluded. [Lifecycle and deployment details](member-management.md).
 
@@ -471,3 +472,11 @@ Abandonner un brouillon sélection/palanquées ouvre une confirmation accessible
 - « Réinitialiser les filtres » de l’annuaire rétablit recherche vide, tous rôles/tous CACI et accès actifs. Les brouillons de création et de CACI sont conservés, y compris quand leur ligne est temporairement filtrée.
 - Après l’heure de fin de Paris, un admin/président peut demander « Marquer les confirmés comme ayant plongé ». Un récapitulatif serveur nominatif précède la confirmation. Seules les présences À renseigner des confirmés effectifs de la dernière publication sont modifiées ; un draft privé différent, les absents, les personnes n’ayant pas plongé, les présences déjà saisies et les remplacements ne sont pas écrasés.
 - Le lot est atomique, autorisé/audité côté serveur et refuse une confirmation périmée si sélection, présences ou état du bilan ont changé. Il faut relire le nouveau récapitulatif et confirmer de nouveau. Une reprise sans inconnus est sans effet. La clôture reste une action distincte, avec les contraintes existantes (présences renseignées et total de plongeurs respectant la capacité). Vérifier les absents avant de clôturer ; les compteurs septembre–août restent basés sur les bilans clôturés.
+
+### Transfert de présidence (D029)
+
+Le bas du profil personnel présente une section dépliable distincte « Présidence du club » au président seulement. Le choix affiche nom/email ; confirmer nécessite de recopier l’email du successeur et reconnaître la perte des droits présidentiels. Les modifications personnelles non enregistrées restent conservées pendant le transfert. Le successeur ne peut être soi-même, suspendu, sans compte Auth, banni, supprimé, non confirmé ou lié à une adresse Auth différente. CACI/niveau ne constituent pas une condition de gouvernance.
+
+La fiche affichée est figée jusqu’à confirmation ; toute modification impose un choix actualisé et une nouvelle confirmation. Une perte de droits ou un résultat réseau ambigu impose de réactualiser l’accès avant toute nouvelle tentative. Le transfert atomique est audité, laisse exactement un président et conserve toutes les données métier/seed. Le profil de l’ancien président est réactualisé immédiatement ; le nouveau rôle est effectif côté serveur même avec les anciens jetons, et les autres appareils utilisent le rafraîchissement existant. Annuler/Escape ne change rien. La récupération opérateur reste distincte.
+
+Précaution de transfert : les adresses fictives en `.invalid` sont exclues des choix et refusées par les deux RPC ; aucun marqueur ou enregistrement seed n’est modifié. La confirmation demande d’avoir vérifié que le successeur peut se connecter avec son lien habituel. Ce contrôle humain ne prétend pas garantir la délivrabilité de tout email. `.invalid` est réservé aux noms volontairement invalides ([RFC 2606](https://www.rfc-editor.org/rfc/rfc2606#section-2)). Les fixtures locales `example.test` restent utilisables via Mailpit ; elles ne doivent pas être utilisées comme successeurs réels hébergés.
