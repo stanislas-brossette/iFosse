@@ -9,4 +9,9 @@ Les captures sont prises après suppression du fragment Auth, sans token, donné
 
 Les comptes fictifs `.invalid` sont exclus et refusés par le serveur ; la confirmation demande d’avoir vérifié que le successeur peut se connecter.
 
-Les tests vérifient le brouillon de création préservé/abandonné explicitement, la reconfirmation après modification réelle du CACI, les rôles réactualisés sans reconnexion, les anciens jetons privés de droits présidentiels, les données métier conservées, le double transfert et la suspension concurrents. Le serveur est validé sur la pile locale isolée seulement ; la migration `20261008110000_presidency_transfer.sql` doit être appliquée en staging avant recette hébergée. Aucun projet hébergé n’est modifié par cette validation.
+Le transfert est accessible uniquement en bas de Mon profil du président, dans une section repliée. Il est absent de l’Administration.
+
+- [Positionnement ordinateur](profile-desktop.png)
+- [Positionnement téléphone](profile-phone.png)
+
+Les tests vérifient les modifications personnelles non enregistrées conservées après le transfert, la reconfirmation après modification réelle du CACI, les rôles réactualisés sans reconnexion, les anciens jetons privés de droits présidentiels, les données métier conservées, le double transfert et la suspension concurrents. Le serveur est validé sur la pile locale isolée seulement ; la migration `20261008110000_presidency_transfer.sql` doit être appliquée en staging avant recette hébergée. Aucun projet hébergé n’est modifié par cette validation.

@@ -7,6 +7,7 @@ import { useUnsavedChanges } from '../../lib/navigation'
 import { businessError } from '../../lib/businessErrors'
 import { levelSuggestions } from '../../lib/levels'
 import { PageHeading } from '../../components/Visual'
+import { ProfilePresidency } from './ProfilePresidency'
 import { caciLabels, caciStatus, formatDate } from '../../lib/dates'
 
 export function CaciEditor({ client, member, onRefresh, onSaved }: { client: SupabaseClient<Database>; member: Member; onRefresh: () => Promise<void>; onSaved?: (date: string | null) => Promise<void> }) {
@@ -45,6 +46,7 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
   const baseline = useRef(JSON.stringify(values))
   const guard = useUnsavedChanges(JSON.stringify(values) !== baseline.current)
   const carDefaultsDirty = useRef(false)
+  const saveButton = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     if (!carDefaultsDirty.current) setValues(values => { const car={has_usual_car:member.has_usual_car,usual_passenger_seats:member.usual_passenger_seats || 3,usual_meeting_point:member.usual_meeting_point};baseline.current=JSON.stringify({...JSON.parse(baseline.current),...car});return {...values,...car} })
   }, [member.has_usual_car, member.usual_passenger_seats, member.usual_meeting_point])
@@ -63,8 +65,9 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
       <fieldset className="usual-car"><legend>Ma voiture habituelle</legend><p className="muted">Habitudes facultatives.</p><p id="usual-car-help">Ces valeurs préremplissent vos futures propositions pour une séance. Elles ne créent aucune offre automatiquement. L’heure de départ et la note se renseignent pour chaque séance.</p>
       <label className="check"><input type="checkbox" aria-describedby="usual-car-help" checked={values.has_usual_car} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, has_usual_car: event.target.checked }) }} />J’ai habituellement une voiture disponible</label>
       {values.has_usual_car && <><p id="usual-seats-help">Les places passagers ne comprennent pas le conducteur.</p><div className="form-grid"><label>Places passagers habituelles<input aria-describedby="usual-seats-help" type="number" min={1} max={8} required value={values.usual_passenger_seats} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, usual_passenger_seats: Number(event.target.value) }) }} /></label><label>Point de rendez-vous habituel <span className="field-hint">(facultatif)</span><input aria-label="Point de rendez-vous habituel" maxLength={200} value={values.usual_meeting_point} onChange={event => { carDefaultsDirty.current = true; setValues({ ...values, usual_meeting_point: event.target.value }) }} /></label></div></>}
-      </fieldset><button disabled={busy}>Enregistrer mon profil</button>{message && <p id={errorId} role={failed?'alert':'status'}>{message}</p>}
+      </fieldset><button ref={saveButton} type="submit" disabled={busy}>Enregistrer mon profil</button>{message && <p id={errorId} role={failed?'alert':'status'}>{message}</p>}
     </form>
     {member.role !== 'member' && <div className="mt"><h3>Mettre à jour mon CACI</h3><CaciEditor client={client} member={member} onRefresh={refresh} /></div>}
+    {member.role === 'president' && <ProfilePresidency client={client} member={member} refresh={refresh} onTransferred={async successor=>{setFailed(false);setMessage(`Présidence transférée à ${successor.first_name} ${successor.last_name}. Vous êtes désormais administrateur.`);await refresh();saveButton.current?.focus()}} />}
   </section>
 }

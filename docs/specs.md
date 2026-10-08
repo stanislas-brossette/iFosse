@@ -475,7 +475,7 @@ Abandonner un brouillon sélection/palanquées ouvre une confirmation accessible
 
 ### Transfert de présidence (D029)
 
-Administration présente une section distincte « Présidence du club » au président seulement. Le choix affiche nom/email ; confirmer nécessite de recopier l’email du successeur et reconnaître la perte des droits présidentiels. La création en cours demande d’abord confirmation d’abandon. Le successeur ne peut être soi-même, suspendu, sans compte Auth, banni, supprimé, non confirmé ou lié à une adresse Auth différente. CACI/niveau ne constituent pas une condition de gouvernance.
+Le bas du profil personnel présente une section dépliable distincte « Présidence du club » au président seulement. Le choix affiche nom/email ; confirmer nécessite de recopier l’email du successeur et reconnaître la perte des droits présidentiels. Les modifications personnelles non enregistrées restent conservées pendant le transfert. Le successeur ne peut être soi-même, suspendu, sans compte Auth, banni, supprimé, non confirmé ou lié à une adresse Auth différente. CACI/niveau ne constituent pas une condition de gouvernance.
 
 La fiche affichée est figée jusqu’à confirmation ; toute modification impose un choix actualisé et une nouvelle confirmation. Une perte de droits ou un résultat réseau ambigu impose de réactualiser l’accès avant toute nouvelle tentative. Le transfert atomique est audité, laisse exactement un président et conserve toutes les données métier/seed. Le profil de l’ancien président est réactualisé immédiatement ; le nouveau rôle est effectif côté serveur même avec les anciens jetons, et les autres appareils utilisent le rafraîchissement existant. Annuler/Escape ne change rien. La récupération opérateur reste distincte.
 

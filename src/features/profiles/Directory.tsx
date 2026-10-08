@@ -6,13 +6,12 @@ import { caciLabels, caciStatus, formatDate, todayParis } from '../../lib/dates'
 import { protectScope } from '../../lib/navigation'
 import { CaciEditor } from './Profile'
 import { MemberCreate } from './MemberCreate'
-import { PresidencyTransfer } from './PresidencyTransfer'
 import { PageHeading } from '../../components/Visual'
 import { useSharedRefresh } from '../../lib/useSharedRefresh'
 
 const roleLabels = { member: 'Adhérent', admin: 'Administrateur', president: 'Président' }
 type Action = { member: Member; kind: 'deactivate' | 'reactivate' | 'grant' | 'revoke' }
-export function Directory({ client, member: current, refreshMember }: { client: SupabaseClient<Database>; member: Member; refreshMember:()=>Promise<void> }) {
+export function Directory({ client, member: current }: { client: SupabaseClient<Database>; member: Member }) {
   const [members, setMembers] = useState<Member[]>([])
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('all')
@@ -54,7 +53,6 @@ export function Directory({ client, member: current, refreshMember }: { client: 
   const visible = members.filter(member => `${member.first_name} ${member.last_name} ${member.email}`.toLocaleLowerCase('fr').includes(search.trim().toLocaleLowerCase('fr')) && (role === 'all' || member.role === role) && (caci === 'all' || caciStatus(member.caci_expiry_date) === caci) && (active === 'all' || (member.disabled_at ? 'inactive' : 'active') === active))
   return <section className="card directory"><PageHeading eyebrow="Administration" title="Gestion des adhérents" actions={president && <button className="primary" aria-expanded={create} onClick={() => {protectScope('member-create',()=>{setCreate(!create);setMessage('')})}}>Ajouter un adhérent</button>}><p>Un annuaire partagé pour les informations du club{president ? ', les droits et les accès.' : '.'}</p></PageHeading>
     {create && president && <MemberCreate client={client} onCancel={() => { setCreate(false); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} onSaved={async () => { await load(); setCreate(false); setSearch(''); setRole('all'); setCaci('all'); setActive('active'); setMessage('Adhérent créé. Il peut demander son lien de connexion.'); document.querySelector<HTMLButtonElement>('.directory .page-heading button')?.focus() }} />}
-    {president && <PresidencyTransfer client={client} current={current} members={members} onReload={load} onStart={start=>protectScope('member-create',()=>{setCreate(false);start()})} onAccessChanged={async()=>{setError('Vérifiez les rôles dans l’annuaire avant toute nouvelle tentative de transfert.');await refreshMember()}} onTransferred={async successor=>{setMessage(`Présidence transférée à ${successor.first_name} ${successor.last_name}. Vous êtes désormais administrateur.`);await refreshMember();await load();accessFilter.current?.focus()}} />}
     <div className="directory-filters"><label className="directory-search">Rechercher un adhérent<input type="search" placeholder="Nom ou email" value={search} onChange={event => setSearch(event.target.value)} /></label><label>Rôle<select value={role} onChange={event => setRole(event.target.value)}><option value="all">Tous les rôles</option>{Object.entries(roleLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>CACI<select value={caci} onChange={event => setCaci(event.target.value)}><option value="all">Tous les CACI</option>{Object.entries(caciLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label className="directory-access">Accès<select ref={accessFilter} value={active} onChange={event => setActive(event.target.value)}><option value="active">Actifs</option><option value="inactive">Inactifs</option><option value="all">Tous les accès</option></select></label></div>
     <div className="directory-results"><p className="muted" role="status">{visible.length} adhérent{visible.length !== 1 && 's'} affiché{visible.length !== 1 && 's'}{message && ` · ${message}`}</p><button className="secondary" type="button" onClick={resetFilters}>Réinitialiser les filtres</button></div>{error && !action && <p role="alert">{error}</p>}
     {!visible.length && <p className="empty-state">Aucun adhérent ne correspond à ces critères.</p>}

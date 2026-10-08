@@ -55,7 +55,7 @@ Le hook local est déclaré dans `supabase/config.toml`; redémarrer la stack ap
 
 ## Transférer la présidence
 
-Dans **Administration → Présidence du club · transfert exceptionnel**, déplier la section dédiée, puis le président clique sur le bouton rouge **Transférer la présidence**. Choisir un autre adhérent actif, vérifier son nom et son email, recopier cet email et cocher la reconnaissance des droits perdus. Une création non enregistrée doit d’abord être conservée ou explicitement abandonnée. Annuler/Escape ne modifie rien et rend le focus au bouton.
+Dans **Mon profil (en bas de page) → Présidence du club · transfert exceptionnel**, déplier la section dédiée, puis le président clique sur le bouton rouge **Transférer la présidence**. Choisir un autre adhérent actif, vérifier son nom et son email, recopier cet email et cocher la reconnaissance des droits perdus. Les modifications personnelles non enregistrées restent conservées pendant le transfert. Annuler/Escape ne modifie rien et rend le focus au bouton.
 
 Après confirmation, le successeur est l’unique président et l’ancien président reste administrateur : il conserve les fonctions opérationnelles mais perd création, suspension/réactivation et gestion des droits. Le serveur applique immédiatement ces règles, sans déconnexion ni nouveau magic link. Pour revenir en arrière, le nouveau président peut retransférer ; `npm run president:manage -- recover …` reste le recours opérateur documenté. Aucun email n’est envoyé par le transfert.
 

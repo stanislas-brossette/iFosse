@@ -46,3 +46,18 @@ it('attaches a known name validation error and preserves all other input',async(
  const alert=screen.getByRole('alert');expect(field('Prénom').getAttribute('aria-describedby')).toBe(alert.id);expect(field('Prénom').getAttribute('aria-invalid')).toBe('true')
  expect(field('Téléphone').value).toBe('0600000000');expect(rpc).not.toHaveBeenCalled()
 })
+
+it('places the collapsed handover last in the President profile and removes it for Admin/Member',async()=>{
+ const query={select:()=>query,order:vi.fn(async()=>({data:[],error:null}))}
+ const privileged={from:()=>query} as unknown as SupabaseClient<Database>
+ const view=render(<Profile client={privileged} member={{...initial,role:'president'}} refresh={async()=>{}} />)
+ await waitFor(()=>expect(query.order).toHaveBeenCalled())
+ const section=screen.getByText('Présidence du club · transfert exceptionnel').closest('details')!
+ expect(section.open).toBe(false)
+ expect(section.closest('.profile-card')!.lastElementChild!.contains(section)).toBe(true)
+ expect(section.compareDocumentPosition(screen.getByText('Mettre à jour mon CACI')) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+ view.rerender(<Profile client={privileged} member={{...initial,role:'admin'}} refresh={async()=>{}} />)
+ expect(screen.queryByText('Présidence du club · transfert exceptionnel')).toBeNull()
+ view.rerender(<Profile client={privileged} member={initial} refresh={async()=>{}} />)
+ expect(screen.queryByText('Présidence du club · transfert exceptionnel')).toBeNull()
+})
