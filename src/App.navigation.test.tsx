@@ -22,7 +22,11 @@ async function setup() {
   const query={select:()=>query,eq:()=>query,maybeSingle:async()=>({data:{id,auth_user_id:id,first_name:'Anne',last_name:'Fictif',role:'member',disabled_at:null} as Member,error:null})}
   const signOut=vi.fn(async()=>{notify('SIGNED_OUT',null);return {error:null}})
   dependencies.client={auth:{getSession:async()=>({data:{session:session()},error:null}),onAuthStateChange:(callback:typeof notify)=>{notify=callback;return {data:{subscription:{unsubscribe:vi.fn()}}}},signOut},from:()=>query} as unknown as SupabaseClient<Database>
-  render(<App />)
+  // Seeing the heading is not a barrier for passive startup effects. Flush
+  // the mocked Auth/profile reads and root -> /seances normalization before
+  // interacting, otherwise initialization can race the identity click.
+  await act(async()=>{render(<App />)})
+  expect(window.location.pathname).toBe('/seances')
   await screen.findByRole('heading',{name:'Les séances'})
   return {signOut,signIn:async(next='a')=>{id=next;await act(async()=>notify('SIGNED_IN',session()));await screen.findByRole('button',{name:'Ouvrir mon profil'})}}
 }
