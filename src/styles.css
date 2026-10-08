@@ -380,3 +380,14 @@ summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .preparation-details summary { padding:0; min-height:44px; }
 @media (max-width:700px) { .selection-management .member-list > .management-row { grid-template-columns:minmax(0,1fr); } }
 .management-row > [role=status], .management-row > [role=alert], .palanquee-editor .member-list > li > [role=status], .attendance .member-list > li > [role=status] { grid-column:1/-1; width:100%; margin:0; }
+
+.field-hint {font-weight:400;color:var(--muted)}
+.directory-results {display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin:1rem 0}
+.directory-results p {margin:0}
+.attendance-batch {border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0;background:var(--teal-tint)}
+.attendance-batch p {font-size:13px;margin-bottom:0}
+.batch-preview-people {max-height:min(35dvh,320px);overflow:auto;padding:12px 12px 12px 30px;border:1px solid var(--line);border-radius:10px}
+.batch-preview-people li {margin:6px 0}
+dialog {max-height:calc(100dvh - 32px);overflow:auto}
+.login .actions .secondary {background:white;color:var(--ink);border-color:var(--line)}
+.login .actions .secondary:hover:not(:disabled) {background:var(--bg);color:var(--ink)}

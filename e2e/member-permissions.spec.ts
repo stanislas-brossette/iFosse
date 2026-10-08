@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { formatDate } from '../src/lib/dates.js'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
 
 test('admin to member switch removes private UI and regular member API cannot edit CACI or browse profiles', async ({ page }) => {
@@ -18,7 +19,7 @@ test('admin to member switch removes private UI and regular member API cannot ed
     await expect(page.getByRole('button', { name: 'Administration', exact: true })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Gestion des adhérents' })).toHaveCount(0)
     await page.getByRole('button', { name: 'Mon profil', exact: true }).click()
-    await expect(page.getByText('valable jusqu’au 2027-12-31', { exact: false })).toBeVisible()
+    await expect(page.getByText(`valable jusqu’au ${formatDate('2027-12-31')}`, { exact: false })).toBeVisible()
     await expect(page.getByLabel('Fin de validité CACI')).toHaveCount(0)
     for (const id of [member.memberId, admin.memberId]) {
       expect((await m.rpc('set_member_caci', { p_member_id: id, p_expiry_date: '2030-01-01' })).error?.code).toBe('42501')

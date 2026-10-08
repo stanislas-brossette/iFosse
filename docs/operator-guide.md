@@ -140,3 +140,18 @@ Les détails opérationnels/paiement sont dépliables par personne. Les filtres 
 Copier l’URL de la séance conserve l’onglet. Retour/Avancer et rechargement restituent cette URL. Les paramètres ne contiennent aucune identité ni jeton. Sur ce navigateur, une demande de connexion depuis un lien de séance propose la reprise après confirmation ; dans un autre navigateur, le calendrier s’ouvre. Les contrôles privés restent réservés aux rôles autorisés.
 
 Les saisies locales sont conservées entre Profil/Administration/Séances lorsqu’elles restent montées. Lorsqu’une sortie les détruirait, choisissez Rester ou Quitter sans enregistrer. Le navigateur avertit aussi avant un rechargement avec saisie en cours. Les brouillons déjà enregistrés en base restent durables. Abandonner un brouillon nécessite confirmation et ne touche pas la publication.
+
+### Aides de saisie et présences en lot (#53)
+
+Le profil propose des niveaux à titre indicatif, en laissant la saisie libre. Les champs facultatifs sont signalés et les dates CACI lisibles en français ; les inputs date restent ISO. Dans l’annuaire, « Réinitialiser les filtres » revient aux adhérents actifs sans effacer une création ou une modification de CACI en cours.
+
+Après demande de connexion, « Consultez votre messagerie » rappelle l’adresse et les courriers indésirables. « Corriger mon adresse » conserve l’adresse éditable ; « Demander un nouveau lien » fait une seule demande explicite. Une limitation fournisseur affiche une invitation à patienter, sans promettre un envoi ou une durée non fournie. La formulation « Si cette adresse est connue du club… » est conservée.
+
+Pour un bilan ouvert après la fin de séance :
+
+1. Cliquer « Marquer les confirmés comme ayant plongé ».
+2. Vérifier le nombre et les noms proposés. Annuler/Escape ne modifie aucune présence.
+3. Confirmer. Le serveur ne renseigne que les confirmés effectifs encore À renseigner et conserve les autres saisies/remplacements. En cas de modification concurrente, relire le nouveau récapitulatif puis confirmer à nouveau.
+4. Vérifier/corriger individuellement les absents et les remplacements. Clôturer séparément après contrôle de la capacité ; aucun compteur n’augmente tant que le bilan reste ouvert.
+
+La migration `20261008070000_attendance_batch.sql` doit être appliquée au projet Supabase de staging avant cette recette hébergée. Sans les deux RPC, l’action indique qu’une mise à jour serveur est nécessaire. Aucun changement d’Auth, RLS, signup, seed ou configuration Netlify n’est requis. Cette livraison valide le fonctionnement local ; elle n’applique aucune migration hébergée et ne vaut pas validation du pilote organisateur.

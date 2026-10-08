@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { caciStatus, todayParis } from './dates'
 it('uses the Paris calendar day even when UTC is the previous day', () => {
   expect(todayParis(new Date('2026-10-01T22:30:00Z'))).toBe('2026-10-02')
@@ -21,4 +21,15 @@ it('keeps August and September in their respective seasons with exclusive end bo
   expect(seasonOf('2027-09-01')).toBe(2027)
   expect(seasonOf('2028-02-29')).toBe(2027)
   expect(seasonBounds(2026)).toEqual({ start: '2026-09-01', end: '2027-09-01' })
+})
+import {formatDate} from './dates'
+it('renders identical French calendar dates in winter/summer across extreme browser timezones',()=>{
+  try {
+    for(const zone of ['UTC','Pacific/Kiritimati','America/Adak']){
+      vi.stubEnv('TZ',zone)
+      expect(formatDate('2026-01-15')).toBe('15 janvier 2026')
+      expect(formatDate('2026-07-15')).toBe('15 juillet 2026')
+      expect(formatDate('2028-02-29')).toBe('29 février 2028')
+    }
+  } finally {vi.unstubAllEnvs()}
 })

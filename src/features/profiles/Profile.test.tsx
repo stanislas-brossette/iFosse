@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../../lib/database.types'
@@ -27,4 +27,22 @@ describe('profile defaults changed by an explicit session opt-in', () => {
     expect(field('Places passagers habituelles').value).toBe('5')
     expect(field('Point de rendez-vous habituel').value).toBe('Brouillon privé')
   })
+})
+import {vi} from 'vitest'
+it('formats CACI and suggests levels without constraining free labels or changing date storage',async()=>{
+ const rpc=vi.fn(async()=>({error:null}))
+ render(<Profile client={{rpc} as unknown as SupabaseClient<Database>} member={{...initial,caci_expiry_date:'2026-10-15'}} refresh={async()=>{}} />)
+ expect(screen.getByText(/valable jusqu’au 15 octobre 2026/)).toBeTruthy()
+ expect(field('Niveau actuel').getAttribute('list')).toBe('profile-levels');expect(document.querySelector('#profile-levels option[value=N2]')).toBeTruthy()
+ fireEvent.change(field('Niveau actuel'),{target:{value:'Qualification libre fictive'}})
+ fireEvent.click(screen.getByRole('button',{name:'Enregistrer mon profil'}))
+ await waitFor(()=>expect(rpc).toHaveBeenCalledWith('update_own_profile',expect.objectContaining({p_current_level:'Qualification libre fictive'})))
+ expect(field('Niveau actuel').value).toBe('Qualification libre fictive')
+})
+it('attaches a known name validation error and preserves all other input',async()=>{
+ const rpc=vi.fn();render(<Profile client={{rpc} as unknown as SupabaseClient<Database>} member={initial} refresh={async()=>{}} />)
+ fireEvent.change(field('Prénom'),{target:{value:'   '}});fireEvent.change(field('Téléphone'),{target:{value:'0600000000'}})
+ fireEvent.submit(screen.getByRole('button',{name:'Enregistrer mon profil'}).closest('form')!)
+ const alert=screen.getByRole('alert');expect(field('Prénom').getAttribute('aria-describedby')).toBe(alert.id);expect(field('Prénom').getAttribute('aria-invalid')).toBe('true')
+ expect(field('Téléphone').value).toBe('0600000000');expect(rpc).not.toHaveBeenCalled()
 })
