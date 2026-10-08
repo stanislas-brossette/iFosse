@@ -104,6 +104,44 @@ isOneToOne: true
       referencedColumns: ["session_id","member_id"]
     }
                   ]
+                },"member_notification_settings": {
+                  Row: {
+                    "enabled": boolean,"environment": string | null,"project_ref": string | null,"singleton": boolean,"staging_recipients": (string)[]
+                  }
+                  Insert: {
+                    "enabled"?: boolean,"environment"?: string | null,"project_ref"?: string | null,"singleton"?: boolean,"staging_recipients"?: (string)[]
+                  }
+                  Update: {
+                    "enabled"?: boolean,"environment"?: string | null,"project_ref"?: string | null,"singleton"?: boolean,"staging_recipients"?: (string)[]
+                  }
+                  Relationships: [
+
+                  ]
+                },"member_notifications": {
+                  Row: {
+                    "attempts": number,"audit_id": string,"first_name": string,"id": string,"kind": string,"last_code": string | null,"lease_token": string | null,"lease_until": string | null,"member_id": string | null,"next_attempt_at": string,"occurred_at": string,"provider_message_id": string | null,"recipient_email": string,"status": string,"updated_at": string
+                  }
+                  Insert: {
+                    "attempts"?: number,"audit_id": string,"first_name": string,"id"?: string,"kind": string,"last_code"?: string | null,"lease_token"?: string | null,"lease_until"?: string | null,"member_id"?: string | null,"next_attempt_at"?: string,"occurred_at": string,"provider_message_id"?: string | null,"recipient_email": string,"status": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "attempts"?: number,"audit_id"?: string,"first_name"?: string,"id"?: string,"kind"?: string,"last_code"?: string | null,"lease_token"?: string | null,"lease_until"?: string | null,"member_id"?: string | null,"next_attempt_at"?: string,"occurred_at"?: string,"provider_message_id"?: string | null,"recipient_email"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "member_notifications_audit_id_fkey"
+      columns: ["audit_id"]
+isOneToOne: false
+      referencedRelation: "audit_events"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "member_notifications_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"members": {
                   Row: {
                     "auth_user_id": string | null,"caci_expiry_date": string | null,"created_at": string,"current_level": string,"disabled_at": string | null,"email": string,"first_name": string,"has_usual_car": boolean,"id": string,"last_name": string,"phone": string | null,"preparing_level": string | null,"role": Database["public"]['Enums']["member_role"],"updated_at": string,"usual_meeting_point": string,"usual_passenger_seats": number
@@ -407,8 +445,19 @@ isOneToOne: false
 "can_read_session_participant":
 { Args: { "p_member_id": string,"p_session_id": string }; Returns: boolean
                            },
+"claim_member_notifications":
+{ Args: { "p_environment": string,"p_limit"?: number,"p_project_ref": string }; Returns: {
+              "first_name": string,"id": string,"kind": string,"lease_token": string,"occurred_at": string,"recipient_email": string
+            }[]
+                           },
 "close_session_bilan":
 { Args: { "p_session_id": string }; Returns: undefined
+                           },
+"complete_member_notification":
+{ Args: { "p_code": string,"p_id": string,"p_lease_token": string,"p_message_id"?: string,"p_outcome": string }; Returns: boolean
+                           },
+"configure_member_notifications":
+{ Args: { "p_enabled": boolean,"p_environment": string,"p_project_ref": string,"p_staging_recipients": (string)[] }; Returns: undefined
                            },
 "create_member_from_identity":
 { Args: { "p_auth_user_id": string,"p_first_name": string,"p_last_name": string,"p_request_id": string }; Returns: string
@@ -432,6 +481,9 @@ isOneToOne: false
                            },
 "discard_selection_draft":
 { Args: { "p_session_id": string }; Returns: undefined
+                           },
+"enqueue_member_notification":
+{ Args: { "p_event": Database["public"]['Tables']["audit_events"]['Row'],"p_kind": string,"p_member_id": string }; Returns: undefined
                            },
 "ensure_palanquee_draft":
 { Args: { "p_session_id": string }; Returns: undefined
@@ -533,6 +585,9 @@ isOneToOne: false
 "member_access_token_hook":
 { Args: { "event": Json }; Returns: Json
                            },
+"member_notification_status":
+{ Args: { "p_event_type": string,"p_member_id": string }; Returns: string
+                           },
 "offer_car":
 { Args: { "p_departure_time"?: string,"p_meeting_point": string,"p_note": string,"p_passenger_capacity": number,"p_session_id": string }; Returns: string
                            },
@@ -553,6 +608,9 @@ isOneToOne: false
                            },
 "reopen_session_bilan":
 { Args: { "p_session_id": string }; Returns: undefined
+                           },
+"retry_member_notification":
+{ Args: { "p_id": string,"p_reason": string,"p_verified_not_accepted": boolean }; Returns: undefined
                            },
 "save_own_car_defaults":
 { Args: { "p_meeting_point": string,"p_passenger_seats": number }; Returns: undefined

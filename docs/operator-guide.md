@@ -159,3 +159,8 @@ La migration `20261008070000_attendance_batch.sql` doit être appliquée au proj
 #### Transfert de présidence depuis l’interface
 
 Le président dispose d’un parcours distinct en bas de Mon profil : successeur actif, nom/email à vérifier, email à recopier, droits perdus à reconnaître, puis confirmation. L’ancien président reste admin. Une fiche modifiée demande actualisation/reconfirmation ; un résultat réseau ambigu demande de vérifier les rôles. Retour possible par le nouveau président ou récupération opérateur existante. Appliquer `20261008110000_presidency_transfer.sql` en staging avant recette ; aucune modification hébergée n’est réalisée par la validation locale. [Parcours et protections](member-management.md#transférer-la-présidence).
+
+
+### Notifications de compte : activation séparée
+
+Appliquer `20261008150000_member_notifications.sql`, déployer `member-notifications` et configurer secrets Edge/Brevo, allowlist staging exacte et cron/Vault. `npm run staging:notifications` est un dry-run ; `-- --apply` active la configuration DB staging seulement, `-- --disable` l’arrête. Aucun secret Netlify/frontend, email synthétique, backfill ou activation production. [Procédure complète et revue des résultats incertains](member-notifications.md).

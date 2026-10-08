@@ -7,6 +7,8 @@ import { useUnsavedChanges } from '../../lib/navigation'
 import { businessError } from '../../lib/businessErrors'
 import { levelSuggestions } from '../../lib/levels'
 import { PageHeading } from '../../components/Visual'
+import { NotificationFeedback } from './NotificationFeedback'
+import type { NotificationReceipt } from './NotificationFeedback'
 import { ProfilePresidency } from './ProfilePresidency'
 import { caciLabels, caciStatus, formatDate } from '../../lib/dates'
 
@@ -45,6 +47,7 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
   const [failed,setFailed]=useState(false)
   const baseline = useRef(JSON.stringify(values))
   const guard = useUnsavedChanges(JSON.stringify(values) !== baseline.current)
+  const [notification,setNotification]=useState<NotificationReceipt|null>(null)
   const carDefaultsDirty = useRef(false)
   const saveButton = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -68,6 +71,7 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
       </fieldset><button ref={saveButton} type="submit" disabled={busy}>Enregistrer mon profil</button>{message && <p id={errorId} role={failed?'alert':'status'}>{message}</p>}
     </form>
     {member.role !== 'member' && <div className="mt"><h3>Mettre à jour mon CACI</h3><CaciEditor client={client} member={member} onRefresh={refresh} /></div>}
-    {member.role === 'president' && <ProfilePresidency client={client} member={member} refresh={refresh} onTransferred={async successor=>{setFailed(false);setMessage(`Présidence transférée à ${successor.first_name} ${successor.last_name}. Vous êtes désormais administrateur.`);await refresh();saveButton.current?.focus()}} />}
+    {member.role === 'president' && <ProfilePresidency client={client} member={member} refresh={refresh} onTransferred={async successor=>{setNotification({memberId:successor.id,eventType:'presidency_transferred'});setFailed(false);setMessage(`Présidence transférée à ${successor.first_name} ${successor.last_name}. Vous êtes désormais administrateur.`);await refresh();saveButton.current?.focus()}} />}
+    {notification && <NotificationFeedback client={client} receipt={notification} />}
   </section>
 }
