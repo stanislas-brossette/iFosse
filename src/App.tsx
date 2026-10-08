@@ -35,7 +35,7 @@ function MemberApp({ client, member, refresh }: { client: SupabaseClient<Databas
     <div className="app-content">
       <div hidden={active !== 'sessions'}><Sessions client={client} member={member} refreshMember={refresh} route={active === 'sessions' ? route : allowedRoute(lastSessionRoute,member.role !== 'member')} onNavigate={navigateRoute} /></div>
       <div hidden={active !== 'profile'}><Profile client={client} member={member} refresh={refresh} /></div>
-      {member.role !== 'member' && <div hidden={active !== 'admin'}><Directory client={client} member={member} /></div>}
+      {member.role !== 'member' && <div hidden={active !== 'admin'}><Directory client={client} member={member} refreshMember={refresh} /></div>}
       <footer className="app-footer">APSAP · Les fosses, simplement.</footer>
     </div>
   </div>

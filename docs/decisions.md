@@ -294,3 +294,10 @@ The administrator checklist uses one consistent selection basis for both the par
 **Decision (explicit member-management request):** one Admin/President directory replaces the duplicated rights list. Only the current President can create an ordinary member or suspend/reactivate access. Creation uses a small Supabase Edge Function for Auth Admin, followed by a caller-authorized transactional SQL finalizer reusing operator provisioning. No passwords, public signup or invitations are introduced; operator bootstrap/recovery remains available.
 
 Suspension is `members.disabled_at`, enforced both by current-member RLS/RPC authorization and a required Custom Access Token Auth hook. History, operational session state, roles and seed ownership remain intact; organizers handle any future-session adjustments explicitly. Reactivation clears the suspension, without removing separate operator Auth bans. An inactive profile cannot become President. General hard deletion is excluded, including test accounts, pending a separate verified history/referential-integrity procedure. See [deployment and recovery instructions](member-management.md).
+
+
+## D029 — Transfert explicite de la présidence
+
+**Decision (demande explicite du propriétaire) :** le président courant peut transférer la présidence à un autre adhérent ou admin actif disposant d’une identité Auth confirmée et utilisable. L’ancien président devient administrateur, conformément à la RPC existante ; l’unicité de la présidence est conservée. Ce parcours dédié ne permet pas de retirer simplement le rôle depuis l’éditeur ordinaire.
+
+L’interface distingue cette action exceptionnelle : identité du successeur, avertissement sur les droits perdus, email à recopier et reconnaissance explicite avant confirmation. Annuler/Escape ne fait rien. Une fiche modifiée demande actualisation/reconfirmation. Le serveur réautorise après verrou, vérifie disponibilité et identité, effectue les deux changements et leur audit atomiquement. Le retour nécessite un nouveau transfert par le nouveau président ou la récupération opérateur existante. Pas de nouveaux mots de passe, emails, signup ou secrets frontend.

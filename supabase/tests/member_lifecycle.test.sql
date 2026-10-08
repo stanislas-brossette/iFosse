@@ -80,7 +80,7 @@ select lives_ok($$select public.set_member_active((select id from lifecycle_peop
 select lives_ok($$select public.set_member_active((select id from lifecycle_people where label='member'),true)$$,'Reactivation idempotent');
 select is((select count(*) from public.audit_events where event_type='member_reactivated' and target_member_id=(select id from lifecycle_people where label='member')),1::bigint,'Reactivation audited');
 select public.set_member_active((select id from lifecycle_people where label='admin'),false);
-select throws_ok($$select public.transfer_presidency((select id from lifecycle_people where label='admin'))$$,'23514',null,'Cannot transfer Presidency to suspended account');
+select throws_ok($$select public.transfer_presidency((select id from lifecycle_people where label='admin'))$$,'22023','SUCCESSOR_UNAVAILABLE','Cannot transfer Presidency to suspended account');
 select ok(public.is_president(),'Rejected transfer preserves current President');
 select throws_ok($$select public.set_member_active((select id from lifecycle_people where label='member'),null)$$,'22023',null,'Null access state rejected');
 select set_config('request.jwt.claim.sub','06000000-0000-4000-8000-000000000002',true);
