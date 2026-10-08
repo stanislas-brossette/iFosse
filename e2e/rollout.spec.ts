@@ -47,6 +47,7 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
     await page.getByRole('tab', { name: 'Gestion', exact: true }).click()
     for (const fixture of [admin, member]) {
       await page.getByRole('combobox', { name: `Sélection de ${fixture.firstName} Fictif`, exact: true }).selectOption('selected')
+      await page.getByText(`Détails et paiement de ${fixture.firstName} Fictif`, { exact: true }).click()
       await page.getByRole('combobox', { name: `Paiement de ${fixture.firstName} Fictif`, exact: true }).selectOption('paid')
     }
     await page.getByRole('button', { name: 'Publier la sélection', exact: true }).click()

@@ -442,3 +442,13 @@ Un bouton Gestion explicite reste réservé aux Admin/Président, sans changer
 la rubrique personnelle ouverte par défaut. Hors participation, la place
 publiée reste visible et la répétition réponse/trajet tient sur une ligne compacte
 qui revient à la ligne si nécessaire.
+
+### Comparaison organisateur dans Gestion (#51)
+
+La sélection de travail conserve les groupes Retenu dans le brouillon / En attente / Non retenu. Les niveaux et le compteur de présences effectives dans les bilans clôturés de la saison de la séance sont visibles, avec tri par nom ou compteur. Les compteurs indisponibles restent explicitement inconnus et viennent après les compteurs connus dans les deux sens ; les égalités sont départagées par nom, prénom, identifiant. Le tri Participants reste indépendant.
+
+Les filtres de Gestion se combinent avec la recherche par ET. CACI à vérifier inclut absent, expiré et proche d’expiration au jour de la séance ; Transport à organiser inclut non résolu et provisoire. À régler utilise le readiness paiement canonique. En attente utilise le choix du brouillon. Tous retire les filtres opérationnels ; Réinitialiser retire aussi la recherche. Aucun filtre ne modifie les données.
+
+La base du récapitulatif opérationnel est indiquée globalement. Les informations et le paiement se déplient par personne ; le calcul CACI/transport/conducteur reste celui de la RPC canonique D027. Une décision privée n’est jamais présentée comme une confirmation publiée.
+
+Avant publication, une comparaison nominative complète, indépendante des filtres, montre ajoutés/retirés des confirmés et autres changements. La première publication est identifiée. Le serveur revérifie une empreinte de la publication effective, du brouillon, des réponses et de la capacité sous le verrou de séance avant d’appeler la publication transactionnelle existante. Toute modification pertinente impose un nouveau récapitulatif et une reconfirmation. Paiements et trajets, sans effet sur le contenu de la sélection, n’invalident pas cette comparaison.

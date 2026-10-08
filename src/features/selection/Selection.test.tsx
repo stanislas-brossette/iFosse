@@ -30,3 +30,20 @@ it('shows a compact labelled control, applies default/name/reverse and restores 
   expect((screen.getByRole('combobox',{name:'Trier par'}) as HTMLSelectElement).value).toBe('name')
   expect(screen.getByRole('button',{name:'Ordre décroissant : passer à l’ordre croissant'})).toBeTruthy()
 })
+
+it('keeps unavailable attendance counts unknown and management tools private', async () => {
+  const people = [{ member_id:'a',first_name:'Anne',last_name:'Fictif',rsvp:'yes',state:'pending',current_level:'N2',publication_version:0 }]
+  const result = { data: [], error: null }
+  const query = Object.assign(Promise.resolve(result), { select:()=>query,eq:()=>query,order:()=>query,limit:()=>query,maybeSingle:async()=>({data:null}) })
+  const client = { rpc:vi.fn(async(name:string)=>name==='get_current_selection' ? {data:people} : name==='get_season_counts' ? {data:null,error:{code:'NETWORK'}} : {data:[]}),from:()=>query } as unknown as SupabaseClient<Database>
+  const view=render(<Selection client={client} member={{id:'a',role:'admin'} as Member} session={{id:'session',date:'2026-10-10',capacity:20} as Session} manage />)
+  await screen.findByText('Indisponible',{exact:true})
+  expect(screen.getByText(/Compteurs indisponibles/)).toBeTruthy()
+  expect(screen.getByRole('combobox',{name:'Trier la sélection'})).toBeTruthy()
+  expect(screen.getByRole('option',{name:'Retenu dans le brouillon'})).toBeTruthy()
+  view.unmount()
+  render(<Selection client={client} member={{id:'a',role:'member'} as Member} session={{id:'session',date:'2026-10-10',capacity:20} as Session} manage={false} participants />)
+  await screen.findByText('Anne Fictif · N2')
+  expect(screen.queryByRole('combobox',{name:'Trier la sélection'})).toBeNull()
+  expect(screen.queryByText('Retenu dans le brouillon')).toBeNull()
+})

@@ -350,3 +350,7 @@ sinon il vaut NULL, sans modification de l’historique enregistré. Le type Rea
 corrige explicitement cette nullabilité omise par le générateur de types RPC.
 La migration remplace la signature de retour de la fonction, sans modifier de
 table, de politique RLS ou de règle transactionnelle.
+
+#### Comparaison de publication (#51)
+
+Migration `20261007210000_selection_comparison.sql` : deux RPC admin-only, `get_selection_publish_preview(uuid)` (JSONB, lecture sans création de brouillon) et `publish_selection_checked(uuid,text)`. La première retourne les états effectifs publics et candidats privés avec noms, version et capacité ; elle est refusée aux membres. La seconde prend le même verrou de séance, revérifie l’empreinte et délègue à `publish_selection` (audit, capacité, snapshots immuables). Un écart retourne `40001 / SELECTION_PREVIEW_STALE` avant écriture. Aucun changement de table, RLS, enum ou architecture ; l’ancienne RPC reste disponible pour les opérateurs/fixtures existants.

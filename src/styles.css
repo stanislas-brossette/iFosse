@@ -353,3 +353,29 @@ summary:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .compact-facts p { margin: 0; }
 .compact-facts .chip { flex-basis: 100%; }
 .auth-toolbar > .identity-link { justify-content: flex-start; }
+
+/* Organizer comparison: concise rows; secondary operational details on demand. */
+.management-tools { display:flex; gap:12px; align-items:end; flex-wrap:wrap; margin:12px 0; }
+.management-tools label { min-width:180px; }
+.management-filters { display:flex; align-items:center; gap:10px 16px; flex-wrap:wrap; border:1px solid var(--line); border-radius:12px; padding:12px; }
+.management-filters label { display:flex; align-items:center; gap:8px; min-height:44px; margin:0; }
+.management-filters input { width:20px; height:20px; min-height:20px; margin:0; }
+.filter-results { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.selection-management .management-row { padding:14px 0; align-items:start; gap:18px; }
+.compact-member-meta { margin:5px 0; }
+.readiness-indicators { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+.readiness-indicators .chip { white-space:normal; }
+.preparation-details summary { min-height:44px; display:flex; align-items:center; color:var(--teal-dark); cursor:pointer; font-weight:600; }
+.preparation-details .readiness-details { background:var(--bg); border-radius:12px; padding:12px; }
+.publication-preview { background:var(--teal-tint); border-radius:14px; padding:18px; }
+.publication-preview h5 { font-size:1rem; margin:12px 0 6px; }
+@media (max-width:700px) {
+  .selection-management .management-row { display:block; }
+  .selection-management .management-row > label { margin-top:10px; }
+  .management-tools { align-items:center; }
+  .management-tools label { flex:1; min-width:150px; }
+}
+.selection-management .member-list > .management-row { padding:12px 0; gap:16px; grid-template-columns:minmax(0,1fr) 260px; }
+.preparation-details { padding:0; border:0; background:transparent; }
+.preparation-details summary { padding:0; min-height:44px; }
+@media (max-width:700px) { .selection-management .member-list > .management-row { grid-template-columns:minmax(0,1fr); } }
