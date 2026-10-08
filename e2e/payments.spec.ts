@@ -29,7 +29,10 @@ test('administrator changes private payment and live readiness while member only
     }
     await expect(other.getByText('Mon paiement : À régler')).toBeVisible()
     await page.getByRole('tab', { name: 'Gestion', exact: true }).click()
-    await page.getByRole('combobox', { name: `Sélection de ${member.firstName} Fictif`, exact: true }).selectOption('selected')
+    const selection = page.getByRole('combobox', { name: `Sélection de ${member.firstName} Fictif`, exact: true })
+    await selection.selectOption('selected')
+    await expect(selection).toHaveValue('selected')
+    await expect(selection).toBeEnabled()
     await page.getByText(`Détails et paiement de ${member.firstName} Fictif`, { exact: true }).click()
     const summary = page.locator('.readiness').filter({ has: page.getByRole('combobox', { name: `Paiement de ${member.firstName} Fictif`, exact: true }) })
     await expect(summary.getByText('3/4 points prêts', { exact: true })).toBeVisible()
