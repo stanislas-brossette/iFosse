@@ -171,3 +171,7 @@ Default is a read-only target/ownership preflight and plan. Apply sends no email
 ## Member management
 
 Administration now uses one searchable directory. Admins maintain CACI; the President can add ordinary members (normal magic-link login), manage admin rights, and deactivate/reactivate access without deleting history. Operator bootstrap/recovery remains available. [Deployment and security guide](docs/member-management.md) documents the required staging Edge Function and Auth token hook; neither is installed by a Netlify frontend deploy. Hard deletion is intentionally excluded.
+
+## Installer iFosse sur téléphone
+
+Installation facultative, sans Play Store/App Store : Chrome Android peut proposer **Installer iFosse** dans Mon profil ; Safari iPhone/iPad utilise **Partager → Sur l’écran d’accueil**. Internet reste nécessaire. Cette V1 ne possède aucun service worker ni cache de données métier ; la connexion utilise les liens habituels. Pour les tests quotidiens, installer depuis l’adresse staging principale stable. [Guide d’installation, connexion en mode autonome et mises à jour](docs/pwa.md).

@@ -97,3 +97,7 @@ The SDK persists and refreshes the session across normal browser restarts. “Se
 No hosted deliverability, production deployment or organizer trial is claimed by local tests. These remain launch gates in #18.
 
 References: [Supabase passwordless email authentication](https://supabase.com/docs/guides/auth/auth-email-passwordless), [email templates and scanner handling](https://supabase.com/docs/guides/auth/auth-email-templates), [database RLS](https://supabase.com/docs/guides/database/postgres/row-level-security).
+
+## Application installée sur téléphone
+
+L’installation PWA garde les mêmes origines autorisées et le callback `/auth/confirm` ; aucun redirect Supabase supplémentaire n’est nécessaire. Safari et une application ajoutée à l’accueil peuvent disposer de sessions distinctes. Depuis l’écran d’attente du lien en mode autonome, une aide facultative permet de coller le lien original de la même origine, dans un champ masqué, puis de confirmer avec le mécanisme `verifyOtp` existant. Aucune URL externe n’est ouverte ni acceptée comme redirect, aucun nouveau stockage/échange de tokens, signup ou mot de passe. Le champ est vidé et les mêmes validations de token/type restent applicables. Voir [parcours, limites et recette réelle](pwa.md).

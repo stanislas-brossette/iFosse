@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#087f82"/>
+  <!-- Existing iFosse waves from src/components/Visual.tsx, centered within
+       the maskable safe circle. Opaque background also suits Apple touch icons. -->
+  <g transform="translate(96 96) scale(13.3333333333)" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10c3-3 6-3 9 0s6 3 9 0M3 16c3-3 6-3 9 0s6 3 9 0M15 4h.01"/>
+  </g>
+</svg>

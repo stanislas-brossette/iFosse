@@ -7,6 +7,7 @@ import { useUnsavedChanges } from '../../lib/navigation'
 import { businessError } from '../../lib/businessErrors'
 import { levelSuggestions } from '../../lib/levels'
 import { PageHeading } from '../../components/Visual'
+import { InstallApp } from '../install/InstallApp'
 import { ProfilePresidency } from './ProfilePresidency'
 import { caciLabels, caciStatus, formatDate } from '../../lib/dates'
 
@@ -68,6 +69,7 @@ export function Profile({ client, member, refresh }: { client: SupabaseClient<Da
       </fieldset><button ref={saveButton} type="submit" disabled={busy}>Enregistrer mon profil</button>{message && <p id={errorId} role={failed?'alert':'status'}>{message}</p>}
     </form>
     {member.role !== 'member' && <div className="mt"><h3>Mettre à jour mon CACI</h3><CaciEditor client={client} member={member} onRefresh={refresh} /></div>}
+    <InstallApp />
     {member.role === 'president' && <ProfilePresidency client={client} member={member} refresh={refresh} onTransferred={async successor=>{setFailed(false);setMessage(`Présidence transférée à ${successor.first_name} ${successor.last_name}. Vous êtes désormais administrateur.`);await refresh();saveButton.current?.focus()}} />}
   </section>
 }

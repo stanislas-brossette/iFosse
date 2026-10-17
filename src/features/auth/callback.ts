@@ -9,3 +9,14 @@ export function readLoginCallback(pathname: string, hash: string): LoginCallback
   }
   return { tokenHash }
 }
+
+// Keep the pasted-link fallback in the installed app on its own environment.
+// Reuse exactly the callback's token/type validation and explicit confirmation.
+export function readSameOriginLoginLink(value: string, origin: string): LoginCallback {
+  try {
+    if (value.length > 2048) return { invalid: true }
+    const url = new URL(value.trim())
+    if (url.origin !== origin || url.username || url.password || url.search || url.pathname !== '/auth/confirm') return { invalid: true }
+    return readLoginCallback(url.pathname, url.hash)
+  } catch { return { invalid: true } }
+}
