@@ -50,7 +50,7 @@ select throws_ok($$select public.set_member_caci_if_current(public.current_membe
 select is((select count(*) from public.members where id=(select id from profile_fixture where email='profiles.other@example.test')),0::bigint,'Private other profile is not retrievable');
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
 select lives_ok($$select public.set_member_caci_if_current((select id from profile_fixture where email='profiles.member@example.test'),date '2028-01-01',null)$$,'Guarded write handles initially empty date');
-select throws_ok($$select public.set_member_caci_if_current((select id from profile_fixture where email='profiles.member@example.test'),date '2029-01-01',null)$$,'40001','CACI_EDIT_CONFLICT','Stale editor cannot overwrite a new value');
+select throws_ok($$select public.set_member_caci_if_current((select id from profile_fixture where email='profiles.member@example.test'),date '2029-01-01',null)$$,'PGRST',jsonb_build_object('code','40001','message','CACI_EDIT_CONFLICT','details',null,'hint',null)::text,'Stale editor cannot overwrite a new value');
 select is((select caci_expiry_date from public.members where email='profiles.member@example.test'),date '2028-01-01','Conflict preserves server date');
 select lives_ok($$select public.set_member_caci_if_current((select id from profile_fixture where email='profiles.member@example.test'),null,date '2028-01-01')$$,'Guarded write can intentionally clear current date');
 reset role;

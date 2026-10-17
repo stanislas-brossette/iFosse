@@ -43,7 +43,7 @@ select throws_ok($$select public.transfer_presidency((select id from people wher
 select throws_ok($$select public.transfer_presidency((select id from people where label='person10'))$$,'22023',null,'Reserved fictitious .invalid successor refused without modifying seed ownership');
 select throws_ok($$select public.transfer_presidency((select id from people where label='person9'))$$,'22023',null,'Mismatched Auth/profile email refused');
 select throws_ok($$select public.transfer_presidency((select id from people where label='person8'))$$,'22023',null,'Unlinked target refused');
-select throws_ok($$select public.transfer_presidency_if_current((select id from people where label='person2'),(select updated_at-interval '1 second' from snapshot))$$,'40001','SUCCESSOR_CHANGED','Stale snapshot refused');
+select throws_ok($$select public.transfer_presidency_if_current((select id from people where label='person2'),(select updated_at-interval '1 second' from snapshot))$$,'PGRST',jsonb_build_object('code','40001','message','SUCCESSOR_CHANGED','details',null,'hint',null)::text,'Stale snapshot refused');
 select is(public.is_president(),true,'Failed transfers preserve caller presidency');
 select is((select count(*) from public.audit_events where event_type='presidency_transferred'),0::bigint,'Refused requests do not audit a successful transfer');
 reset role;

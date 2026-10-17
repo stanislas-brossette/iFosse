@@ -38,12 +38,12 @@ select set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000001'
 select throws_ok($$select public.get_attendance_batch_preview((select id from scenarios where label='lot'))$$,'42501',null,'Member cannot read nominal admin preview');
 select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'42501',null,'Member cannot apply batch');
 select set_config('request.jwt.claim.sub','53000000-0000-4000-8000-000000000008',true);
-select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),null)$$,'40001','ATTENDANCE_PREVIEW_STALE','Explicit current fingerprint required');
+select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),null)$$,'PGRST',jsonb_build_object('code','40001','message','ATTENDANCE_PREVIEW_STALE','details',null,'hint',null)::text,'Explicit current fingerprint required');
 select public.set_attendance((select id from scenarios where label='lot'),(select id from people where n=5),'absent');
-select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'40001','ATTENDANCE_PREVIEW_STALE','Concurrent attendance change refuses the entire batch');
+select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'PGRST',jsonb_build_object('code','40001','message','ATTENDANCE_PREVIEW_STALE','details',null,'hint',null)::text,'Concurrent attendance change refuses the entire batch');
 select is((select attendance_status::text from public.session_participations where session_id=(select id from scenarios where label='lot') and member_id=(select id from people where n=1)),'unknown','Stale batch never updates another member');
 select public.set_attendance((select id from scenarios where label='lot'),(select id from people where n=5),'unknown');
-select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'40001','ATTENDANCE_PREVIEW_STALE','ABA attendance correction still requires reconfirmation');
+select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'PGRST',jsonb_build_object('code','40001','message','ATTENDANCE_PREVIEW_STALE','details',null,'hint',null)::text,'ABA attendance correction still requires reconfirmation');
 update scenarios set preview=public.get_attendance_batch_preview(id),audit_count=(select count(*) from public.audit_events where session_id=scenarios.id) where label='lot';
 reset role;
 create function pg_temp.reject_batch_audit() returns trigger language plpgsql as $$begin if new.event_type='attendance_changed' and new.target_member_id=(select id from people where n=5) then raise exception 'Injected batch audit failure'; end if; return new;end$$;
@@ -61,7 +61,7 @@ select is((select attendance_status::text from public.session_participations whe
 select is((select status::text from public.sessions where id=(select id from scenarios where label='lot')),'open','Batch never closes the bilan');
 select is((select completed_count from public.get_season_counts(2025) where member_id=(select id from people where n=1)),0::bigint,'Batch alone does not affect seasonal count');
 select is((select count(*) from public.audit_events where session_id=(select id from scenarios where label='lot')),(select audit_count+2 from scenarios where label='lot'),'Every applied attendance uses existing per-member audit');
-select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'40001','ATTENDANCE_PREVIEW_STALE','Double apply is rejected');
+select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'PGRST',jsonb_build_object('code','40001','message','ATTENDANCE_PREVIEW_STALE','details',null,'hint',null)::text,'Double apply is rejected');
 update scenarios set preview=public.get_attendance_batch_preview(id),audit_count=(select count(*) from public.audit_events where session_id=scenarios.id) where label='lot';
 select is(public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot')),0,'Fresh empty rerun is a safe no-op');
 select is((select count(*) from public.audit_events where session_id=(select id from scenarios where label='lot')),(select audit_count from scenarios where label='lot'),'Empty rerun creates no audit');
@@ -69,17 +69,17 @@ select public.close_session_bilan((select id from scenarios where label='lot'));
 select is((select completed_count from public.get_season_counts(2025) where member_id=(select id from people where n=1)),1::bigint,'Only explicit closure increments season');
 select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'22023',null,'Closed bilan rejects batch');
 select public.reopen_session_bilan((select id from scenarios where label='lot'));
-select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'40001','ATTENDANCE_PREVIEW_STALE','Close/reopen invalidates a previous preview');
+select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='lot'),(select preview->>'fingerprint' from scenarios where label='lot'))$$,'PGRST',jsonb_build_object('code','40001','message','ATTENDANCE_PREVIEW_STALE','details',null,'hint',null)::text,'Close/reopen invalidates a previous preview');
 select public.set_session_rsvp((select id from scenarios where label='withdraw'),'yes',id) from people where n in(1,5);
 select public.set_draft_selection((select id from scenarios where label='withdraw'),id,'selected') from people where n in(1,5);
 select public.publish_selection((select id from scenarios where label='withdraw'));
 update scenarios set preview=public.get_attendance_batch_preview(id) where label='withdraw';
 select public.set_session_rsvp((select id from scenarios where label='withdraw'),'no',(select id from people where n=5),false,true);
-select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='withdraw'),(select preview->>'fingerprint' from scenarios where label='withdraw'))$$,'40001','ATTENDANCE_PREVIEW_STALE','Withdrawal invalidates preview');
+select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='withdraw'),(select preview->>'fingerprint' from scenarios where label='withdraw'))$$,'PGRST',jsonb_build_object('code','40001','message','ATTENDANCE_PREVIEW_STALE','details',null,'hint',null)::text,'Withdrawal invalidates preview');
 update scenarios set preview=public.get_attendance_batch_preview(id) where label='withdraw';
 select is((select preview->>'member_count' from scenarios where label='withdraw'),'1','New preview excludes effective withdrawal');
 select public.publish_selection((select id from scenarios where label='withdraw'));
-select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='withdraw'),(select preview->>'fingerprint' from scenarios where label='withdraw'))$$,'40001','ATTENDANCE_PREVIEW_STALE','Republication requires a fresh preview');
+select throws_ok($$select public.mark_confirmed_attendance((select id from scenarios where label='withdraw'),(select preview->>'fingerprint' from scenarios where label='withdraw'))$$,'PGRST',jsonb_build_object('code','40001','message','ATTENDANCE_PREVIEW_STALE','details',null,'hint',null)::text,'Republication requires a fresh preview');
 -- Boundary counters use the existing closed attendance model, never selection.
 insert into scenarios(label,id) values
 ('august',public.save_session('2025-08-31','21:00','22:00','Août','','','',1,true,false,false)),
