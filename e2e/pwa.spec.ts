@@ -18,6 +18,24 @@ async function safeScreenshot(page: Page, name: string) {
   await page.screenshot({ path: `test-results/visual-acceptance/pwa-${name}.png` })
 }
 
+test('manifest fetch includes the existing preview protection cookie', async ({ page, context }) => {
+  await context.addCookies([{ name: 'synthetic-preview-access', value: 'allowed', url: appOrigin, httpOnly: true }])
+  let authenticated = false
+  await page.route('**/manifest.webmanifest', async route => {
+    const headers = await route.request().allHeaders()
+    authenticated = headers.cookie?.includes('synthetic-preview-access=allowed') ?? false
+    if (!authenticated) { await route.fulfill({ status: 401, contentType: 'text/html', body: 'Preview login required' }); return }
+    await route.continue()
+  })
+  await page.goto('/')
+  const cdp = await context.newCDPSession(page)
+  const result = await cdp.send('Page.getAppManifest')
+  expect(authenticated).toBe(true)
+  expect(result.errors).toEqual([])
+  expect(JSON.parse(result.data!)).toMatchObject({ name: 'iFosse', start_url: '/seances' })
+  await cdp.detach()
+})
+
 test('public manifest/icons cover install and callback routes without service-worker or data caching', async ({ page, request }) => {
   await page.goto('/')
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', '/manifest.webmanifest')

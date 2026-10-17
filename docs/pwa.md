@@ -42,6 +42,12 @@ Ce changement frontend ne nécessite **aucune migration SQL, nouveau secret, nou
 
 Valider une Deploy Preview avec le projet Supabase staging existant. Pour les installations quotidiennes des testeurs, utiliser ensuite l’adresse staging principale stable : une preview est une installation distincte qui ne se transforme pas en production quand la PR est fusionnée. Le passage futur à l’adresse production nécessite son installation/connexion séparée ; les données ne sont pas transférées par la PWA.
 
+### Preview protégée par Netlify
+
+La connexion Netlify qui autorise l’ouverture d’une preview est distincte de la connexion adhérent Supabase. Le lien HTML du manifest utilise `crossorigin="use-credentials"` pour transmettre la session du navigateur, même sur la même origine. Sans cet attribut, un manifest protégé peut répondre HTTP 401 et le bouton d’installation reste absent. Un test navigateur couvre ce refus en l’absence du cookie.
+
+Cela ne garantit pas la génération d’une application Android : les ressources nécessaires peuvent aussi être récupérées sans la session Netlify du navigateur par les services d’installation. Si manifest/icônes restent protégés et que Chrome refuse l’installation, effectuer la recette sur une adresse staging où ces ressources sont publiquement accessibles, après décision explicite de l’opérateur sur la protection du site. Ne pas contourner cette protection avec un secret dans le manifest ni modifier les règles de production. La PR ne désactive aucune protection Netlify ; une installation réelle ne peut pas être déclarée validée sur la seule base des tests locaux.
+
 ### Téléphones réels — critères de recette encore obligatoires
 
 Les tests Chromium qui émulent un user-agent Safari ou un mode standalone ne prouvent ni l’installation OS ni le comportement de Mail/Safari sur iOS.
