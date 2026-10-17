@@ -7,12 +7,16 @@ test('organizer compares a private equal-count swap, filters independently and r
   const fixtures = [await createMemberFixture(),await createMemberFixture(),await createMemberFixture()]
   const [admin,alice,bob] = fixtures; makeFixtureAdmin(admin)
   await openConfirmation(page,await requestMagicLink(page,admin));await page.getByRole('button',{name:'Se connecter',exact:true}).click()
+  await expect(page.getByRole('heading',{name:'Les séances',exact:true})).toBeVisible()
   const client = await fixtureClient(admin); const member = await fixtureClient(alice)
   let id:string|undefined
   try {
     id=await createSession(client,`Comparaison ${admin.firstName}`)
     for (const f of [alice,bob]) expect((await client.rpc('set_session_rsvp',{p_session_id:id,p_member_id:f.memberId,p_rsvp:'yes'})).error).toBeNull()
     expect((await client.rpc('set_draft_selection',{p_session_id:id,p_member_id:alice.memberId,p_state:'selected'})).error).toBeNull()
+    // Read the completed fixture snapshot explicitly: this test exercises
+    // publication comparison, not discovery of out-of-band writes by polling.
+    await page.reload()
     await expect(page.getByRole('button',{name:new RegExp(`séance du ${formatDate(testSessionDate)}`)})).toBeVisible({timeout:12000})
     await page.getByRole('button',{name:new RegExp(`séance du ${formatDate(testSessionDate)}`)}).click();await page.getByRole('tab',{name:'Gestion',exact:true}).click()
     await expect(page.locator('.management-row')).toHaveCount(2)

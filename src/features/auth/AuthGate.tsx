@@ -4,6 +4,7 @@ import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import type { Database, Tables } from '../../lib/database.types'
 import { readLoginCallback } from './callback'
 import { publicConfig } from '../../lib/publicConfig'
+import { StandaloneLoginLink } from '../install/StandaloneLoginLink'
 import { loginRedirectUrl } from './redirect'
 import { clearReturnPath, consumeReturnPath, rememberReturnPath, replaceNavigation, syncNavigation } from '../../lib/navigation'
 
@@ -164,6 +165,6 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   return <section className="card login"><p className="eyebrow">Bienvenue au club</p><h1>{requestedEmail ? 'Consultez votre messagerie' : 'Connexion à iFosse'}</h1>{!requestedEmail && <p>Utilisez l’adresse email connue du club. Vous recevrez un lien valable dix minutes, sans mot de passe.</p>}
     {(error || callback) && <p role="alert">{error || invalidLink}</p>}
     {message && <p role="status">{message}</p>}
-    {requestedEmail ? <><p>Adresse saisie : <strong>{requestedEmail}</strong></p><p>Vérifiez aussi vos courriers indésirables. Ouvrez le lien reçu puis confirmez la connexion sur votre appareil.</p><div className="actions"><button className="secondary" disabled={busy} onClick={()=>{setRequestedEmail(null);setMessage('');setError('')}}>Corriger mon adresse</button><button disabled={busy} onClick={()=>void sendLink()}>{busy?'Demande en cours…':'Demander un nouveau lien'}</button></div></> : <form onSubmit={event => void requestLink(event)}><label>Adresse email<input type="email" autoComplete="email" autoFocus required value={email} onChange={event => setEmail(event.target.value)} /></label><button disabled={busy} type="submit">{busy?'Demande en cours…':'Recevoir un lien de connexion'}</button></form>}
+    {requestedEmail ? <><p>Adresse saisie : <strong>{requestedEmail}</strong></p><p>Vérifiez aussi vos courriers indésirables. Ouvrez le lien reçu puis confirmez la connexion sur votre appareil.</p><div className="actions"><button className="secondary" disabled={busy} onClick={()=>{setRequestedEmail(null);setMessage('');setError('')}}>Corriger mon adresse</button><button disabled={busy} onClick={()=>void sendLink()}>{busy?'Demande en cours…':'Demander un nouveau lien'}</button></div><StandaloneLoginLink disabled={busy} onLink={tokenHash=>{setError('');setMessage('');setCallback({tokenHash})}} /></> : <form onSubmit={event => void requestLink(event)}><label>Adresse email<input type="email" autoComplete="email" autoFocus required value={email} onChange={event => setEmail(event.target.value)} /></label><button disabled={busy} type="submit">{busy?'Demande en cours…':'Recevoir un lien de connexion'}</button></form>}
   </section>
 }

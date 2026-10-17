@@ -26,3 +26,51 @@ Referrer-Policy = "strict-origin-when-cross-origin"
 for = "/assets/*"
 [headers.values]
 Cache-Control = "public, max-age=31536000, immutable"
+
+# Revalidate entry documents and install metadata on every network navigation.
+# Keep these rules separate from the immutable, hashed /assets/* rule.
+
+[[headers]]
+for = "/"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/index.html"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/seances"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/seances/*"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/profil"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/administration"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/auth/confirm"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/manifest.webmanifest"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/icons/*"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"

@@ -159,3 +159,7 @@ La migration `20261008070000_attendance_batch.sql` doit être appliquée au proj
 #### Transfert de présidence depuis l’interface
 
 Le président dispose d’un parcours distinct en bas de Mon profil : successeur actif, nom/email à vérifier, email à recopier, droits perdus à reconnaître, puis confirmation. L’ancien président reste admin. Une fiche modifiée demande actualisation/reconfirmation ; un résultat réseau ambigu demande de vérifier les rôles. Retour possible par le nouveau président ou récupération opérateur existante. Appliquer `20261008110000_presidency_transfer.sql` en staging avant recette ; aucune modification hébergée n’est réalisée par la validation locale. [Parcours et protections](member-management.md#transférer-la-présidence).
+
+### Installation PWA facultative (D031)
+
+La PWA est une livraison frontend, sans migration ni configuration Auth supplémentaire. Manifest/icônes restent sur l’origine installée ; recommander l’adresse staging principale aux testeurs plutôt qu’une preview temporaire. Aucun service worker ni cache métier ; les documents et métadonnées sont revalidés, les assets hashés gardent leur cache existant. Valider installation, connexion (y compris collage du lien si l’email ouvre un navigateur séparé), réouverture et version A → B sur de vrais Android/iPhone avant de déclarer le parcours opérationnel. [Guide et checklist](pwa.md).
