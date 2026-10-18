@@ -4,6 +4,7 @@ import type { Database } from './lib/database.types'
 import type { Member } from './features/auth/AuthGate'
 import { publicConfig as config } from './lib/publicConfig'
 import { supabase } from './lib/supabase'
+import { NotificationCenter } from './features/notifications/NotificationCenter'
 import { AuthGate } from './features/auth/AuthGate'
 import { Profile } from './features/profiles/Profile'
 import { Directory } from './features/profiles/Directory'
@@ -46,7 +47,7 @@ export default function App() {
   const resetNavigation = useCallback((previous:string|null,next:string|null) => { if(previous || next === null) { clearReturnPath(); replaceNavigation('/seances') } }, [])
   return <main className="shell">
     <header className="app-brand"><Brand /><p>Les fosses, simplement.</p></header>
-    {client ? <AuthGate client={client} onOpenProfile={() => navigateRoute({area:'profile',tab:'overview',view:'upcoming'})} onIdentityChange={resetNavigation}>{(member, refresh) => <MemberApp client={client} member={member} refresh={refresh} />}</AuthGate> : <section className="card" aria-labelledby="welcome"><h1 id="welcome">Les séances du club APSAP</h1>
+    {client ? <AuthGate client={client} renderMemberActions={member=><NotificationCenter key={member.auth_user_id} client={client}/>} onOpenProfile={() => navigateRoute({area:'profile',tab:'overview',view:'upcoming'})} onIdentityChange={resetNavigation}>{(member, refresh) => <MemberApp client={client} member={member} refresh={refresh} />}</AuthGate> : <section className="card" aria-labelledby="welcome"><h1 id="welcome">Les séances du club APSAP</h1>
       <p>La nouvelle application partagée est en préparation.</p>
       <p role="status">{config ? 'Connexion au service configurée.' : 'Configuration locale à compléter.'}</p>
     </section>}

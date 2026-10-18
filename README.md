@@ -175,3 +175,8 @@ Administration now uses one searchable directory. Admins maintain CACI; the Pres
 ## Installer iFosse sur téléphone
 
 Installation facultative, sans Play Store/App Store : Chrome Android peut proposer **Installer iFosse** dans Mon profil ; Safari iPhone/iPad utilise **Partager → Sur l’écran d’accueil**. Internet reste nécessaire. Cette V1 ne possède aucun service worker ni cache de données métier ; la connexion utilise les liens habituels. Pour les tests quotidiens, installer depuis l’adresse staging principale stable. [Guide d’installation, connexion en mode autonome et mises à jour](docs/pwa.md).
+
+La [boîte de notifications interne](docs/in-app-notifications.md) couvre les
+publications de sélection, changements de covoiturage et CACI modifié par un admin.
+Elle est désactivée par défaut : recette et activation opérateur staging séparées,
+sans email ni push, sans changer les permissions métier.
