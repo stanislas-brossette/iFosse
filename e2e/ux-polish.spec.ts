@@ -35,22 +35,22 @@ test('directory CACI collapses only on success, updates date/status and retains 
     await expect(row).toContainText(`CACI Valide · valable jusqu’au ${formatDate('2099-12-31')}`)
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')
     await expect(toggle).toBeFocused()
-    await expect.poll(caciNotifications).toBe(1)
-    await expect(page.getByText('Email non envoyé : destinataire exclu des notifications de cet environnement.',{exact:true})).toBeVisible()
+    await expect.poll(caciNotifications).toBe(0)
+    await expect(page.getByText('Email non envoyé : destinataire exclu des notifications de cet environnement.',{exact:true})).toHaveCount(0)
     await mkdir('test-results/visual-acceptance',{recursive:true})
     for(const [name,width,height] of [['desktop',1440,900],['phone',390,844]] as const){
       await page.setViewportSize({width,height})
-      await page.getByText('Email non envoyé : destinataire exclu des notifications de cet environnement.',{exact:true}).scrollIntoViewIfNeeded()
+      await row.scrollIntoViewIfNeeded()
       expect(new URL(page.url()).hash).toBe('')
       expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false)
-      await page.screenshot({path:`test-results/visual-acceptance/caci-notification-${name}.png`})
+      await page.screenshot({path:`test-results/visual-acceptance/caci-directory-${name}.png`})
     }
     await page.setViewportSize({width:1440,height:900})
     // Saving the same date still collapses but must not reuse an old email receipt.
     await toggle.click()
     await row.getByRole('button',{name:'Enregistrer le CACI',exact:true}).click()
     await expect(date).toHaveCount(0)
-    await expect.poll(caciNotifications).toBe(1)
+    await expect.poll(caciNotifications).toBe(0)
     await expect(page.getByText('Email non envoyé : destinataire exclu des notifications de cet environnement.',{exact:true})).toHaveCount(0)
     await toggle.click(); await date.fill('2098-12-31')
     // Race a genuine server-side update between submit and its compare/write RPC.
@@ -62,7 +62,7 @@ test('directory CACI collapses only on success, updates date/status and retains 
     await expect(row.getByText('Le CACI a été modifié ailleurs.', { exact: false })).toBeVisible()
     await expect(date).toHaveValue('2098-12-31')
     await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    await expect.poll(caciNotifications).toBe(2) // The external change, not the rejected save.
+    await expect.poll(caciNotifications).toBe(0) // Neither an external CACI change nor a rejected save sends email.
     await row.getByRole('button', { name: 'Recharger la date enregistrée', exact: true }).click()
     await expect(date).toHaveValue('2097-12-31')
     // Inject a permission response to verify UI recovery without changing account permissions.
@@ -70,7 +70,7 @@ test('directory CACI collapses only on success, updates date/status and retains 
     await date.fill('2096-12-31'); await row.getByRole('button', { name: 'Enregistrer le CACI', exact: true }).click()
     await expect(row.getByText('Vos droits ne permettent plus cette action. Actualisez votre accès.', { exact: true })).toBeVisible()
     await expect(date).toHaveValue('2096-12-31')
-    await expect.poll(caciNotifications).toBe(2)
+    await expect.poll(caciNotifications).toBe(0)
     await page.getByLabel('Rechercher un adhérent').fill('Aucun résultat fictif')
     await expect(page.getByText('Aucun adhérent ne correspond à ces critères.')).toBeVisible()
     await page.getByRole('button',{name:'Réinitialiser les filtres',exact:true}).click()
@@ -81,7 +81,7 @@ test('directory CACI collapses only on success, updates date/status and retains 
     await row.getByRole('button', { name: 'Enregistrer le CACI', exact: true }).click()
     await expect(date).toHaveCount(0)
     await expect(row).toContainText(`valable jusqu’au ${formatDate('2096-12-31')}`)
-    await expect.poll(caciNotifications).toBe(3)
+    await expect.poll(caciNotifications).toBe(0)
   } finally { await removeMemberFixture(member); await removeMemberFixture(admin) }
 })
 
