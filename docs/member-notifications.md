@@ -29,7 +29,7 @@ npm run staging:notifications:install
 npm run staging:notifications:install -- --apply
 ```
 
-La première commande vérifie les accès et affiche le plan **sans écriture ni envoi**. La seconde installe et active. À chaque lancement, quatre informations sont demandées :
+La première commande vérifie les accès et affiche le plan **sans écriture ni envoi**. Elle inspecte les catalogues, sans lire les valeurs privées de configuration ni déchiffrer Vault : le rôle SQL de lecture seule de l’API n’y est pas autorisé. Ces vérifications privées sont réservées à `--apply`, avec les permissions SQL d’installation ; le secret Vault est lu/réutilisé après suspension des envois email, sans modifier les droits du rôle de lecture seule. La seconde installe et active. À chaque lancement, quatre informations sont demandées :
 
 1. Un **jeton personnel Supabase** créé dans [Account → Access tokens](https://supabase.com/dashboard/account/tokens), ayant accès au seul projet staging si votre configuration le permet. Il permet de lire le projet, exécuter les migrations, gérer ses secrets et déployer la fonction. Ce n’est ni la clé publique ni le service-role.
 2. Une **clé API Brevo** transactionnelle ; le mot de passe SMTP utilisé par Auth ne convient pas.

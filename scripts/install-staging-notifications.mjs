@@ -81,6 +81,9 @@ export const settingsSql=`select enabled,environment,project_ref,
  and to_regprocedure('public.claim_member_notifications(text,text,integer)') is not null
  and to_regprocedure('public.enqueue_member_notification(public.audit_events,uuid,text)') is not null as private
  from public.member_notification_settings where singleton;`
+// Catalog-only inspection is safe for the Management API read-only role.
+// Reading private configuration rows is deferred to explicit --apply.
+export const settingsPrivacySql=settingsSql.replace('select enabled,environment,project_ref,','select ').replace(' from public.member_notification_settings where singleton;',';')
 export const extensionSql=`select name,installed_version from pg_available_extensions where name in ('pg_cron','pg_net','supabase_vault');`
 export const jobsSql=`select jobid,jobname,command,active from cron.job;`
 export const enableSql=`update public.member_notification_settings set enabled=true,environment='preview',project_ref='${STAGING_REF}',staging_recipients=$1::text[] where singleton returning enabled;`
@@ -179,7 +182,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   }catch{fail(`Réponse Supabase illisible : ${operation}. Aucune réponse fournisseur affichée.`)}
  }
  const sql=(query,parameters=[],write=false)=>{
-  const check=query===preflightSql ? 'prérequis et catalogue' : query===settingsSql ? 'confidentialité de la file' : query===extensionSql ? 'extensions disponibles' : query===jobsSql ? 'tâches Cron existantes' : query.startsWith('select decrypted_secret') ? 'secret Vault existant' : 'installation/configuration'
+  const check=query===preflightSql ? 'prérequis et catalogue' : (query===settingsSql || query===settingsPrivacySql) ? 'confidentialité de la file' : query===extensionSql ? 'extensions disponibles' : query===jobsSql ? 'tâches Cron existantes' : query.startsWith('select decrypted_secret') ? 'secret Vault existant' : 'installation/configuration'
   return api('/database/query',{method:'POST',body:{query,parameters,read_only:!write},write,check})
  }
  const secrets=values=>api('/secrets',{method:'POST',body:Object.entries(values).map(([name,value])=>({name,value})),write:true})
@@ -196,24 +199,19 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
  const state=(await sql(preflightSql))?.[0]
  if(!state?.prerequisites || state.outbox!==state.settings || (state.caci && !state.outbox))fail('Schéma applicatif incomplet/inattendu : appliquer les migrations métier habituelles avant installation.')
  settingsPresent=state.settings
- if(settingsPresent){
-  const settings=(await sql(settingsSql))?.[0]
-  if(!settings?.private || (settings.environment && settings.environment!=='preview') || (settings.project_ref && settings.project_ref!==STAGING_REF))fail('File/configuration existante incompatible : aucune écriture.')
- }
+
  const extensions=await sql(extensionSql)
  if(!Array.isArray(extensions) || ['pg_cron','pg_net','supabase_vault'].some(name=>!extensions.some(e=>e.name===name)))fail('Extensions nécessaires indisponibles sur ce serveur.')
  const installed=name=>extensions.some(e=>e.name===name && e.installed_version)
  if(installed('pg_cron'))validateJobs(await sql(jobsSql))
- let dispatch
- if(installed('supabase_vault')){
-  const rows=await sql('select decrypted_secret from vault.decrypted_secrets where name=$1;',[VAULT_NAME])
-  if(!Array.isArray(rows) || rows.length>1)fail('Secret Vault existant ambigu.')
-  dispatch=rows[0]?.decrypted_secret
-  if(dispatch && dispatch.length<32)fail('Secret Vault existant trop court : aucune rotation automatique.')
+ if(settingsPresent){
+  const settings=(await sql(apply ? settingsSql : settingsPrivacySql,[],apply))?.[0]
+  if(!settings?.private || (settings.environment && settings.environment!=='preview') || (settings.project_ref && settings.project_ref!==STAGING_REF))fail('File/configuration existante incompatible : aucune écriture.')
  }
+
  log(`Cible vérifiée : ifosse-staging / ${STAGING_REF} / preview.`)
  log(`Plan : ${state.outbox ? 'conserver la file' : 'installer la file'} ; limiter aux emails sensibles de compte (aucun email CACI) ; déployer member-notifications ; configurer ${recipients.length} destinataire(s) ; réutiliser/créer Vault et une seule tâche par minute.`)
- if(!apply){log('Dry-run terminé : aucune écriture, aucun déploiement, aucun email. Relancer avec --apply pour installer.');return}
+ if(!apply){log('Les valeurs privées de configuration et le secret Vault seront vérifiés uniquement pendant --apply.');log('Dry-run terminé : aucune écriture, aucun déploiement, aucun email. Relancer avec --apply pour installer.');return}
  try{
   writing=true
   // Fail closed during upgrades; never clear pending/history or replay receipts.
@@ -227,6 +225,12 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   for(const [name,schema] of [['pg_cron','pg_catalog'],['pg_net','extensions'],['supabase_vault','vault']]){
    if(!installed(name))await sql(`create extension if not exists ${name} with schema ${schema};`,[],true)
   }
+  // read_only:true uses a restricted SQL role that must not decrypt Vault.
+  // Reuse/read the credential only in explicit apply, with email gates paused.
+  const rows=await sql('select decrypted_secret from vault.decrypted_secrets where name=$1;',[VAULT_NAME],true)
+  if(!Array.isArray(rows) || rows.length>1)fail('Secret Vault existant ambigu.')
+  let dispatch=rows[0]?.decrypted_secret
+  if(dispatch && (typeof dispatch!=='string' || dispatch.length<32))fail('Secret Vault existant trop court : aucune rotation automatique.')
   if(!dispatch){
    dispatch=randomBytes(32).toString('hex')
    await sql('select vault.create_secret($1,$2);',[dispatch,VAULT_NAME],true)
@@ -237,7 +241,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   for(const file of local.files)form.append('file',new Blob([file.content],{type:'application/typescript'}),file.name)
   const deployed=await api('/functions/deploy?slug=member-notifications',{method:'POST',body:form,write:true})
   if(deployed?.slug!=='member-notifications' || deployed.verify_jwt!==false || deployed.status!=='ACTIVE')fail('Déploiement non confirmé : activation interrompue.')
-  const check=(await sql(settingsSql))?.[0]
+  const check=(await sql(settingsSql,[],true))?.[0]
   if(!check?.private)fail('Contrôle final de confidentialité refusé.')
   validateJobs(await sql(jobsSql))
   await sql(scheduleSql,[],true)

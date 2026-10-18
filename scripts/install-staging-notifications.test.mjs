@@ -1,16 +1,17 @@
 // @vitest-environment node
 import { expect,it,vi } from 'vitest'
 import { PassThrough,Writable } from 'node:stream'
-import { installNotifications,installationSources,sqlFailureDiagnostic,createHiddenPrompt,preflightSql,settingsSql,extensionSql,jobsSql,scheduleSql,enableSql,disableSql,cronCommand,JOB_NAME,VAULT_NAME,trackedMigration } from './install-staging-notifications.mjs'
+import { installNotifications,installationSources,sqlFailureDiagnostic,createHiddenPrompt,preflightSql,settingsSql,settingsPrivacySql,extensionSql,jobsSql,scheduleSql,enableSql,disableSql,cronCommand,JOB_NAME,VAULT_NAME,trackedMigration } from './install-staging-notifications.mjs'
 import {STAGING_REF} from './staging-seed.mjs'
 const env={SUPABASE_ACCESS_TOKEN:'sbp_fixture_private',BREVO_API_KEY:'fixture_private_brevo',NOTIFICATION_SENDER_EMAIL:'Sender@club-fictif.fr',NOTIFICATION_STAGING_RECIPIENTS:'Tester@club-fictif.fr,tester@club-fictif.fr'}
-function setup({existing=false,project={},senderActive=true,jobs=[],failure,shutdownFailure=false}={}){
+function setup({existing=false,project={},senderActive=true,jobs=[],failure,shutdownFailure=false,restrictedReads=false}={}){
  const calls=[],log=vi.fn(),state={outbox:existing,settings:existing,caci:false,account_only:existing,prerequisites:true},extensions=['pg_cron','pg_net','supabase_vault'].map(name=>({name,installed_version:existing?'1':null}))
  let savedDispatch=existing?'a'.repeat(64):null,failed=false
  const fetcher=vi.fn(async(url,options={})=>{
   const body=options.body instanceof FormData ? options.body : options.body ? JSON.parse(options.body) : null
   const call={url,options,body};calls.push(call)
   if(failure?.(call) || (failed && shutdownFailure && (url.endsWith('/secrets') || body?.query===disableSql))){failed=true;throw Error('secret provider detail '+env.BREVO_API_KEY)}
+  if(restrictedReads && body?.read_only && (body.query===settingsSql || body.query.includes('vault.decrypted_secrets')))return new Response(JSON.stringify({message:'ERROR: 42501: permission denied'}),{status:400})
   let data
   if(url==='https://api.brevo.com/v3/senders')data={senders:[{email:'sender@club-fictif.fr',active:senderActive}]}
   else if(url.endsWith(STAGING_REF))data={ref:STAGING_REF,name:'ifosse-staging',status:'ACTIVE_HEALTHY',...project}
@@ -19,6 +20,7 @@ function setup({existing=false,project={},senderActive=true,jobs=[],failure,shut
   else {
    const q=body.query
    if(q===preflightSql)data=[{...state}]
+   else if(q===settingsPrivacySql)data=[{private:true}]
    else if(q===settingsSql)data=[{private:true,environment:'preview',project_ref:STAGING_REF}]
    else if(q===extensionSql)data=extensions
    else if(q===jobsSql)data=jobs
@@ -106,4 +108,27 @@ it('identifies the failed preflight and SQLSTATE while preserving dry-run read-o
  expect(error.message).toContain('PostgreSQL 42501')
  expect(error.message).not.toContain('private-secret')
  expect(fetcher.mock.calls.every(([,options])=>!options.body || JSON.parse(options.body).read_only===true)).toBe(true)
+})
+
+
+it('dry-run works with restricted hosted reads and never reads private settings or decrypted Vault',async()=>{
+ const s=setup({existing:true,restrictedReads:true})
+ await s.run()
+ expect(s.writes()).toHaveLength(0)
+ expect(s.calls.some(c=>c.body?.query===settingsSql)).toBe(false)
+ expect(s.calls.some(c=>c.body?.query?.includes('vault.decrypted_secrets'))).toBe(false)
+ expect(s.calls.some(c=>c.body?.query===settingsPrivacySql)).toBe(true)
+ expect(s.log.mock.calls.join()).toContain('vérifiés uniquement pendant --apply')
+})
+it('apply reuses existing Vault with privileged reads after pausing email gates',async()=>{
+ const s=setup({existing:true,restrictedReads:true})
+ await s.run({args:['--apply']})
+ const vaultIndex=s.calls.findIndex(c=>c.body?.query?.startsWith('select decrypted_secret'))
+ const pauseIndex=s.calls.findIndex(c=>c.body?.query===disableSql)
+ expect(vaultIndex).toBeGreaterThan(pauseIndex)
+ expect(s.calls[vaultIndex].body.read_only).toBe(false)
+ expect(s.calls.filter(c=>c.body?.query===settingsSql).every(c=>c.body.read_only===false)).toBe(true)
+ expect(s.getDispatch()).toBe('a'.repeat(64))
+ expect(s.calls.some(c=>c.body?.query?.includes('vault.create_secret'))).toBe(false)
+ expect(s.log.mock.calls.join()).not.toContain(s.getDispatch())
 })
