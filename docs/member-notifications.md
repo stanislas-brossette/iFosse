@@ -137,6 +137,9 @@ filtrées au prochain claim.
 Pour une installation existante, garder les deux envois désactivés pendant la mise à
 jour (SQL `enabled=false` et secret `NOTIFICATION_ENABLED=false`), attendre la fin
 d’une éventuelle requête en cours, appliquer la troisième migration et déployer le
-worker avant de réactiver. L’installeur staging effectue ces étapes dans cet ordre,
-sans répéter les migrations déjà installées. Ne pas activer la PR en production
-dans le cadre des tests club.
+worker avant de réactiver. Couper les interrupteurs ne stoppe pas une invocation
+déjà en cours : elle peut encore envoyer un avis avec son ancienne version. Si
+l’envoi était déjà activé, attendre sa fin avant de lancer l’installation.
+L’installeur staging coupe les interrupteurs, applique les migrations manquantes,
+déploie puis réactive ; il ne prétend pas annuler une requête en cours. Ne pas
+activer la PR en production dans le cadre des tests club.
