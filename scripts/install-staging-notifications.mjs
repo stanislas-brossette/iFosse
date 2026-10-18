@@ -137,11 +137,18 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
  let verified=false,writing=false,settingsPresent=false
  const api=async(path,{method='GET',body,write=false}={})=>{
   if(write && (!apply || !verified))fail('Écriture refusée avant validation staging/--apply.')
+  const operation=path==='' ? 'vérification du projet (Project Settings : Read)' : path==='/database/query' ? `requête SQL (Database : ${write ? 'Read-write' : 'Read'})` : path==='/secrets' ? 'configuration des secrets (Edge Function Secrets : Read-write)' : 'déploiement du worker (Edge Functions : Read-write)'
+  let response
   try{
-   const response=await fetcher(`https://api.supabase.com/v1/projects/${STAGING_REF}${path}`,{method,headers:{Authorization:`Bearer ${token}`,...(body && !(body instanceof FormData) ? {'Content-Type':'application/json'} : {})},body:body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,redirect:'error',signal:AbortSignal.timeout(120000)})
-   if(!response.ok)fail(`API Supabase refusée (HTTP ${response.status}).`)
+   response=await fetcher(`https://api.supabase.com/v1/projects/${STAGING_REF}${path}`,{method,headers:{Authorization:`Bearer ${token}`,...(body && !(body instanceof FormData) ? {'Content-Type':'application/json'} : {})},body:body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,redirect:'error',signal:AbortSignal.timeout(120000)})
+  }catch{fail(`Accès Supabase indisponible : ${operation}. Vérifier réseau et délai ; aucune réponse fournisseur affichée.`)}
+  if(!response.ok){
+   const hint=response.status===401 ? 'Jeton invalide, expiré ou révoqué.' : response.status===403 ? 'Vérifier les permissions du jeton et son accès au seul projet ifosse-staging.' : 'Requête refusée ; conserver ce code pour diagnostic.'
+   fail(`API Supabase HTTP ${response.status} : ${operation}. ${hint} Aucune réponse fournisseur affichée.`)
+  }
+  try{
    const text=await response.text();return text ? JSON.parse(text) : null
-  }catch{fail('Accès Supabase indisponible/refusé. Vérifier jeton et permissions ; aucune réponse fournisseur affichée.')}
+  }catch{fail(`Réponse Supabase illisible : ${operation}. Aucune réponse fournisseur affichée.`)}
  }
  const sql=(query,parameters=[],write=false)=>api('/database/query',{method:'POST',body:{query,parameters,read_only:!write},write})
  const secrets=values=>api('/secrets',{method:'POST',body:Object.entries(values).map(([name,value])=>({name,value})),write:true})

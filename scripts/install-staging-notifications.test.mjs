@@ -63,3 +63,24 @@ it('upgrades a historical CACI-enabled installation to account-only emails witho
  expect(sql).not.toContain('create function public.queue_caci_audit_notification')
  expect(s.state.account_only).toBe(true);expect(s.state.caci).toBe(false)
 })
+
+
+it.each([401,403,500])('reports a safe HTTP %i diagnostic without echoing the provider body or making writes',async status=>{
+ const s=setup()
+ const fetcher=vi.fn(async()=>new Response('secret provider detail '+env.SUPABASE_ACCESS_TOKEN,{status}))
+ await expect(s.run({fetcher})).rejects.toThrow(`HTTP ${status} : vérification du projet`)
+ expect(fetcher).toHaveBeenCalledTimes(1)
+ expect(s.writes()).toHaveLength(0)
+ try{await s.run({fetcher})}catch(error){expect(error.message).not.toContain(env.SUPABASE_ACCESS_TOKEN);expect(error.message).not.toContain('secret provider detail')}
+})
+it('identifies SQL permissions on a refused dry-run without writes',async()=>{
+ const s=setup()
+ const fetcher=vi.fn(async(url)=>url.endsWith('/database/query') ? new Response('private SQL detail',{status:403}) : new Response(JSON.stringify(url.endsWith(STAGING_REF) ? {ref:STAGING_REF,name:'ifosse-staging',status:'ACTIVE_HEALTHY'} : {senders:[{email:'sender@club-fictif.fr',active:true}]})))
+ await expect(s.run({fetcher})).rejects.toThrow('HTTP 403 : requête SQL (Database : Read)')
+ expect(fetcher.mock.calls.every(([,options])=>!options.body || JSON.parse(options.body).read_only===true)).toBe(true)
+})
+it('distinguishes network failures from HTTP refusals without exposing exception details',async()=>{
+ const s=setup()
+ await expect(s.run({fetcher:async()=>{throw Error(env.SUPABASE_ACCESS_TOKEN)}})).rejects.toThrow('Accès Supabase indisponible : vérification du projet')
+ expect(s.writes()).toHaveLength(0)
+})
