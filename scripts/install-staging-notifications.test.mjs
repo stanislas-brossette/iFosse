@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { expect,it,vi } from 'vitest'
 import { PassThrough,Writable } from 'node:stream'
-import { installNotifications,installationSources,createHiddenPrompt,preflightSql,settingsSql,extensionSql,jobsSql,scheduleSql,enableSql,disableSql,cronCommand,JOB_NAME,VAULT_NAME,trackedMigration } from './install-staging-notifications.mjs'
+import { installNotifications,installationSources,sqlFailureDiagnostic,createHiddenPrompt,preflightSql,settingsSql,extensionSql,jobsSql,scheduleSql,enableSql,disableSql,cronCommand,JOB_NAME,VAULT_NAME,trackedMigration } from './install-staging-notifications.mjs'
 import {STAGING_REF} from './staging-seed.mjs'
 const env={SUPABASE_ACCESS_TOKEN:'sbp_fixture_private',BREVO_API_KEY:'fixture_private_brevo',NOTIFICATION_SENDER_EMAIL:'Sender@club-fictif.fr',NOTIFICATION_STAGING_RECIPIENTS:'Tester@club-fictif.fr,tester@club-fictif.fr'}
 function setup({existing=false,project={},senderActive=true,jobs=[],failure,shutdownFailure=false}={}){
@@ -83,4 +83,27 @@ it('distinguishes network failures from HTTP refusals without exposing exception
  const s=setup()
  await expect(s.run({fetcher:async()=>{throw Error(env.SUPABASE_ACCESS_TOKEN)}})).rejects.toThrow('Accès Supabase indisponible : vérification du projet')
  expect(s.writes()).toHaveLength(0)
+})
+
+
+it.each([
+ [{message:'ERROR: 42501: permission denied for private-secret'},'PostgreSQL 42501 : autorisation SQL insuffisante'],
+ [{code:'42601',message:'syntax error near private-secret'},'PostgreSQL 42601 : syntaxe SQL refusée'],
+ [{message:'permission denied for private-secret'},'Autorisation SQL insuffisante'],
+ [{message:'cannot insert multiple commands into a prepared statement: private-secret'},'Plusieurs commandes refusées'],
+ [{message:'private-secret',code:'private-secret'},'Code PostgreSQL non fourni'],
+ [null,'Code PostgreSQL non fourni'],
+])('classifies SQL errors without disclosing provider data %j', (payload,expected)=>{
+ const result=sqlFailureDiagnostic(payload)
+ expect(result).toContain(expected)
+ expect(result).not.toContain('private-secret')
+})
+it('identifies the failed preflight and SQLSTATE while preserving dry-run read-only enforcement',async()=>{
+ const s=setup()
+ const fetcher=vi.fn(async(url)=>new Response(JSON.stringify(url.endsWith('/database/query') ? {message:'ERROR: 42501: private-secret'} : url.endsWith(STAGING_REF) ? {ref:STAGING_REF,name:'ifosse-staging',status:'ACTIVE_HEALTHY'} : {senders:[{email:'sender@club-fictif.fr',active:true}]}),{status:url.endsWith('/database/query') ? 400 : 200}))
+ const error=await s.run({fetcher}).catch(error=>error)
+ expect(error.message).toContain('prérequis et catalogue')
+ expect(error.message).toContain('PostgreSQL 42501')
+ expect(error.message).not.toContain('private-secret')
+ expect(fetcher.mock.calls.every(([,options])=>!options.body || JSON.parse(options.body).read_only===true)).toBe(true)
 })

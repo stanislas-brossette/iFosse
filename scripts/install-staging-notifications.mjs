@@ -102,6 +102,30 @@ export const scheduleSql=`do $install$
  end;
  $install$;`
 
+// Provider text can contain SQL values, credentials or private rows. Only emit
+// fixed classifications and recognizable PostgreSQL codes, never raw messages.
+export function sqlFailureDiagnostic(payload){
+ const message=typeof payload?.message==='string' ? payload.message : ''
+ const candidate=typeof payload?.code==='string' ? payload.code : message.match(/\bERROR:\s*([0-9A-Z]{5}):/)?.[1]
+ const code=/^[0-9A-Z]{5}$/.test(candidate ?? '') && /[0-9]/.test(candidate) ? candidate : null
+ const descriptions={
+  '42501':'autorisation SQL insuffisante',
+  '42601':'syntaxe SQL refusée',
+  '42P01':'relation SQL absente',
+  '42883':'fonction SQL absente ou signature incompatible',
+  '42704':'objet ou type SQL absent',
+  '42703':'colonne SQL absente',
+  '25006':'opération refusée en lecture seule',
+  '08P01':'paramètres SQL incompatibles',
+ }
+ if(code)return ` PostgreSQL ${code}${descriptions[code] ? ' : '+descriptions[code] : ''}.`
+ if(/permission denied|insufficient privilege/i.test(message))return ' Autorisation SQL insuffisante.'
+ if(/cannot insert multiple commands into a prepared statement/i.test(message))return ' Plusieurs commandes refusées dans une requête préparée.'
+ if(/syntax error/i.test(message))return ' Syntaxe SQL refusée.'
+ if(/read.only|read only/i.test(message))return ' Refus lié au mode lecture seule.'
+ return ' Code PostgreSQL non fourni ou non reconnu.'
+}
+
 export function createHiddenPrompt(input=process.stdin,output=process.stdout){
  if(!input.isTTY || !output.isTTY)fail('Terminal interactif requis ; sinon fournir les variables opérateur. Voir --help.')
  let muted=false
@@ -135,7 +159,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
  let local
  try{local=await sources()}catch{fail('Fichiers de migration/fonction absents ou modifiés : vérifier le checkout de la PR. Aucune écriture.')} // Integrity check before hosted writes.
  let verified=false,writing=false,settingsPresent=false
- const api=async(path,{method='GET',body,write=false}={})=>{
+ const api=async(path,{method='GET',body,write=false,check=''}={})=>{
   if(write && (!apply || !verified))fail('Écriture refusée avant validation staging/--apply.')
   const operation=path==='' ? 'vérification du projet (Project Settings : Read)' : path==='/database/query' ? `requête SQL (Database : ${write ? 'Read-write' : 'Read'})` : path==='/secrets' ? 'configuration des secrets (Edge Function Secrets : Read-write)' : 'déploiement du worker (Edge Functions : Read-write)'
   let response
@@ -144,13 +168,20 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   }catch{fail(`Accès Supabase indisponible : ${operation}. Vérifier réseau et délai ; aucune réponse fournisseur affichée.`)}
   if(!response.ok){
    const hint=response.status===401 ? 'Jeton invalide, expiré ou révoqué.' : response.status===403 ? 'Vérifier les permissions du jeton et son accès au seul projet ifosse-staging.' : 'Requête refusée ; conserver ce code pour diagnostic.'
-   fail(`API Supabase HTTP ${response.status} : ${operation}. ${hint} Aucune réponse fournisseur affichée.`)
+   let diagnostic=''
+   if(path==='/database/query'){
+    try{diagnostic=sqlFailureDiagnostic(await response.json())}catch{diagnostic=' Réponse d’erreur non JSON.'}
+   }
+   fail(`API Supabase HTTP ${response.status} : ${operation}${check ? ' / '+check : ''}. ${hint}${diagnostic} Aucune réponse fournisseur affichée.`)
   }
   try{
    const text=await response.text();return text ? JSON.parse(text) : null
   }catch{fail(`Réponse Supabase illisible : ${operation}. Aucune réponse fournisseur affichée.`)}
  }
- const sql=(query,parameters=[],write=false)=>api('/database/query',{method:'POST',body:{query,parameters,read_only:!write},write})
+ const sql=(query,parameters=[],write=false)=>{
+  const check=query===preflightSql ? 'prérequis et catalogue' : query===settingsSql ? 'confidentialité de la file' : query===extensionSql ? 'extensions disponibles' : query===jobsSql ? 'tâches Cron existantes' : query.startsWith('select decrypted_secret') ? 'secret Vault existant' : 'installation/configuration'
+  return api('/database/query',{method:'POST',body:{query,parameters,read_only:!write},write,check})
+ }
  const secrets=values=>api('/secrets',{method:'POST',body:Object.entries(values).map(([name,value])=>({name,value})),write:true})
  const project=await api('')
  if((project.ref ?? project.id)!==STAGING_REF || project.name!=='ifosse-staging' || project.status!=='ACTIVE_HEALTHY')fail('Projet staging attendu absent, renommé ou indisponible. Aucune écriture.')
