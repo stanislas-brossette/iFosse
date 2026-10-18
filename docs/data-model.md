@@ -379,8 +379,8 @@ changes enqueue without modifying the existing business RPCs or historical snaps
 See [event rules and rollout](in-app-notifications.md).
 
 
-### File de notifications de compte (D030)
+## File de notifications de compte (D030)
 
 `member_notification_settings` est une configuration serveur désactivée par défaut, fixant environnement/ref et destinataires staging exacts. `member_notifications` référence l’audit et l’adhérent, conserve uniquement identité email/prénom à la date de l’événement, type et reçu/bail. Unicité `(audit_id,kind)`, RLS sans accès navigateur. Le trigger d’audit ne copie pas les payloads de CACI/paiement ; aucun backfill. Les RPC de claim/complete/reprise/configuration sont service-only. La RPC de reçu navigateur ne renvoie qu’un statut de la propre opération de l’admin courant. Historique métier conservé ; rétention de 90 jours pour les reçus terminaux, revue des incertitudes. [Détails](member-notifications.md).
 
-`20261008160000_caci_notifications.sql` ajoute le type `caci_updated` et un trigger pour le seul audit `caci_date_changed`. Il réutilise la file privée et ses gardes, sans recopier les dates du payload. Les RPC CACI, verrous, autorisations et refus de conflit restent inchangés ; aucun backfill.
+`20261008160000_caci_notifications.sql` est conservée dans l’historique des installations existantes. La migration additive `20261018110000_account_email_scope.sql` retire son trigger CACI et exclut les anciens avis CACI non envoyés du dispatch. Les audits et reçus restent conservés. Le CACI relève désormais de la boîte interne (D032), indépendamment des emails ; ses RPC, verrous et autorisations restent inchangés.

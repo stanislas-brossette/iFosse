@@ -20,6 +20,7 @@ insert into caci_people values
 update public.members set role='admin' where id=(select id from caci_people where label='admin');
 update public.member_notification_settings set enabled=true,environment='preview',project_ref='btpojwwwsxrepsehmxbm',
  staging_recipients=array['admin@caci-fictif.fr','member@caci-fictif.fr','seed@caci-fictif.fr'];
+update public.app_notification_settings set enabled=true where singleton;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','08160000-0000-4000-8000-000000000001',true);
 select public.set_member_caci_if_current((select id from caci_people where label='member'),'2099-12-31',null);
@@ -28,6 +29,7 @@ select public.set_member_caci_if_current((select id from caci_people where label
 select throws_ok($$select public.set_member_caci_if_current((select id from caci_people where label='member'),'2031-01-01',null)$$,'PGRST',jsonb_build_object('code','40001','message','CACI_EDIT_CONFLICT','details',null,'hint',null)::text,'Concurrent CACI change remains rejected');
 reset role;
 select is((select count(*) from public.member_notifications),0::bigint,'Successful CACI update creates no email');
+select is((select count(*) from public.app_notifications where kind='caci_updated' and member_id=(select id from caci_people where label='member')),1::bigint,'Active in-app CACI notification remains available alongside account emails');
 select is((select count(*) from public.audit_events where event_type='caci_date_changed'),1::bigint,'CACI audit is retained');
 select ok(not exists(select 1 from pg_trigger where tgname='audit_queue_caci_notification'),'Historical CACI email trigger is removed');
 -- Model a legacy unsent item from before the scope migration, including a retry.
@@ -36,6 +38,8 @@ select id,target_member_id,'caci_updated','member@caci-fictif.fr','Fictif',creat
 from public.audit_events where event_type='caci_date_changed';
 select is((select count(*) from public.claim_member_notifications('preview','btpojwwwsxrepsehmxbm')),0::bigint,'Legacy CACI cannot be claimed');
 select is((select status from public.member_notifications),'suppressed','Legacy CACI is cancelled without deleting audit/receipt');
+select is((select enabled from public.app_notification_settings where singleton),true,'Email dispatcher never disables the active in-app channel');
+select is((select count(*) from public.app_notifications where kind='caci_updated' and member_id=(select id from caci_people where label='member')),1::bigint,'Suppressing legacy CACI email preserves its separate in-app notice');
 select is((select count(*) from public.audit_events where event_type='caci_date_changed'),1::bigint,'Cancelling an old email preserves CACI audit');
 select is((select caci_expiry_date from public.members where id=(select id from caci_people where label='member')),'2099-12-31'::date,'Removing email does not change CACI business value');
 select ok(not public.member_notification_email_kind('caci_updated'),'CACI is excluded from email allowlist');
