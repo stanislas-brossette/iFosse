@@ -308,7 +308,9 @@ Précaution de transfert : les adresses fictives en `.invalid` sont exclues des 
 
 **Décision (demande explicite du propriétaire)** : première tranche email pour création depuis le Président, désactivation/réactivation, attribution/retrait admin et transfert de présidence (deux intéressés). Bienvenue informatif sans invitation/Auth token. Recentrage validé par le propriétaire : le CACI et les événements opérationnels relèvent des notifications internes, pas des emails. La migration additive de restriction conserve l’historique des installations existantes.
 
-Mise en file avec l’audit après réussite, worker serveur Brevo séparé, destinataires synthétiques exclus, staging limité à une liste exacte de testeurs. Envoi désactivé par défaut, aucun rattrapage des anciens audits. Une panne fournisseur ne remet pas en cause l’action métier. Statut accepté distinct de livré ; reprises bornées après refus certain, incertitude revue par opérateur pour éviter les doublons. [Architecture, déploiement et limites](member-notifications.md).
+Mise en file avec l’audit après réussite, worker serveur Brevo séparé, destinataires synthétiques exclus, staging limité par défaut à une liste exacte de testeurs. Envoi désactivé par défaut, aucun rattrapage des anciens audits. Une panne fournisseur ne remet pas en cause l’action métier. Statut accepté distinct de livré ; reprises bornées après refus certain, incertitude revue par opérateur pour éviter les doublons. [Architecture, déploiement et limites](member-notifications.md).
+
+Complément de recette demandé par le propriétaire : le staging peut passer explicitement en mode emails pour tous les adhérents réels enregistrés (actuels/futurs), tout en conservant la liste de test par défaut. Aucun seed, domaine réservé, email arbitraire ou rattrapage historique. La migration seule ne change pas l’audience ; l’opérateur active séparément SQL et worker via `--all-members`. Ce complément n’active rien en production.
 
 ## D031 — Installation PWA V1 facultative et en ligne
 

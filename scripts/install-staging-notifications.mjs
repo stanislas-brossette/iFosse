@@ -33,6 +33,7 @@ export const migrationFiles=[
  ['20261008150000_member_notifications.sql','cce2a97832d0c5054c38c85bdcfc78832d14c86d0f57ae88c083200be15381dc'],
  ['20261008160000_caci_notifications.sql','89cade5b555425307c00487314b0c65b7bdb1ddbf9d102f89ee308858bf05895'],
  ['20261018110000_account_email_scope.sql','528fb45816982a924fbf0a2f59a01718194702489f02f71ec2a9cb85cd68e2be'],
+ ['20261018210000_registered_member_emails.sql','81c24ffc9631add0f33f4ee04afd9aac5b3192f92950a431946e30b724369799'],
 ]
 export async function installationSources(reader=readFile){
  const migrations=[]
@@ -45,7 +46,7 @@ export async function installationSources(reader=readFile){
  for(const name of ['index.ts','handler.mjs'])files.push({name,content:await reader(new URL(`../supabase/functions/member-notifications/${name}`,import.meta.url),'utf8')})
  return {migrations,files}
 }
-// Record only these three pinned migrations in the same transaction as their DDL.
+// Record only these pinned migrations in the same transaction as their DDL.
 // Preserve existing history; a conflicting version aborts rather than overwriting it.
 export function trackedMigration(sql,index){
  const [filename]=migrationFiles[index]
@@ -71,7 +72,8 @@ export const preflightSql=`select
  to_regclass('public.member_notifications') is not null as outbox,
  to_regclass('public.member_notification_settings') is not null as settings,
  exists(select 1 from pg_trigger where tgname='audit_queue_caci_notification' and tgrelid=to_regclass('public.audit_events') and not tgisinternal and tgenabled<>'D' and tgfoid=to_regprocedure('public.queue_caci_audit_notification()')) as caci,
- to_regprocedure('public.member_notification_email_kind(text)') is not null as account_only;
+ to_regprocedure('public.member_notification_email_kind(text)') is not null as account_only,
+ exists(select 1 from pg_attribute where attrelid=to_regclass('public.member_notification_settings') and attname='staging_recipient_mode' and not attisdropped) as registered_audience;
 `
 export const settingsSql=`select enabled,environment,project_ref,
  (select relrowsecurity from pg_class where oid='public.member_notifications'::regclass)
@@ -86,7 +88,8 @@ export const settingsSql=`select enabled,environment,project_ref,
 export const settingsPrivacySql=settingsSql.replace('select enabled,environment,project_ref,','select ').replace(' from public.member_notification_settings where singleton;',';')
 export const extensionSql=`select name,installed_version from pg_available_extensions where name in ('pg_cron','pg_net','supabase_vault');`
 export const jobsSql=`select jobid,jobname,command,active from cron.job;`
-export const enableSql=`update public.member_notification_settings set enabled=true,environment='preview',project_ref='${STAGING_REF}',staging_recipients=$1::text[] where singleton returning enabled;`
+export const enableSql=`update public.member_notification_settings set enabled=true,environment='preview',project_ref='${STAGING_REF}',staging_recipients=$1::text[],staging_recipient_mode='allowlist' where singleton returning enabled;`
+export const enableRegisteredSql=enableSql.replace("staging_recipient_mode='allowlist'","staging_recipient_mode='registered'")
 export const disableSql='update public.member_notification_settings set enabled=false where singleton;'
 // Recheck ownership inside the scheduling transaction, including concurrent edits.
 export const scheduleSql=`do $install$
@@ -143,11 +146,13 @@ export function createHiddenPrompt(input=process.stdin,output=process.stdout){
 
 export async function installNotifications({args=[],env=process.env,fetcher=fetch,sources=installationSources,ask,log=console.log}={}){
  if(args.length===1 && args[0]==='--help'){
-  log('npm run staging:notifications:install [-- --apply]\nSans --apply : vérifications et plan, aucune écriture. Staging fixé, production refusée.\nSaisie guidée ou variables : SUPABASE_ACCESS_TOKEN, BREVO_API_KEY, NOTIFICATION_SENDER_EMAIL, NOTIFICATION_STAGING_RECIPIENTS. Secrets masqués, jamais sauvegardés.');return
+  log('npm run staging:notifications:install [-- --all-members] [-- --apply]\nSans --apply : vérifications et plan, aucune écriture. Staging fixé, production refusée.\nSaisie guidée ou variables : SUPABASE_ACCESS_TOKEN, BREVO_API_KEY, NOTIFICATION_SENDER_EMAIL, NOTIFICATION_STAGING_RECIPIENTS. Secrets masqués, jamais sauvegardés.');return
  }
- if(args.length>1 || (args.length===1 && args[0]!=='--apply'))fail('Option inconnue. Voir --help.')
+ if(args.some(arg=>!['--apply','--all-members'].includes(arg)) || new Set(args).size!==args.length)fail('Option inconnue. Voir --help.')
+ const allMembers=args.includes('--all-members')
+ if(allMembers && env.NOTIFICATION_STAGING_RECIPIENTS?.trim())fail('Retirer NOTIFICATION_STAGING_RECIPIENTS pour choisir explicitement --all-members.')
  if((env.SUPABASE_URL && env.SUPABASE_URL!==STAGING_URL) || (env.SUPABASE_PROJECT_ENV && env.SUPABASE_PROJECT_ENV!=='preview') || (env.SUPABASE_PROJECT_REF && env.SUPABASE_PROJECT_REF!==STAGING_REF))fail('Configuration différente du projet staging fixé. Aucune requête effectuée.')
- const apply=args[0]==='--apply'
+ const apply=args.includes('--apply')
  const collect=async(key,label,secret=false)=>{
   const value=(env[key] ?? (ask ? await ask(label,secret) : '')).trim()
   if(!value || /[\r\n\0]/.test(value))fail(`Valeur ${key} manquante ou invalide. Voir --help.`)
@@ -157,8 +162,8 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
  if(!token.startsWith('sbp_'))fail('Un jeton personnel Supabase est requis, pas une clé de projet.')
  const key=await collect('BREVO_API_KEY','Clé API Brevo (masquée) : ',true)
  const sender=(await collect('NOTIFICATION_SENDER_EMAIL','Adresse expéditeur vérifiée Brevo : ')).toLowerCase()
- const recipients=[...new Set((await collect('NOTIFICATION_STAGING_RECIPIENTS','Emails testeurs autorisés (virgules) : ')).split(',').map(x=>x.trim().toLowerCase()))]
- if(!emailValid(sender) || !recipients.length || recipients.some(x=>!emailValid(x)))fail('Expéditeur/destinataires réels exacts requis, sans wildcard ni domaine réservé.')
+ const recipients=allMembers ? [] : [...new Set((await collect('NOTIFICATION_STAGING_RECIPIENTS','Emails testeurs autorisés (virgules) : ')).split(',').map(x=>x.trim().toLowerCase()))]
+ if(!emailValid(sender) || (!allMembers && !recipients.length) || recipients.some(x=>!emailValid(x)))fail('Expéditeur/destinataires réels exacts requis, sans wildcard ni domaine réservé.')
  let local
  try{local=await sources()}catch{fail('Fichiers de migration/fonction absents ou modifiés : vérifier le checkout de la PR. Aucune écriture.')} // Integrity check before hosted writes.
  let verified=false,writing=false,settingsPresent=false
@@ -210,7 +215,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
  }
 
  log(`Cible vérifiée : ifosse-staging / ${STAGING_REF} / preview.`)
- log(`Plan : ${state.outbox ? 'conserver la file' : 'installer la file'} ; limiter aux emails sensibles de compte (aucun email CACI) ; déployer member-notifications ; configurer ${recipients.length} destinataire(s) ; réutiliser/créer Vault et une seule tâche par minute.`)
+ log(`Plan : ${state.outbox ? 'conserver la file' : 'installer la file'} ; limiter aux emails sensibles de compte (aucun email CACI) ; déployer member-notifications ; ${allMembers ? 'autoriser tous les adhérents réels enregistrés (actuels et futurs), hors seed/domaines fictifs' : 'configurer '+recipients.length+' destinataire(s) autorisé(s)'} ; réutiliser/créer Vault et une seule tâche par minute.`)
  if(!apply){log('Les valeurs privées de configuration et le secret Vault seront vérifiés uniquement pendant --apply.');log('Dry-run terminé : aucune écriture, aucun déploiement, aucun email. Relancer avec --apply pour installer.');return}
  try{
   writing=true
@@ -222,6 +227,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
    if(!state.caci)await sql(trackedMigration(local.migrations[1],1),[],true)
    await sql(trackedMigration(local.migrations[2],2),[],true)
   }
+  if(!state.registered_audience)await sql(trackedMigration(local.migrations[3],3),[],true)
   for(const [name,schema] of [['pg_cron','pg_catalog'],['pg_net','extensions'],['supabase_vault','vault']]){
    if(!installed(name))await sql(`create extension if not exists ${name} with schema ${schema};`,[],true)
   }
@@ -235,7 +241,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
    dispatch=randomBytes(32).toString('hex')
    await sql('select vault.create_secret($1,$2);',[dispatch,VAULT_NAME],true)
   }
-  await secrets({NOTIFICATION_ENABLED:'false',NOTIFICATION_ENV:'preview',NOTIFICATION_DISPATCH_SECRET:dispatch,NOTIFICATION_STAGING_RECIPIENTS:recipients.join(','),NOTIFICATION_SENDER_EMAIL:sender,BREVO_API_KEY:key})
+  await secrets({NOTIFICATION_ENABLED:'false',NOTIFICATION_ENV:'preview',NOTIFICATION_DISPATCH_SECRET:dispatch,NOTIFICATION_RECIPIENT_MODE:allMembers ? 'registered' : 'allowlist',NOTIFICATION_STAGING_RECIPIENTS:recipients.join(','),NOTIFICATION_SENDER_EMAIL:sender,BREVO_API_KEY:key})
   const form=new FormData()
   form.append('metadata',JSON.stringify({name:'member-notifications',entrypoint_path:'index.ts',verify_jwt:false}))
   for(const file of local.files)form.append('file',new Blob([file.content],{type:'application/typescript'}),file.name)
@@ -246,7 +252,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   validateJobs(await sql(jobsSql))
   await sql(scheduleSql,[],true)
   await secrets({NOTIFICATION_ENABLED:'true'})
-  const enabled=await sql(enableSql,[recipients],true)
+  const enabled=await sql(allMembers ? enableRegisteredSql : enableSql,[recipients],true)
   if(enabled?.[0]?.enabled!==true)fail('Activation SQL non confirmée.')
   log('Installation staging terminée. Notifications activées pour les futures actions autorisées. Aucun email de test envoyé. Tester une action de compte sur un testeur autorisé depuis la preview ; aucun email CACI.')
  }catch{
@@ -260,7 +266,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){
  let prompt
  try{
-  const needsPrompt=!['SUPABASE_ACCESS_TOKEN','BREVO_API_KEY','NOTIFICATION_SENDER_EMAIL','NOTIFICATION_STAGING_RECIPIENTS'].every(name=>process.env[name])
+  const needsPrompt=!['SUPABASE_ACCESS_TOKEN','BREVO_API_KEY','NOTIFICATION_SENDER_EMAIL',...(process.argv.includes('--all-members') ? [] : ['NOTIFICATION_STAGING_RECIPIENTS'])].every(name=>process.env[name])
   if(needsPrompt && !process.argv.includes('--help'))prompt=createHiddenPrompt()
   await installNotifications({args:process.argv.slice(2),ask:prompt?.ask})
  }catch(error){console.error(error instanceof Error && !error.code ? error.message : 'Installation indisponible. Vérifier les fichiers locaux et les accès ; aucun détail fournisseur affiché.');process.exitCode=1}finally{prompt?.close()}

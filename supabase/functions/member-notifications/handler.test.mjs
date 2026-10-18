@@ -57,3 +57,31 @@ describe('internal notification dispatcher',()=>{
   expect((await app.request()).status).toBe(503);expect(app.fetcher).toHaveBeenCalledOnce()
  })
 })
+
+
+describe('explicit registered-member staging audience',()=>{
+ const vars={...env,NOTIFICATION_RECIPIENT_MODE:'registered',NOTIFICATION_STAGING_RECIPIENTS:''}
+ it('sends account mail to an eligible row claimed by SQL outside the test allowlist',async()=>{
+  const app=setup({vars,rows:[{...row,recipient_email:'new-member@club-fictif.fr'}]})
+  expect((await (await app.request()).json()).accepted).toBe(1)
+  expect(JSON.parse(app.fetcher.mock.calls[0][1].body).to).toEqual([{email:'new-member@club-fictif.fr'}])
+ })
+ it.each(['fake@ifosse-seed.invalid','fake@example.test','fake@example.com'])('still excludes reserved address %s',async recipient_email=>{
+  const app=setup({vars,rows:[{...row,recipient_email}]})
+  expect((await (await app.request()).json()).suppressed).toBe(1)
+  expect(app.fetcher).not.toHaveBeenCalled()
+ })
+ it.each([{NOTIFICATION_RECIPIENT_MODE:''},{NOTIFICATION_RECIPIENT_MODE:'all'},{NOTIFICATION_STAGING_RECIPIENTS:'*'},{NOTIFICATION_STAGING_RECIPIENTS:'allowed@club-fictif.fr'},{NOTIFICATION_ENV:'production',SUPABASE_URL:'https://qjrpxuatsnvrqxhzklzq.supabase.co'}])('fails closed for invalid or production registered-mode configuration %j',async patch=>{
+  const app=setup({vars:{...vars,...patch}})
+  expect((await app.request()).status).toBe(503)
+  expect(app.serviceClient).not.toHaveBeenCalled()
+  expect(app.fetcher).not.toHaveBeenCalled()
+ })
+ it('does not send mail to arbitrary request-body targets',async()=>{
+  const rpc=vi.fn(async name=>name==='claim_member_notifications' ? {data:[],error:null} : {data:true,error:null})
+  const fetcher=vi.fn()
+  const handler=notificationHandler({env:vars,serviceClient:()=>({rpc}),fetcher})
+  await handler(new Request('https://edge.example.test',{method:'POST',headers:{Authorization:`Bearer ${vars.NOTIFICATION_DISPATCH_SECRET}`},body:JSON.stringify({to:'arbitrary@club-fictif.fr'})}))
+  expect(fetcher).not.toHaveBeenCalled()
+ })
+})

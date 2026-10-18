@@ -16,7 +16,7 @@ Le worker `member-notifications` nécessite un secret d’appel interne distinct
 
 Le UUID de la notification sert de clé d’idempotence Brevo. Brevo documente une fenêtre de 30 minutes ; cela **ne permet pas de promettre une livraison exactement une fois à travers une panne distribuée**. Les HTTP 429 explicitement refusés sont repris avec délai 1/2/4/8 minutes, au maximum cinq tentatives. Les refus 4xx restent `failed`. Les timeouts, 5xx, réponses indéterminées, perte de reçu DB et baux expirés restent `uncertain`, sans renvoi automatique. La modification métier reste enregistrée. Les opérations d’envoi/acceptation ne sont jamais confondues avec l’accès Auth.
 
-Les comptes réservés `.invalid`, `.test`, `.example`, `.localhost`, `example.com/net/org`, et les identités/registre du seed sont exclus, même avec une adresse ultérieurement modifiée. La configuration staging exige une liste d’emails **exacts**, sans wildcard, dans SQL et dans le worker. Aucune redirection des emails exclus vers une boîte commune.
+Les comptes réservés `.invalid`, `.test`, `.example`, `.localhost`, `example.com/net/org`, et les identités/registre du seed sont exclus, même avec une adresse ultérieurement modifiée. La configuration staging reste sur une liste d’emails **exacts**, sans wildcard, par défaut. Le mode opérateur explicite `--all-members` autorise tous les adhérents réels enregistrés, actuels et futurs : le claim SQL exige une identité Auth confirmée et liée à la même adresse que la notification. Les comptes seed et domaines réservés restent exclus. Aucun destinataire n’est fourni par une requête navigateur. Le mode est activé à la fois dans SQL et dans les secrets serveur du worker. Aucune redirection des emails exclus vers une boîte commune.
 
 Pas de rattrapage historique : configuration désactivée au départ, reçus `disabled` jamais rejoués. Les messages en attente datant de plus de sept jours sont exclus ; les reçus terminaux sont retirés après 90 jours lors d’une exécution du worker, sans supprimer l’audit métier. Les incertitudes restent disponibles pour revue opérateur. Désactiver l’envoi bloque les nouveaux claims et suspend les tâches encore en attente ; un lot déjà réclamé peut terminer ses envois (au maximum deux minutes de bail). réactiver peut reprendre celles-ci si elles restent éligibles. Les nouveaux événements intervenus pendant la désactivation ne sont pas rejoués.
 
@@ -44,15 +44,32 @@ Un refus affiche uniquement le code HTTP et l’étape concernée, sans corps de
 
 La cible est **fixée dans le code** à `ifosse-staging` / `btpojwwwsxrepsehmxbm`, puis son identité, son nom et son état sont vérifiés via Supabase avant toute écriture. Une variable `SUPABASE_URL`, `SUPABASE_PROJECT_REF` ou `SUPABASE_PROJECT_ENV` contradictoire provoque un refus. Aucun autre projet, notamment production, ne peut être choisi. L’expéditeur doit apparaître comme vérifié dans Brevo. Les domaines fictifs et les wildcards sont refusés.
 
-L’installateur applique uniquement les trois migrations de notifications dont le contenu est vérifié par SHA-256, inscrit chaque nouvelle migration dans l’historique Supabase dans la même transaction, active les extensions nécessaires, crée/réutilise le secret Vault, configure les secrets serveur, déploie `member-notifications` et programme **une seule** tâche par minute. Les migrations métier antérieures doivent déjà être présentes. Il ne change ni Auth/SMTP, ni Netlify, ni comptes, ni fichiers frontend. Il n’envoie pas d’email de test et ne rejoue pas les événements intervenus lorsque les notifications étaient désactivées. Après activation, la tâche planifiée peut traiter les événements encore en attente et éligibles.
+L’installateur applique uniquement les quatre migrations de notifications dont le contenu est vérifié par SHA-256, inscrit chaque nouvelle migration dans l’historique Supabase dans la même transaction, active les extensions nécessaires, crée/réutilise le secret Vault, configure les secrets serveur, déploie `member-notifications` et programme **une seule** tâche par minute. Les migrations métier antérieures doivent déjà être présentes. Il ne change ni Auth/SMTP, ni Netlify, ni comptes, ni fichiers frontend. Il n’envoie pas d’email de test et ne rejoue pas les événements intervenus lorsque les notifications étaient désactivées. Après activation, la tâche planifiée peut traiter les événements encore en attente et éligibles.
 
 Relancer la même commande réutilise la file, son historique, le secret Vault et la tâche reconnue. Aucune suppression de données. Une tâche différente ou plusieurs tâches correspondantes interrompent l’installation plutôt que remplacer une configuration manuelle inconnue. Ne pas lancer deux installations simultanément. En cas d’échec après le début des modifications, les deux interrupteurs d’envoi sont désactivés ; les étapes déjà réussies restent en place et la commande peut être relancée. Si cette désactivation ne peut être confirmée, le message demande explicitement de suspendre Cron et de vérifier le secret serveur `NOTIFICATION_ENABLED=false`.
 
 Limites : l’API Management SQL de Supabase est expérimentale ; la vérification locale utilise une base jetable (`npm run db:notification-install-check`, changements intégralement annulés) et des réponses fournisseur simulées, et ne prouve pas l’installation hébergée. Un ancien schéma incohérent ou une migration déjà appliquée manuellement avec un historique contradictoire nécessite une revue opérateur. L’installateur n’est pas un outil de réparation générale ni d’activation production.
 
+## Autoriser les adhérents réels du club sur staging
+
+Après recette sur des comptes volontaires, le propriétaire peut autoriser tous les adhérents enregistrés, sans maintenir de liste d’adresses. Depuis cette branche :
+
+```bash
+npm run staging:notifications:install -- --all-members
+npm run staging:notifications:install -- --all-members --apply
+```
+
+La première commande est un dry-run sans écriture. La seconde met à jour l’installation staging existante puis active le mode `registered`, côté SQL et worker. Les trois premières saisies restent identiques (jeton personnel Supabase, clé API Brevo, expéditeur vérifié) ; aucune liste de destinataires n’est demandée. Si `NOTIFICATION_STAGING_RECIPIENTS` est encore exportée dans le terminal, la retirer avec `unset NOTIFICATION_STAGING_RECIPIENTS` avant de choisir ce mode. Une configuration contradictoire est refusée.
+
+La migration additive `20261018210000_registered_member_emails.sql` ajoute `staging_recipient_mode`, avec `allowlist` par défaut : appliquer la migration seule ne change pas l’audience et n’active aucun envoi. Les migrations déjà déployées restent inchangées. Les événements `suppressed`/`disabled` ne sont jamais rejoués lors du passage au mode club. Un avis n’est adressé qu’à l’adhérent concerné par une future action de compte, pas à tout le club. Les comptes désactivés peuvent recevoir leurs avis d’accès ; ils ne récupèrent aucun droit ni session pour autant.
+
+Le passage conserve la file, ses reçus, le secret Vault et une seule tâche Cron. Il ne touche ni Auth/SMTP, ni Netlify, ni les notifications internes. Si les emails étaient déjà actifs, attendre la fin d’une invocation en cours après avoir suspendu les envois comme décrit ci-dessous ; le changement de configuration ne peut pas annuler un email déjà confié à Brevo.
+
+Pour revenir au test restreint, relancer l’installateur **sans** `--all-members`, fournir les adresses exactes autorisées, puis `--apply`. Le CLI avancé `staging:notifications` conserve son fonctionnement par liste ; il ne suffit pas seul à mettre le worker en mode club. Le mode club introduit ici est réservé au projet staging fixé : aucune activation ni modification du projet production.
+
 ## Procédure manuelle avancée / arrêt
 
-Cette PR ne modifie aucun projet hébergé. Appliquer `20261008150000_member_notifications.sql` sur **ifosse-staging** (`btpojwwwsxrepsehmxbm`). Appliquer ensuite `20261008160000_caci_notifications.sql` puis obligatoirement `20261018110000_account_email_scope.sql`. La deuxième migration historique est conservée pour ne pas réécrire l’historique des installations existantes ; la troisième retire son trigger CACI, annule les avis CACI non envoyés et limite la prise en charge aux sept types de compte. Ces migrations n’activent rien et ne migrent aucun ancien audit en email.
+Cette PR ne modifie aucun projet hébergé. Appliquer `20261008150000_member_notifications.sql` sur **ifosse-staging** (`btpojwwwsxrepsehmxbm`). Appliquer ensuite `20261008160000_caci_notifications.sql` puis obligatoirement `20261018110000_account_email_scope.sql`. Appliquer enfin `20261018210000_registered_member_emails.sql` (audience par défaut inchangée). La deuxième migration historique est conservée pour ne pas réécrire l’historique des installations existantes ; la troisième retire son trigger CACI, annule les avis CACI non envoyés et limite la prise en charge aux sept types de compte. Ces migrations n’activent rien et ne migrent aucun ancien audit en email.
 
 Configurer **les secrets de la Supabase Edge Function**, jamais Netlify, `VITE_*`, le dépôt ou une fixture :
 
@@ -62,7 +79,8 @@ Configurer **les secrets de la Supabase Edge Function**, jamais Netlify, `VITE_*
 | `NOTIFICATION_ENV` | `preview` |
 | `BREVO_API_KEY` | Clé API transactionnelle privée du compte Brevo ; ce n’est pas le mot de passe SMTP Supabase Auth |
 | `NOTIFICATION_SENDER_EMAIL` | Expéditeur réel vérifié dans Brevo |
-| `NOTIFICATION_STAGING_RECIPIENTS` | Emails exacts des testeurs volontaires, séparés par virgules |
+| `NOTIFICATION_RECIPIENT_MODE` | `allowlist` par défaut ; `registered` uniquement après activation explicite du mode club staging |
+| `NOTIFICATION_STAGING_RECIPIENTS` | Emails exacts en mode `allowlist` ; chaîne vide en mode `registered` |
 | `NOTIFICATION_DISPATCH_SECRET` | Secret aléatoire dédié d’au moins 32 caractères ; même valeur privée dans Vault pour le cron |
 
 `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` sont les variables serveur fournies par Supabase au worker. Le service-role ne doit pas être exposé dans le navigateur. Ne modifier aucun paramètre SMTP/template/magic link existant pour ces notifications.
@@ -111,7 +129,7 @@ Ne pas planifier une seconde tâche identique. Protéger Vault et les journaux `
 
 1. Utiliser uniquement des comptes de test autorisés possédant de vraies boîtes, jamais les profils du seed.
 2. Ajouter un compte depuis le Président : succès métier puis statut en attente, bienvenue reçu avec **l’URL staging principale**, sans magic link. Le compte demande ensuite son propre lien comme avant.
-3. Vérifier désactivation/réactivation et droits admin ; vérifier aussi qu’un compte hors liste ne reçoit rien. Ne pas transférer la présidence au seed ; utiliser deux testeurs capables de se connecter pour ce scénario.
+3. Vérifier désactivation/réactivation et droits admin ; en mode `allowlist`, vérifier aussi qu’un compte hors liste ne reçoit rien. En mode `registered`, vérifier un second adhérent réel hors ancienne liste et l’exclusion des comptes seed. Ne pas transférer la présidence au seed ; utiliser deux testeurs capables de se connecter pour ce scénario.
 4. Contrôler dans SQL Editor les états/codes agrégés et les reçus privés si nécessaire :
 
 ```sql
@@ -140,7 +158,7 @@ filtrées au prochain claim.
 
 Pour une installation existante, garder les deux envois désactivés pendant la mise à
 jour (SQL `enabled=false` et secret `NOTIFICATION_ENABLED=false`), attendre la fin
-d’une éventuelle requête en cours, appliquer la troisième migration et déployer le
+d’une éventuelle requête en cours, appliquer les migrations additives manquantes et déployer le
 worker avant de réactiver. Couper les interrupteurs ne stoppe pas une invocation
 déjà en cours : elle peut encore envoyer un avis avec son ancienne version. Si
 l’envoi était déjà activé, attendre sa fin avant de lancer l’installation.

@@ -184,3 +184,5 @@ sans email ni push, sans changer les permissions métier.
 ## Emails de notification de compte
 
 Une file serveur prépare les notifications de création, accès, droits admin et transfert de présidence. Activation hébergée distincte via Brevo/Edge/cron, désactivée par défaut, sans email aux comptes synthétiques. `npm run staging:notifications:install` guide la prévalidation sans écrire ; `npm run staging:notifications:install -- --apply` installe migrations, secrets serveur, worker et Cron uniquement sur le staging fixé. Deux clés masquées, un expéditeur vérifié et une liste exacte de testeurs sont demandés. [Guide opérateur](docs/member-notifications.md).
+
+Après recette des emails de compte, le mode club staging s’active explicitement par `npm run staging:notifications:install -- --all-members` (dry-run), puis `npm run staging:notifications:install -- --all-members --apply`. Il couvre les adhérents réels enregistrés, actuels/futurs, hors seed et domaines fictifs ; aucun rattrapage des avis exclus ni changement en production. Voir le [guide opérateur](docs/member-notifications.md).
