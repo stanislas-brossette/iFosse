@@ -9,10 +9,10 @@ import { loginRedirectUrl } from './redirect'
 import { clearReturnPath, consumeReturnPath, rememberReturnPath, replaceNavigation, syncNavigation } from '../../lib/navigation'
 
 export type Member = Tables<'members'>
-type Props = { client: SupabaseClient<Database>; children: (member: Member, refresh: () => Promise<void>) => ReactNode; onOpenProfile?: (member: Member) => void; onIdentityChange?: (previous:string|null,next:string|null) => void }
+type Props = { client: SupabaseClient<Database>; children: (member: Member, refresh: () => Promise<void>) => ReactNode; onOpenProfile?: (member: Member) => void; onIdentityChange?: (previous:string|null,next:string|null) => void; renderMemberActions?: (member:Member)=>ReactNode }
 const invalidLink = 'Ce lien est expiré ou a déjà été utilisé. Demandez un nouveau lien.'
 
-export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: Props) {
+export function AuthGate({ client, children, onOpenProfile, onIdentityChange, renderMemberActions }: Props) {
   const [session, setSession] = useState<Session | null>(null)
   const [member, setMember] = useState<Member | null>(null)
   const [profileLoading, setProfileLoading] = useState(false)
@@ -152,7 +152,7 @@ export function AuthGate({ client, children, onOpenProfile, onIdentityChange }: 
   if (loading) return <p role="status">Connexion en cours…</p>
   if (callback && 'tokenHash' in callback) return <section className="card login"><p className="eyebrow">Votre espace APSAP</p><h1>Confirmer la connexion</h1><p>Connectez-vous sur cet appareil avec le lien reçu par email.</p>{error && <p role="alert">{error}</p>}<button disabled={busy} onClick={() => void confirmLink()}>Se connecter</button></section>
   if (session) return <>
-    <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span>{member && member.auth_user_id === session.user.id && onOpenProfile ? <button type="button" className="identity identity-link" aria-label="Ouvrir mon profil" onClick={() => onOpenProfile(member)}>{identityContent}</button> : <div className="identity">{identityContent}</div>}<button ref={logoutButton} disabled={busy} onClick={() => setConfirmLogout(true)}>Se déconnecter</button></div>
+    <div className="toolbar auth-toolbar"><span className="topbar-caption">APSAP / Espace adhérent</span>{member && member.auth_user_id === session.user.id && onOpenProfile ? <button type="button" className="identity identity-link" aria-label="Ouvrir mon profil" onClick={() => onOpenProfile(member)}>{identityContent}</button> : <div className="identity">{identityContent}</div>}{member && member.auth_user_id === session.user.id && renderMemberActions?.(member)}<button ref={logoutButton} disabled={busy} onClick={() => setConfirmLogout(true)}>Se déconnecter</button></div>
     <dialog ref={logoutDialog} onKeyDown={trapLogoutFocus} aria-labelledby="logout-title" aria-describedby="logout-description" onCancel={event => { event.preventDefault(); if (!busy) cancelLogout() }}>
       <h2 id="logout-title">Se déconnecter ?</h2>
       <p id="logout-description">Pour revenir sur iFosse, vous devrez demander un nouveau lien de connexion.</p>

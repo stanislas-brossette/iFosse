@@ -402,3 +402,22 @@ dialog {max-height:calc(100dvh - 32px);overflow:auto}
 .install-app h2 { margin: 0 0 8px; font-size: 1.05rem; }
 .install-app p, .installed-login-help p { line-height: 1.6; overflow-wrap: anywhere; }
 .installed-login-help summary { min-height: 44px; padding: 12px 0; cursor: pointer; color: var(--teal); font-weight: 650; }
+
+/* Private inbox: no persistent browser cache, compact header and mobile dialog. */
+.notification-center { flex: 0 0 auto; }
+.notification-bell { display:flex; align-items:center; gap:6px; position:relative; }
+.notification-count { background:var(--teal, #087f82); color:white; border-radius:20px; padding:2px 6px; font-size:.75rem; }
+.notification-dialog { width:min(600px, calc(100vw - 32px)); }
+.notification-dialog .page-heading { align-items:center; gap:12px; }
+.notification-dialog h2 { margin:0; }
+.notification-list { list-style:none; padding:0; display:grid; gap:12px; }
+.notification-list li { padding:16px; border:1px solid #e4ebee; border-radius:14px; overflow-wrap:anywhere; }
+.notification-list .notification-unread { background:#e9f6f4; border-left:4px solid #087f82; }
+.notification-list h3 { margin:8px 0; font-size:1rem; }
+.notification-meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; font-size:.8rem; color:#5d7380; }
+.notification-list .actions { gap:8px; flex-wrap:wrap; }
+@media(max-width:700px) {
+  .notification-label { display:none; }
+  .notification-bell { padding:10px; min-width:44px; }
+  .notification-dialog .page-heading { flex-direction:row; }
+}

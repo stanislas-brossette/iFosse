@@ -5,7 +5,45 @@ export type Database = {
 
   "public": {
           Tables: {
-            "audit_events": {
+            "app_notification_settings": {
+                  Row: {
+                    "enabled": boolean,"singleton": boolean
+                  }
+                  Insert: {
+                    "enabled"?: boolean,"singleton"?: boolean
+                  }
+                  Update: {
+                    "enabled"?: boolean,"singleton"?: boolean
+                  }
+                  Relationships: [
+
+                  ]
+                },"app_notifications": {
+                  Row: {
+                    "created_at": string,"id": string,"kind": string,"member_id": string,"message": string,"read_at": string | null,"session_id": string | null,"source_id": string,"title": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"kind": string,"member_id": string,"message": string,"read_at"?: string | null,"session_id"?: string | null,"source_id": string,"title": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"kind"?: string,"member_id"?: string,"message"?: string,"read_at"?: string | null,"session_id"?: string | null,"source_id"?: string,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "app_notifications_member_id_fkey"
+      columns: ["member_id"]
+isOneToOne: false
+      referencedRelation: "members"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "app_notifications_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"audit_events": {
                   Row: {
                     "actor_member_id": string | null,"created_at": string,"event_type": string,"id": string,"payload": NonNullable<Json>,"session_id": string | null,"target_member_id": string | null
                   }
@@ -433,6 +471,9 @@ isOneToOne: false
 "discard_selection_draft":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
+"enqueue_app_notification":
+{ Args: { "p_kind": string,"p_member": string,"p_message": string,"p_session": string,"p_source": string,"p_title": string }; Returns: undefined
+                           },
 "ensure_palanquee_draft":
 { Args: { "p_session_id": string }; Returns: undefined
                            },
@@ -471,6 +512,9 @@ isOneToOne: false
 { Args: { "p_session_id": string }; Returns: {
               "current_level": string,"first_name": string,"last_name": string,"member_id": string,"preparing_level": string,"publication_id": string,"publication_version": number,"registered_at": string,"rsvp": Database["public"]['Enums']["rsvp_state"],"state": string
             }[]
+                           },
+"get_my_notifications":
+{ Args: { "p_before_id"?: string,"p_before_time"?: string }; Returns: Json
                            },
 "get_palanquee_state":
 { Args: { "p_session_id": string }; Returns: {
@@ -526,6 +570,9 @@ isOneToOne: false
                            },
 "lock_transport_session":
 { Args: { "p_session_id": string }; Returns: string
+                           },
+"mark_app_notifications_read":
+{ Args: { "p_ids": (string)[] }; Returns: undefined
                            },
 "mark_confirmed_attendance":
 { Args: { "p_expected_fingerprint": string,"p_session_id": string }; Returns: number

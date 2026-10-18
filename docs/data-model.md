@@ -368,3 +368,12 @@ Migration `20261007210000_selection_comparison.sql` : deux RPC admin-only, `get_
 L’ancien président devient admin et le successeur président dans une seule transaction, avec l’événement `presidency_transferred` (acteur/cible/ancien rôle cible/nouveaux rôles). Toute erreur, y compris d’audit, annule les deux changements. Index d’unicité, contraintes du président actif, RLS, historique/seed et RPC de bootstrap/récupération restent inchangés. Aucun champ ni table n’est ajouté ; seules les fonctions et les types générés évoluent.
 
 Précaution de transfert : les adresses fictives en `.invalid` sont exclues des choix et refusées par les deux RPC ; aucun marqueur ou enregistrement seed n’est modifié. La confirmation demande d’avoir vérifié que le successeur peut se connecter avec son lien habituel. Ce contrôle humain ne prétend pas garantir la délivrabilité de tout email. `.invalid` est réservé aux noms volontairement invalides ([RFC 2606](https://www.rfc-editor.org/rfc/rfc2606#section-2)). Les fixtures locales `example.test` restent utilisables via Mailpit ; elles ne doivent pas être utilisées comme successeurs réels hébergés.
+
+## Private in-app inbox
+
+`app_notifications` stores event snapshots for one active recipient, optional session
+reference, deduplication source, timestamp and read timestamp. Only own-row SELECT
+is exposed; writes/read acknowledgement use narrow server functions. Settings are
+operator-only and default disabled. Published selection audits and transactional car
+changes enqueue without modifying the existing business RPCs or historical snapshots.
+See [event rules and rollout](in-app-notifications.md).

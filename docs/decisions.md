@@ -311,3 +311,18 @@ Précaution de transfert : les adresses fictives en `.invalid` sont exclues des 
 La V1 n’enregistre aucun service worker : données/Auth restent servis par le réseau et aucun cache applicatif ne retarde les mises à jour. Les documents et métadonnées d’installation sont revalidés ; aucun rechargement forcé pendant une saisie. Le mode autonome et `appinstalled` masquent les propositions. Safari iOS affiche des instructions adaptées.
 
 Les liens magiques gardent le callback, l’origine et la confirmation explicite existants. Pour un contexte installé isolé du navigateur, une aide facultative permet de coller le lien original de la même origine dans un champ masqué, sans navigation vers un redirect utilisateur ni lecture automatique du presse-papiers. Ce n’est pas un nouvel échange de session ou un changement de politique Auth. Recette d’installation, persistance et mises à jour sur Android/iPhone réels obligatoire avant validation hébergée. Voir [le guide PWA](pwa.md).
+
+## D032 — Notifications internes ciblées et canaux séparés
+
+**Décision (validation explicite du propriétaire)** : privilégier une boîte privée
+avec compteur non lu dans le web/PWA pour les événements opérationnels : publication
+et résultat de sélection, changement de rendez-vous/départ ou retrait de voiture,
+CACI changé par un administrateur. Pas de brouillon, d’avis à soi-même, de push ni
+d’email opérationnel. Une republication identique ne génère pas de nouveau message.
+Les emails de compte (PR #65 séparée) se limitent à la création, l’accès, les rôles
+et la présidence. Pas d’email CACI.
+
+La migration est additive et désactivée par défaut ; activation opérateur après
+recette staging, sans rattrapage historique. Une panne de la boîte ne doit pas
+empêcher une action métier validée. Les règles actuelles d’autorisation, de
+publication et de covoiturage restent inchangées. Voir [activation et limites](in-app-notifications.md).
