@@ -61,6 +61,8 @@ npm run staging:notifications:install -- --all-members --apply
 
 La première commande est un dry-run sans écriture. La seconde met à jour l’installation staging existante puis active le mode `registered`, côté SQL et worker. Les trois premières saisies restent identiques (jeton personnel Supabase, clé API Brevo, expéditeur vérifié) ; aucune liste de destinataires n’est demandée. Si `NOTIFICATION_STAGING_RECIPIENTS` est encore exportée dans le terminal, la retirer avec `unset NOTIFICATION_STAGING_RECIPIENTS` avant de choisir ce mode. Une configuration contradictoire est refusée.
 
+Le succès de l’installation exige désormais une réponse de démarrage authentifiée du **worker réellement déployé**, avec le bon environnement et le bon mode. Ce contrôle `GET` ne lit pas la file et n’envoie aucun email. Il a lieu pendant que SQL reste désactivé ; trois essais bornés tolèrent la propagation des secrets. En cas d’échec, les deux interrupteurs email sont désactivés, et l’installation n’annonce pas un succès. Il ne prouve pas la réception en boîte ni la délivrabilité Brevo.
+
 La migration additive `20261018210000_registered_member_emails.sql` ajoute `staging_recipient_mode`, avec `allowlist` par défaut : appliquer la migration seule ne change pas l’audience et n’active aucun envoi. Les migrations déjà déployées restent inchangées. Les événements `suppressed`/`disabled` ne sont jamais rejoués lors du passage au mode club. Un avis n’est adressé qu’à l’adhérent concerné par une future action de compte, pas à tout le club. Les comptes désactivés peuvent recevoir leurs avis d’accès ; ils ne récupèrent aucun droit ni session pour autant.
 
 Le passage conserve la file, ses reçus, le secret Vault et une seule tâche Cron. Il ne touche ni Auth/SMTP, ni Netlify, ni les notifications internes. Si les emails étaient déjà actifs, attendre la fin d’une invocation en cours après avoir suspendu les envois comme décrit ci-dessous ; le changement de configuration ne peut pas annuler un email déjà confié à Brevo.
@@ -165,3 +167,11 @@ l’envoi était déjà activé, attendre sa fin avant de lancer l’installatio
 L’installeur staging coupe les interrupteurs, applique les migrations manquantes,
 déploie puis réactive ; il ne prétend pas annuler une requête en cours. Ne pas
 activer la PR en production dans le cadre des tests club.
+
+## Diagnostic du premier déploiement du mode club
+
+Un défaut du point d’entrée Deno omettait `NOTIFICATION_RECIPIENT_MODE` lors de la lecture des secrets. Avec la liste vide du mode club, le worker revenait à `allowlist` et répondait `503 / NOTIFICATION_CONFIGURATION` avant tout claim ou appel Brevo. Les tests du handler seul ne couvraient pas cette projection d’environnement. Le correctif inclut le mode dans le point d’entrée et exécute ce vrai fichier dans un test avec les seules frontières SDK/réseau simulées.
+
+Pour une installation de cette version défectueuse : mettre à jour la branche puis relancer le dry-run et `--all-members --apply`. Aucun besoin de rejouer manuellement les migrations ni de recréer les comptes. L’installateur vérifie maintenant le démarrage avant réactivation SQL. Les avis encore `pending`, récents et éligibles pourront être envoyés par Cron après réparation ; ce n’est pas un rejeu des reçus `disabled`/`suppressed`/`accepted`. Les avis `uncertain` demandent toujours la revue opérateur habituelle. Ne jamais effacer les reçus ou remettre toutes les lignes en attente.
+
+Le fichier [diagnostic SQL sans données personnelles](audits/member-email-runtime-check.sql) est en lecture seule et affiche uniquement configuration non secrète, compteurs de file et résultats HTTP agrégés (toutes les requêtes `pg_net`, pas uniquement les emails). Il ne lit ni Vault, ni destinataires, ni corps d’email, ni réponses fournisseur brutes. Exécuter uniquement dans le SQL Editor de staging pour confirmer l’état hébergé ; le code local ne peut pas le déduire.

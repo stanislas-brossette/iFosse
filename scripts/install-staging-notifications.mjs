@@ -144,7 +144,7 @@ export function createHiddenPrompt(input=process.stdin,output=process.stdout){
  }}
 }
 
-export async function installNotifications({args=[],env=process.env,fetcher=fetch,sources=installationSources,ask,log=console.log}={}){
+export async function installNotifications({args=[],env=process.env,fetcher=fetch,sources=installationSources,ask,log=console.log,pause=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){
  if(args.length===1 && args[0]==='--help'){
   log('npm run staging:notifications:install [-- --all-members] [-- --apply]\nSans --apply : vérifications et plan, aucune écriture. Staging fixé, production refusée.\nSaisie guidée ou variables : SUPABASE_ACCESS_TOKEN, BREVO_API_KEY, NOTIFICATION_SENDER_EMAIL, NOTIFICATION_STAGING_RECIPIENTS. Secrets masqués, jamais sauvegardés.');return
  }
@@ -166,7 +166,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
  if(!emailValid(sender) || (!allMembers && !recipients.length) || recipients.some(x=>!emailValid(x)))fail('Expéditeur/destinataires réels exacts requis, sans wildcard ni domaine réservé.')
  let local
  try{local=await sources()}catch{fail('Fichiers de migration/fonction absents ou modifiés : vérifier le checkout de la PR. Aucune écriture.')} // Integrity check before hosted writes.
- let verified=false,writing=false,settingsPresent=false
+ let verified=false,writing=false,settingsPresent=false,phase='configuration et déploiement'
  const api=async(path,{method='GET',body,write=false,check=''}={})=>{
   if(write && (!apply || !verified))fail('Écriture refusée avant validation staging/--apply.')
   const operation=path==='' ? 'vérification du projet (Project Settings : Read)' : path==='/database/query' ? `requête SQL (Database : ${write ? 'Read-write' : 'Read'})` : path==='/secrets' ? 'configuration des secrets (Edge Function Secrets : Read-write)' : 'déploiement du worker (Edge Functions : Read-write)'
@@ -252,15 +252,30 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   validateJobs(await sql(jobsSql))
   await sql(scheduleSql,[],true)
   await secrets({NOTIFICATION_ENABLED:'true'})
+  // Validate the actual deployed entrypoint, not just Management API metadata.
+  // SQL remains paused; GET is authenticated and cannot claim/send queue rows.
+  phase='vérification du démarrage du worker'
+  let ready=false
+  for(let attempt=0;attempt<3;attempt++){
+   try{
+    const health=await fetcher(endpoint,{method:'GET',headers:{Authorization:`Bearer ${dispatch}`},redirect:'error',signal:AbortSignal.timeout(10000)})
+    const result=health.ok ? await health.json() : null
+    ready=result?.code==='READY' && result.environment==='preview' && result.recipient_mode===(allMembers ? 'registered' : 'allowlist')
+   }catch{/* Retry only the side-effect-free readiness check, never a dispatch. */}
+   if(ready)break
+   if(attempt<2)await pause(1000)
+  }
+  if(!ready)fail('Démarrage du worker ou mode destinataires non confirmé.')
+  phase='activation SQL'
   const enabled=await sql(allMembers ? enableRegisteredSql : enableSql,[recipients],true)
   if(enabled?.[0]?.enabled!==true)fail('Activation SQL non confirmée.')
-  log('Installation staging terminée. Notifications activées pour les futures actions autorisées. Aucun email de test envoyé. Tester une action de compte sur un testeur autorisé depuis la preview ; aucun email CACI.')
+  log('Installation staging terminée. Notifications activées pour les futures actions autorisées. Aucun email de test envoyé. Démarrage du worker vérifié, sans envoi de test. Tester une action de compte sur un adhérent autorisé ; aucun email CACI.')
  }catch{
   if(writing){
    const shutdown=await Promise.allSettled([secrets({NOTIFICATION_ENABLED:'false'}),...(settingsPresent ? [sql(disableSql,[],true)] : [])])
    if(shutdown.some(r=>r.status==='rejected'))fail('Installation interrompue ; désactivation automatique non confirmée. Suspendre Cron et vérifier NOTIFICATION_ENABLED=false dans staging. Aucun secret affiché.')
   }
-  fail('Installation interrompue, envoi désactivé. Les étapes déjà réussies sont conservées ; relancer --apply après correction des accès. Aucun secret affiché.')
+  fail(`Installation interrompue (${phase}), envoi désactivé. Les étapes déjà réussies sont conservées ; relancer --apply après correction. Aucun secret affiché.`)
  }
 }
 if(process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href){

@@ -18,7 +18,7 @@ describe('internal notification dispatcher',()=>{
   expect(notificationConfig({...env,NOTIFICATION_ENV:'production',SUPABASE_URL:'https://qjrpxuatsnvrqxhzklzq.supabase.co'}).site).toBe('https://ifosse.netlify.app')
  })
  it('rejects browser/member credentials and methods before privileged reads',async()=>{
-  const app=setup();expect((await app.request('member-jwt')).status).toBe(401);expect((await app.request(undefined,'GET')).status).toBe(405);expect(app.serviceClient).not.toHaveBeenCalled()
+  const app=setup();expect((await app.request('member-jwt')).status).toBe(401);expect((await app.request(undefined,'PUT')).status).toBe(405);expect(app.serviceClient).not.toHaveBeenCalled()
  })
  it.each(['welcome','deactivated','reactivated','admin_granted','admin_revoked','presidency_received','presidency_departed'])('renders %s as text, with fixed site and no Auth/medical payload',kind=>{
   const message=notificationMessage({...row,kind},notificationConfig(env));expect(message.subject).toBeTruthy();expect(message.textContent).toContain('https://ifosse-staging.netlify.app');expect(message.textContent).not.toMatch(/token_hash|\/auth\/confirm|CACI|mot de passe :/);expect(message.htmlContent).toBeUndefined();expect(message.headers).toEqual({idempotencyKey:row.id})
@@ -84,4 +84,14 @@ describe('explicit registered-member staging audience',()=>{
   await handler(new Request('https://edge.example.test',{method:'POST',headers:{Authorization:`Bearer ${vars.NOTIFICATION_DISPATCH_SECRET}`},body:JSON.stringify({to:'arbitrary@club-fictif.fr'})}))
   expect(fetcher).not.toHaveBeenCalled()
  })
+})
+
+
+it('readiness is authenticated and checks mode without claiming or sending emails',async()=>{
+ const app=setup({vars:{...env,NOTIFICATION_RECIPIENT_MODE:'registered',NOTIFICATION_STAGING_RECIPIENTS:''}})
+ expect((await app.request('wrong-secret','GET')).status).toBe(401)
+ const result=await app.request(undefined,'GET')
+ expect(await result.json()).toEqual({code:'READY',environment:'preview',recipient_mode:'registered'})
+ expect(app.serviceClient).not.toHaveBeenCalled()
+ expect(app.fetcher).not.toHaveBeenCalled()
 })

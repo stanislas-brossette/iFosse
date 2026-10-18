@@ -30,10 +30,12 @@ export function notificationMessage(row,config){
 const response=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})
 export function notificationHandler({env,serviceClient,fetcher=fetch}){
  return async request=>{
-  if(request.method!=='POST')return response(405,{code:'METHOD_NOT_ALLOWED'})
+  if(!['POST','GET'].includes(request.method))return response(405,{code:'METHOD_NOT_ALLOWED'})
   let config
   try{config=notificationConfig(env)}catch{return response(503,{code:'NOTIFICATION_CONFIGURATION'})}
   if(request.headers.get('Authorization')!==`Bearer ${config.secret}`)return response(401,{code:'UNAUTHORIZED'})
+  // Authenticated readiness never claims queue rows or contacts the provider.
+  if(request.method==='GET')return response(200,{code:'READY',environment:config.environment,recipient_mode:config.recipientMode})
   try{
    const db=serviceClient()
    const claimed=await db.rpc('claim_member_notifications',{p_environment:config.environment,p_project_ref:config.ref,p_limit:10})
