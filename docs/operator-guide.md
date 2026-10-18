@@ -63,7 +63,7 @@ Dans **Mon profil > Ma voiture habituelle**, cocher « J’ai habituellement une
 
 Dans **Covoiturage**, une offre existante apparaît en résumé **Ma voiture** avec places libres, rendez-vous/départ et passagers. **Modifier ma voiture** ouvre les valeurs actuelles; enregistrer avec succès referme le formulaire. Un refus conserve la saisie; annuler revient au résumé. **Retirer ma voiture** conserve la confirmation lorsqu’elle transporte des passagers, qui restent inscrits à la fosse. Une nouvelle offre se crée toujours avec **Proposer une voiture**.
 
-Dans l’annuaire, enregistrer un CACI avec succès actualise immédiatement son statut/date et referme l’éditeur. Un conflit ou refus le laisse ouvert avec la saisie et les options de reprise existantes. L’éditeur de son propre profil reste ouvert après sauvegarde.
+Dans l’annuaire, enregistrer un CACI avec succès actualise immédiatement son statut/date et referme l’éditeur. Un conflit ou refus le laisse ouvert avec la saisie et les options de reprise existantes. L’éditeur de son propre profil reste ouvert après sauvegarde. Une modification effective prépare un avis email sobre si les [notifications](member-notifications.md) sont activées et le destinataire autorisé : consulter Mon profil, sans date ni document dans le message. Une valeur identique ou un refus ne crée pas d’avis.
 
 ## Peupler uniquement le staging avec des données inventées
 
@@ -163,3 +163,7 @@ Le président dispose d’un parcours distinct en bas de Mon profil : successeur
 ### Installation PWA facultative (D031)
 
 La PWA est une livraison frontend, sans migration ni configuration Auth supplémentaire. Manifest/icônes restent sur l’origine installée ; recommander l’adresse staging principale aux testeurs plutôt qu’une preview temporaire. Aucun service worker ni cache métier ; les documents et métadonnées sont revalidés, les assets hashés gardent leur cache existant. Valider installation, connexion (y compris collage du lien si l’email ouvre un navigateur séparé), réouverture et version A → B sur de vrais Android/iPhone avant de déclarer le parcours opérationnel. [Guide et checklist](pwa.md).
+
+### Notifications de compte : activation séparée
+
+Installation guidée recommandée : `npm run staging:notifications:install` vérifie sans écrire, puis `npm run staging:notifications:install -- --apply` installe les deux migrations, les secrets Edge/Brevo, la fonction et Cron/Vault sur le staging fixé. Saisir un jeton personnel Supabase et une clé API Brevo (masqués), l’expéditeur vérifié et la liste exacte des testeurs. La procédure manuelle reste disponible. `npm run staging:notifications` est un dry-run ; `-- --apply` active la configuration DB staging seulement, `-- --disable` l’arrête. Aucun secret Netlify/frontend, email synthétique, backfill ou activation production. [Procédure complète et revue des résultats incertains](member-notifications.md).

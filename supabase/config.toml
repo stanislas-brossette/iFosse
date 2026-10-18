@@ -70,3 +70,8 @@ uri = "pg-functions://postgres/public/member_access_token_hook"
 # The handler verifies the bearer with Auth.getUser and checks the LIVE database
 # role twice. Supports hosted asymmetric JWTs; never trusts decoded claims alone.
 verify_jwt = false
+
+[functions.member-notifications]
+# Internal scheduler only: the handler requires a separate 32+ character secret
+# and positively pins the hosted environment before creating a service client.
+verify_jwt = false
