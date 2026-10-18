@@ -1,8 +1,8 @@
 # Notifications de compte par email
 
-Première tranche demandée par le propriétaire : création depuis l’interface Président, désactivation/réactivation, attribution/retrait admin, transfert de présidence (un email à chacun des deux intéressés). Une modification effective du CACI par admin/président prépare également un avis au seul adhérent concerné, y compris pour son propre CACI. Pas de paiement, séance ou autre modification personnelle dans cette tranche. Pas de newsletter ni de préférences transversales.
+Première tranche demandée par le propriétaire : création depuis l’interface Président, désactivation/réactivation, attribution/retrait admin, transfert de présidence (un email à chacun des deux intéressés). Les notifications CACI et opérationnelles sont réservées à une boîte interne séparée ; aucun email CACI n’est envoyé. Pas de paiement, séance ou autre modification personnelle dans cette tranche. Pas de newsletter ni de préférences transversales.
 
-Le bienvenue explique comment demander le magic link habituel ; il n’est ni une invitation Auth, ni un lien de connexion, ni une création de mot de passe. Le signup reste fermé. Les changements conservent leurs autorisations SQL actuelles. Les imports, bootstrap/récupération opérateur et seed ne déclenchent aucun email. Un changement CACI réussi utilise son audit existant : valeurs identiques (y compris absent → absent), refus, conflit ou rollback ne créent pas de nouvel avis. Le texte demande de consulter Mon profil ; aucune date de validité ni document ne quitte la base. Le statut email reste visible après fermeture de l’éditeur de l’annuaire ; une sauvegarde sans changement ne reprend pas un ancien reçu.
+Le bienvenue explique comment demander le magic link habituel ; il n’est ni une invitation Auth, ni un lien de connexion, ni une création de mot de passe. Le signup reste fermé. Les changements conservent leurs autorisations SQL actuelles. Les imports, bootstrap/récupération opérateur et seed ne déclenchent aucun email.
 
 ## Architecture et garanties
 
@@ -40,7 +40,7 @@ Les deux clés sont saisies sans écho dans le terminal et ne sont jamais sauveg
 
 La cible est **fixée dans le code** à `ifosse-staging` / `btpojwwwsxrepsehmxbm`, puis son identité, son nom et son état sont vérifiés via Supabase avant toute écriture. Une variable `SUPABASE_URL`, `SUPABASE_PROJECT_REF` ou `SUPABASE_PROJECT_ENV` contradictoire provoque un refus. Aucun autre projet, notamment production, ne peut être choisi. L’expéditeur doit apparaître comme vérifié dans Brevo. Les domaines fictifs et les wildcards sont refusés.
 
-L’installateur applique uniquement les deux migrations de notifications dont le contenu est vérifié par SHA-256, inscrit chaque nouvelle migration dans l’historique Supabase dans la même transaction, active les extensions nécessaires, crée/réutilise le secret Vault, configure les secrets serveur, déploie `member-notifications` et programme **une seule** tâche par minute. Les migrations métier antérieures doivent déjà être présentes. Il ne change ni Auth/SMTP, ni Netlify, ni comptes, ni fichiers frontend. Il n’envoie pas d’email de test et ne rejoue pas les événements intervenus lorsque les notifications étaient désactivées. Après activation, la tâche planifiée peut traiter les événements encore en attente et éligibles.
+L’installateur applique uniquement les trois migrations de notifications dont le contenu est vérifié par SHA-256, inscrit chaque nouvelle migration dans l’historique Supabase dans la même transaction, active les extensions nécessaires, crée/réutilise le secret Vault, configure les secrets serveur, déploie `member-notifications` et programme **une seule** tâche par minute. Les migrations métier antérieures doivent déjà être présentes. Il ne change ni Auth/SMTP, ni Netlify, ni comptes, ni fichiers frontend. Il n’envoie pas d’email de test et ne rejoue pas les événements intervenus lorsque les notifications étaient désactivées. Après activation, la tâche planifiée peut traiter les événements encore en attente et éligibles.
 
 Relancer la même commande réutilise la file, son historique, le secret Vault et la tâche reconnue. Aucune suppression de données. Une tâche différente ou plusieurs tâches correspondantes interrompent l’installation plutôt que remplacer une configuration manuelle inconnue. Ne pas lancer deux installations simultanément. En cas d’échec après le début des modifications, les deux interrupteurs d’envoi sont désactivés ; les étapes déjà réussies restent en place et la commande peut être relancée. Si cette désactivation ne peut être confirmée, le message demande explicitement de suspendre Cron et de vérifier le secret serveur `NOTIFICATION_ENABLED=false`.
 
@@ -48,7 +48,7 @@ Limites : l’API Management SQL de Supabase est expérimentale ; la vérificati
 
 ## Procédure manuelle avancée / arrêt
 
-Cette PR ne modifie aucun projet hébergé. Appliquer `20261008150000_member_notifications.sql` sur **ifosse-staging** (`btpojwwwsxrepsehmxbm`). Appliquer ensuite `20261008160000_caci_notifications.sql` pour l’avis CACI. Ces migrations n’activent rien et ne migrent aucun ancien audit en email.
+Cette PR ne modifie aucun projet hébergé. Appliquer `20261008150000_member_notifications.sql` sur **ifosse-staging** (`btpojwwwsxrepsehmxbm`). Appliquer ensuite `20261008160000_caci_notifications.sql` puis obligatoirement `20261018110000_account_email_scope.sql`. La deuxième migration historique est conservée pour ne pas réécrire l’historique des installations existantes ; la troisième retire son trigger CACI, annule les avis CACI non envoyés et limite la prise en charge aux sept types de compte. Ces migrations n’activent rien et ne migrent aucun ancien audit en email.
 
 Configurer **les secrets de la Supabase Edge Function**, jamais Netlify, `VITE_*`, le dépôt ou une fixture :
 
@@ -123,3 +123,20 @@ Avant une restauration hébergée, fixer le secret serveur `NOTIFICATION_ENABLED
 Production est une activation distincte non réalisée ici : URL/projet, credentials, expéditeur, environnement, configuration DB et ordonnanceur doivent tous être explicitement revus. Le CLI staging refuse toute activation production. Aucun secret ni liste de testeurs staging ne doit être partagé avec production.
 
 Références : [Brevo transactionnel](https://developers.brevo.com/reference/send-transac-email), [idempotence et limite de 30 minutes](https://developers.brevo.com/docs/heterogenous-versions-batch-emails), [ordonnancement Supabase/Vault](https://supabase.com/docs/guides/functions/schedule-functions).
+
+## Recentrage et installations existantes
+
+Le CACI ne déclenche plus d’email ni de reçu email dans son éditeur. La boîte interne
+est livrée séparément, sans dépendance Brevo/Cron. La nouvelle migration est additive :
+les deux fichiers historiques et leurs empreintes restent inchangés. Les reçus déjà
+acceptés et les audits restent conservés. Un email déjà confié au fournisseur ne peut
+pas être rappelé. Une ancienne tâche CACI encore louée est aussi refusée par le
+worker mis à jour, avant tout appel Brevo. Les relances d’anciennes tâches sont
+filtrées au prochain claim.
+
+Pour une installation existante, garder les deux envois désactivés pendant la mise à
+jour (SQL `enabled=false` et secret `NOTIFICATION_ENABLED=false`), attendre la fin
+d’une éventuelle requête en cours, appliquer la troisième migration et déployer le
+worker avant de réactiver. L’installeur staging effectue ces étapes dans cet ordre,
+sans répéter les migrations déjà installées. Ne pas activer la PR en production
+dans le cadre des tests club.

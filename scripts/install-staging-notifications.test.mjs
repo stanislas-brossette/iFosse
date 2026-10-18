@@ -5,7 +5,7 @@ import { installNotifications,installationSources,createHiddenPrompt,preflightSq
 import {STAGING_REF} from './staging-seed.mjs'
 const env={SUPABASE_ACCESS_TOKEN:'sbp_fixture_private',BREVO_API_KEY:'fixture_private_brevo',NOTIFICATION_SENDER_EMAIL:'Sender@club-fictif.fr',NOTIFICATION_STAGING_RECIPIENTS:'Tester@club-fictif.fr,tester@club-fictif.fr'}
 function setup({existing=false,project={},senderActive=true,jobs=[],failure,shutdownFailure=false}={}){
- const calls=[],log=vi.fn(),state={outbox:existing,settings:existing,caci:existing,prerequisites:true},extensions=['pg_cron','pg_net','supabase_vault'].map(name=>({name,installed_version:existing?'1':null}))
+ const calls=[],log=vi.fn(),state={outbox:existing,settings:existing,caci:false,account_only:existing,prerequisites:true},extensions=['pg_cron','pg_net','supabase_vault'].map(name=>({name,installed_version:existing?'1':null}))
  let savedDispatch=existing?'a'.repeat(64):null,failed=false
  const fetcher=vi.fn(async(url,options={})=>{
   const body=options.body instanceof FormData ? options.body : options.body ? JSON.parse(options.body) : null
@@ -27,6 +27,7 @@ function setup({existing=false,project={},senderActive=true,jobs=[],failure,shut
    else if(q===enableSql)data=[{enabled:true}]
    else if(q.includes('create table public.member_notification_settings')){state.outbox=state.settings=true;data=[]}
    else if(q.includes('create function public.queue_caci_audit_notification')){state.caci=true;data=[]}
+   else if(q.includes('create function public.member_notification_email_kind')){state.account_only=true;state.caci=false;data=[]}
    else if(q===scheduleSql){jobs.splice(0,jobs.length,{jobid:1,jobname:JOB_NAME,command:cronCommand,active:true});data=[]}
    else data=[]
   }
@@ -51,3 +52,14 @@ it('interactive prompt never echoes a secret into terminal output',async()=>{con
 it('help and unknown arguments never contact providers',async()=>{const s=setup();await s.run({args:['--help'],env:{}});await expect(s.run({args:['--force']})).rejects.toThrow('Option inconnue');expect(s.calls).toHaveLength(0)})
 
 it('records only pinned migrations atomically without rewriting existing history',async()=>{const local=await installationSources();const sql=trackedMigration(local.migrations[0],0);expect(sql.startsWith('begin;')).toBe(true);expect(sql.endsWith('commit;')).toBe(true);expect(sql).toContain("insert into supabase_migrations.schema_migrations(version,name,statements) values ('20261008150000','member_notifications'");expect(sql.slice(sql.lastIndexOf('create schema if not exists supabase_migrations'),sql.indexOf('array['))).not.toMatch(/on conflict|delete from supabase_migrations|truncate/i);expect(sql).toContain("array['"+local.migrations[0].replaceAll("'","''")+"']");expect(()=>trackedMigration('untrusted',0)).toThrow()})
+
+it('upgrades a historical CACI-enabled installation to account-only emails without replaying old migrations',async()=>{
+ const s=setup({existing:true});s.state.account_only=false;s.state.caci=true
+ await s.run({args:['--apply']})
+ const sql=s.writes().map(c=>c.body?.query??'').join('\n')
+ expect(sql).toContain('drop trigger if exists audit_queue_caci_notification')
+ expect(sql).toContain('member_notification_email_kind')
+ expect(sql).not.toContain('create table public.member_notification_settings')
+ expect(sql).not.toContain('create function public.queue_caci_audit_notification')
+ expect(s.state.account_only).toBe(true);expect(s.state.caci).toBe(false)
+})

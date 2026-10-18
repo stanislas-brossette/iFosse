@@ -32,6 +32,7 @@ const fail=message=>{throw new Error(message)}
 export const migrationFiles=[
  ['20261008150000_member_notifications.sql','cce2a97832d0c5054c38c85bdcfc78832d14c86d0f57ae88c083200be15381dc'],
  ['20261008160000_caci_notifications.sql','89cade5b555425307c00487314b0c65b7bdb1ddbf9d102f89ee308858bf05895'],
+ ['20261018110000_account_email_scope.sql','528fb45816982a924fbf0a2f59a01718194702489f02f71ec2a9cb85cd68e2be'],
 ]
 export async function installationSources(reader=readFile){
  const migrations=[]
@@ -44,7 +45,7 @@ export async function installationSources(reader=readFile){
  for(const name of ['index.ts','handler.mjs'])files.push({name,content:await reader(new URL(`../supabase/functions/member-notifications/${name}`,import.meta.url),'utf8')})
  return {migrations,files}
 }
-// Record only these two pinned migrations in the same transaction as their DDL.
+// Record only these three pinned migrations in the same transaction as their DDL.
 // Preserve existing history; a conflicting version aborts rather than overwriting it.
 export function trackedMigration(sql,index){
  const [filename]=migrationFiles[index]
@@ -69,7 +70,8 @@ export const preflightSql=`select
  and to_regclass('public.staging_seed_runs') is not null as prerequisites,
  to_regclass('public.member_notifications') is not null as outbox,
  to_regclass('public.member_notification_settings') is not null as settings,
- exists(select 1 from pg_trigger where tgname='audit_queue_caci_notification' and tgrelid=to_regclass('public.audit_events') and not tgisinternal and tgenabled<>'D' and tgfoid=to_regprocedure('public.queue_caci_audit_notification()')) as caci;
+ exists(select 1 from pg_trigger where tgname='audit_queue_caci_notification' and tgrelid=to_regclass('public.audit_events') and not tgisinternal and tgenabled<>'D' and tgfoid=to_regprocedure('public.queue_caci_audit_notification()')) as caci,
+ to_regprocedure('public.member_notification_email_kind(text)') is not null as account_only;
 `
 export const settingsSql=`select enabled,environment,project_ref,
  (select relrowsecurity from pg_class where oid='public.member_notifications'::regclass)
@@ -172,7 +174,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   if(dispatch && dispatch.length<32)fail('Secret Vault existant trop court : aucune rotation automatique.')
  }
  log(`Cible vérifiée : ifosse-staging / ${STAGING_REF} / preview.`)
- log(`Plan : ${state.outbox ? 'conserver la file' : 'installer la file'} ; ${state.caci ? 'conserver' : 'installer'} le trigger CACI ; déployer member-notifications ; configurer ${recipients.length} destinataire(s) ; réutiliser/créer Vault et une seule tâche par minute.`)
+ log(`Plan : ${state.outbox ? 'conserver la file' : 'installer la file'} ; limiter aux emails sensibles de compte (aucun email CACI) ; déployer member-notifications ; configurer ${recipients.length} destinataire(s) ; réutiliser/créer Vault et une seule tâche par minute.`)
  if(!apply){log('Dry-run terminé : aucune écriture, aucun déploiement, aucun email. Relancer avec --apply pour installer.');return}
  try{
   writing=true
@@ -180,7 +182,10 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   await secrets({NOTIFICATION_ENABLED:'false'})
   if(settingsPresent)await sql(disableSql,[],true)
   if(!state.outbox){await sql(trackedMigration(local.migrations[0],0),[],true);settingsPresent=true}
-  if(!state.caci)await sql(trackedMigration(local.migrations[1],1),[],true)
+  if(!state.account_only){
+   if(!state.caci)await sql(trackedMigration(local.migrations[1],1),[],true)
+   await sql(trackedMigration(local.migrations[2],2),[],true)
+  }
   for(const [name,schema] of [['pg_cron','pg_catalog'],['pg_net','extensions'],['supabase_vault','vault']]){
    if(!installed(name))await sql(`create extension if not exists ${name} with schema ${schema};`,[],true)
   }
@@ -201,7 +206,7 @@ export async function installNotifications({args=[],env=process.env,fetcher=fetc
   await secrets({NOTIFICATION_ENABLED:'true'})
   const enabled=await sql(enableSql,[recipients],true)
   if(enabled?.[0]?.enabled!==true)fail('Activation SQL non confirmée.')
-  log('Installation staging terminée. Notifications activées pour les futures actions autorisées. Aucun email de test envoyé. Tester une modification CACI depuis la preview.')
+  log('Installation staging terminée. Notifications activées pour les futures actions autorisées. Aucun email de test envoyé. Tester une action de compte sur un testeur autorisé depuis la preview ; aucun email CACI.')
  }catch{
   if(writing){
    const shutdown=await Promise.allSettled([secrets({NOTIFICATION_ENABLED:'false'}),...(settingsPresent ? [sql(disableSql,[],true)] : [])])

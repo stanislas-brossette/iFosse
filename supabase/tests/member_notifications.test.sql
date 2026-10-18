@@ -1,4 +1,5 @@
 begin;
+create extension if not exists pgtap with schema extensions;
 set local search_path=public,extensions;
 select no_plan();
 select ok(not has_table_privilege('authenticated','public.member_notifications','SELECT'),'Browser cannot read recipient snapshots');
