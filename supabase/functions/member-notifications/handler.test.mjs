@@ -46,8 +46,8 @@ describe('internal notification dispatcher',()=>{
   const app=setup({provider:()=>new Response(JSON.stringify({message:'SECRET_PROVIDER'}),{status})});const result=await app.request();expect((await result.json())[outcome]).toBe(1);expect(app.rpc).toHaveBeenCalledWith('complete_member_notification',expect.objectContaining({p_outcome:outcome}));expect(app.rpc.mock.calls.join()).not.toContain('SECRET_PROVIDER')
  })
  it('quarantines network errors and malformed accepted replies rather than resending',async()=>{
-  for(const provider of [()=>{throw Error('SECRET_PROVIDER')},()=>new Response('{}',{status:201})]){
-   const app=setup({provider});const result=await app.request();expect((await result.json()).uncertain).toBe(1);expect(app.fetcher).toHaveBeenCalledOnce()
+  for(const provider of [()=>{throw Error('SECRET_PROVIDER')},...[{},{messageId:''},{messageId:'   '},{messageId:42}].map(payload=>()=>new Response(JSON.stringify(payload),{status:201}))]){
+   const app=setup({provider});const result=await app.request();expect((await result.json()).uncertain).toBe(1);expect(app.fetcher).toHaveBeenCalledOnce();expect(app.rpc).toHaveBeenCalledWith('complete_member_notification',expect.objectContaining({p_outcome:'uncertain',p_message_id:undefined}))
   }
  })
  it('recognizes provider deduplication without falsely claiming inbox delivery',async()=>{

@@ -50,7 +50,7 @@ export function notificationHandler({env,serviceClient,fetcher=fetch}){
        if(payload.code==='duplicate_parameter'){outcome='accepted';code='provider_deduplicated'}else{outcome='failed';code='provider_rejected'}
       }else if(result.ok){
        const payload=await result.json()
-       if(typeof payload.messageId==='string' && payload.messageId.length<=500){outcome='accepted';code='provider_accepted';messageId=payload.messageId}
+       if(typeof payload.messageId==='string' && payload.messageId.trim().length>0 && payload.messageId.length<=500){outcome='accepted';code='provider_accepted';messageId=payload.messageId}
       }
      }catch{/* Unknown acceptance: quarantine, do not blindly resend. */}
     }
