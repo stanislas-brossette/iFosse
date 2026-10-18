@@ -102,6 +102,6 @@ References: [Supabase passwordless email authentication](https://supabase.com/do
 
 L’installation PWA garde les mêmes origines autorisées et le callback `/auth/confirm` ; aucun redirect Supabase supplémentaire n’est nécessaire. Safari et une application ajoutée à l’accueil peuvent disposer de sessions distinctes. Depuis l’écran d’attente du lien en mode autonome, une aide facultative permet de coller le lien original de la même origine, dans un champ masqué, puis de confirmer avec le mécanisme `verifyOtp` existant. Aucune URL externe n’est ouverte ni acceptée comme redirect, aucun nouveau stockage/échange de tokens, signup ou mot de passe. Le champ est vidé et les mêmes validations de token/type restent applicables. Voir [parcours, limites et recette réelle](pwa.md).
 
-### Notifications de compte
+## Notifications de compte
 
 D030 ajoute une notification informative après les opérations applicatives Président, via une file serveur et Brevo. Les mentions antérieures « aucun email » décrivent l’absence d’invitation Supabase Auth et le comportement avant activation : aucun magic link n’est généré par création/transfert. Les imports/bootstrap/récupération restent sans email. [Activation staging, reprise et limites](member-notifications.md).

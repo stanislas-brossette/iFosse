@@ -304,6 +304,12 @@ L’interface place cette action exceptionnelle en bas de Mon profil du préside
 
 Précaution de transfert : les adresses fictives en `.invalid` sont exclues des choix et refusées par les deux RPC ; aucun marqueur ou enregistrement seed n’est modifié. La confirmation demande d’avoir vérifié que le successeur peut se connecter avec son lien habituel. Ce contrôle humain ne prétend pas garantir la délivrabilité de tout email. `.invalid` est réservé aux noms volontairement invalides ([RFC 2606](https://www.rfc-editor.org/rfc/rfc2606#section-2)). Les fixtures locales `example.test` restent utilisables via Mailpit ; elles ne doivent pas être utilisées comme successeurs réels hébergés.
 
+## D030 — Notifications transactionnelles de compte
+
+**Décision (demande explicite du propriétaire)** : première tranche email pour création depuis le Président, désactivation/réactivation, attribution/retrait admin et transfert de présidence (deux intéressés). Bienvenue informatif sans invitation/Auth token. Recentrage validé par le propriétaire : le CACI et les événements opérationnels relèvent des notifications internes, pas des emails. La migration additive de restriction conserve l’historique des installations existantes.
+
+Mise en file avec l’audit après réussite, worker serveur Brevo séparé, destinataires synthétiques exclus, staging limité à une liste exacte de testeurs. Envoi désactivé par défaut, aucun rattrapage des anciens audits. Une panne fournisseur ne remet pas en cause l’action métier. Statut accepté distinct de livré ; reprises bornées après refus certain, incertitude revue par opérateur pour éviter les doublons. [Architecture, déploiement et limites](member-notifications.md).
+
 ## D031 — Installation PWA V1 facultative et en ligne
 
 **Décision (demande explicite du propriétaire)** : ajouter une installation depuis le navigateur avec manifest, icônes de la marque existante et mode autonome. L’usage web reste disponible. Aucun store natif, push, synchronisation en arrière-plan ou écriture hors ligne. Cette tranche autorise uniquement l’installation et son parcours de connexion ; elle ne modifie aucune règle métier.
@@ -326,9 +332,3 @@ La migration est additive et désactivée par défaut ; activation opérateur ap
 recette staging, sans rattrapage historique. Une panne de la boîte ne doit pas
 empêcher une action métier validée. Les règles actuelles d’autorisation, de
 publication et de covoiturage restent inchangées. Voir [activation et limites](in-app-notifications.md).
-
-## D030 — Notifications transactionnelles de compte
-
-**Décision (demande explicite du propriétaire)** : première tranche email pour création depuis le Président, désactivation/réactivation, attribution/retrait admin et transfert de présidence (deux intéressés). Bienvenue informatif sans invitation/Auth token. Extension explicitement validée par le propriétaire : un changement effectif du CACI par admin/président (y compris pour soi) notifie le seul adhérent concerné, sans date de validité ni document dans l’email. Valeur inchangée, refus, conflit ou rollback : aucun nouvel avis. Pas d’email pour les autres modifications personnelles, import/seed ou récupération/bootstrap opérateur. Cette décision remplace la mention antérieure « aucun email » pour ces seules opérations applicatives ; Auth reste inchangé.
-
-Mise en file avec l’audit après réussite, worker serveur Brevo séparé, destinataires synthétiques exclus, staging limité à une liste exacte de testeurs. Envoi désactivé par défaut, aucun rattrapage des anciens audits. Une panne fournisseur ne remet pas en cause l’action métier. Statut accepté distinct de livré ; reprises bornées après refus certain, incertitude revue par opérateur pour éviter les doublons. [Architecture, déploiement et limites](member-notifications.md).

@@ -24,7 +24,7 @@ select set_config('request.jwt.claim.sub','08160000-0000-4000-8000-000000000001'
 select public.set_member_caci_if_current((select id from caci_people where label='member'),'2099-12-31',null);
 select is(public.member_notification_status((select id from caci_people where label='member'),'caci_date_changed'),'pending','Admin sees a separate receipt after the successful change');
 select public.set_member_caci_if_current((select id from caci_people where label='member'),'2099-12-31','2099-12-31');
-select throws_ok($$select public.set_member_caci_if_current((select id from caci_people where label='member'),'2031-01-01',null)$$,'40001',null,'Concurrent change remains rejected');
+select throws_ok($$select public.set_member_caci_if_current((select id from caci_people where label='member'),'2031-01-01',null)$$,'PGRST',jsonb_build_object('code','40001','message','CACI_EDIT_CONFLICT','details',null,'hint',null)::text,'Concurrent change remains rejected');
 select throws_ok($$select public.set_member_caci_if_current((select id from caci_people where label='member'),'infinity','2099-12-31')$$,'23514',null,'Invalid date remains rejected');
 reset role;
 select is((select count(*) from public.member_notifications where kind='caci_updated'),1::bigint,'Same value, conflict and validation error add no mail');
