@@ -48,11 +48,13 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await browse.click()
     await page.clock.fastForward(1400)
     await expect(page.locator('.surprise-bubble')).toHaveCount(0)
+    await page.evaluate(() => { Math.random = () => 0 })
     await browse.click()
+    await expect(page.locator('.surprise-bubble')).toHaveCount(3)
+    await page.clock.fastForward(1400)
     await expect(page.locator('.surprise-bubble')).toHaveCount(0)
     await expect(browse).toBeFocused()
-    // Reduced motion suppresses the effect even without a cooldown.
-    await page.evaluate(() => { localStorage.clear(); sessionStorage.clear() })
+    // Reduced motion still suppresses the effect on later visits.
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.reload()
     await page.clock.fastForward(5_000)
