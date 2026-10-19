@@ -421,3 +421,23 @@ dialog {max-height:calc(100dvh - 32px);overflow:auto}
   .notification-bell { padding:10px; min-width:44px; }
   .notification-dialog .page-heading { flex-direction:row; }
 }
+/* Rare underwater wink: fixed, clipped and completely transparent to input. */
+.surprise-bubbles { position: fixed; inset: 0; z-index: 30; overflow: hidden; pointer-events: none; user-select: none; }
+.surprise-bubbles-origin { position: absolute; width: 0; height: 0; }
+.surprise-bubble {
+  position: absolute; left: var(--bubble-x); bottom: 0;
+  width: var(--bubble-size); height: var(--bubble-size); border-radius: 50%;
+  border: 1px solid rgb(45 144 155 / 40%);
+  background: radial-gradient(circle at 30% 25%, rgb(255 255 255 / 90%) 0 9%, transparent 25%), radial-gradient(circle at 65% 70%, rgb(108 205 211 / 12%), rgb(231 250 251 / 30%));
+  box-shadow: inset -1px -1px 2px rgb(53 149 160 / 12%);
+  opacity: 0; will-change: transform, opacity;
+  animation: surprise-bubble-rise var(--bubble-duration) ease-out var(--bubble-delay) both;
+}
+@keyframes surprise-bubble-rise {
+  0% { opacity: 0; transform: translate(0, 0) scale(.6); }
+  18% { opacity: .75; }
+  45% { transform: translate(calc(var(--bubble-drift) * -.35), calc(var(--bubble-rise) * -.4)) scale(.95); }
+  70% { opacity: .55; }
+  100% { opacity: 0; transform: translate(var(--bubble-drift), calc(var(--bubble-rise) * -1)) scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) { .surprise-bubbles { display: none; } }

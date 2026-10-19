@@ -25,7 +25,7 @@ export function SessionTabs({ value, admin, onChange }: { value: SessionTab; adm
   }
   return <div className="session-tabs-container">
     {edges.before && <button className="tabs-scroll before" aria-label="Voir les rubriques précédentes" onClick={() => move(-1)}>‹</button>}
-    <nav ref={rail} className="session-tabs" role="tablist" aria-label="Rubriques de la séance">{tabs.map(([key, label], index) => <button key={key} role="tab" id={`session-tab-${key}`} aria-controls="session-panel" aria-selected={value === key} tabIndex={value === key ? 0 : -1} onClick={() => onChange(key)} onKeyDown={event => {
+    <nav ref={rail} className="session-tabs" role="tablist" aria-label="Rubriques de la séance">{tabs.map(([key, label], index) => <button data-bubbles={key !== 'manage' ? true : undefined} key={key} role="tab" id={`session-tab-${key}`} aria-controls="session-panel" aria-selected={value === key} tabIndex={value === key ? 0 : -1} onClick={() => onChange(key)} onKeyDown={event => {
       const offset = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
       if (!offset && event.key !== 'Home' && event.key !== 'End') return
       event.preventDefault()

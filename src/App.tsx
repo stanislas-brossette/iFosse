@@ -10,6 +10,7 @@ import { Profile } from './features/profiles/Profile'
 import { Directory } from './features/profiles/Directory'
 import { Sessions } from './features/sessions/Sessions'
 import { Brand, Icon } from './components/Visual'
+import { SurpriseBubbles } from './components/SurpriseBubbles'
 import { seasonOf, todayParis } from './lib/dates'
 
 import { allowedRoute, clearReturnPath, navigate as navigateRoute, NavigationPrompt, replaceNavigation, routePath, useRoute } from './lib/navigation'
@@ -25,10 +26,10 @@ function MemberApp({ client, member, refresh }: { client: SupabaseClient<Databas
   useEffect(() => { if (route.area === 'sessions') setLastSessionRoute(route) }, [route.area,route.sessionId,route.tab,route.editing,route.view,route.season])
   function navigate(next:Area) { navigateRoute(next === 'sessions' ? allowedRoute(lastSessionRoute,member.role !== 'member') : {area:next,tab:'overview',view:'upcoming'}) }
   return <div className="app-layout">
-    <aside className="sidebar"><Brand /><p className="club-label">APSAP · Plongée</p><p className="nav-label">Votre club</p>
+    <SurpriseBubbles /><aside className="sidebar"><Brand /><p className="club-label">APSAP · Plongée</p><p className="nav-label">Votre club</p>
       <nav className="main-navigation" aria-label="Navigation principale">
-        <button aria-current={active === 'sessions' ? 'page' : undefined} onClick={() => navigate('sessions')}><Icon name="calendar" /><span>Séances</span></button>
-        <button aria-current={active === 'profile' ? 'page' : undefined} onClick={() => navigate('profile')}><Icon name="profile" /><span>Mon profil</span></button>
+        <button data-bubbles aria-current={active === 'sessions' ? 'page' : undefined} onClick={() => navigate('sessions')}><Icon name="calendar" /><span>Séances</span></button>
+        <button data-bubbles aria-current={active === 'profile' ? 'page' : undefined} onClick={() => navigate('profile')}><Icon name="profile" /><span>Mon profil</span></button>
         {member.role !== 'member' && <button aria-current={active === 'admin' ? 'page' : undefined} onClick={() => navigate('admin')}><Icon name="users" /><span>Administration</span></button>}
       </nav>
       <div className="sidebar-bottom"><p className="eyebrow">La saison du club</p><strong>{seasonOf(todayParis())}–{seasonOf(todayParis()) + 1}</strong><p>De septembre à août</p></div>
