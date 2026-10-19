@@ -334,3 +334,21 @@ La migration est additive et désactivée par défaut ; activation opérateur ap
 recette staging, sans rattrapage historique. Une panne de la boîte ne doit pas
 empêcher une action métier validée. Les règles actuelles d’autorisation, de
 publication et de covoiturage restent inchangées. Voir [activation et limites](in-app-notifications.md).
+
+## D033 — Bulles décoratives rares
+
+**Décision (validation explicite du propriétaire)** : quelques clics de consultation
+peuvent exceptionnellement libérer 3 à 5 petites bulles translucides bleu-vert,
+qui remontent en oscillant puis disparaissent en environ une seconde. Aucun son,
+message, déplacement de contenu ou interception des clics.
+
+Après cinq secondes dans l’espace connecté : probabilité de 1 % par clic éligible,
+au maximum une apparition par visite (onglet) et trois jours entre apparitions
+dans un même navigateur. Seuls les boutons explicitement marqués de navigation
+séances/profil, filtres du calendrier et rubriques hors Gestion sont éligibles.
+Les formulaires, confirmations, erreurs et actions métier ne déclenchent pas
+l’effet. La préférence de réduction des animations le désactive immédiatement.
+
+Le stockage navigateur ne conserve qu’une date d’apparition et un témoin de visite,
+sans identité ni synchronisation serveur. Un stockage indisponible supprime
+l’effet. Aucun changement de données métier, migration ou configuration hébergée.
