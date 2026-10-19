@@ -18,7 +18,7 @@ describe('internal notification dispatcher',()=>{
   expect(notificationConfig({...env,NOTIFICATION_ENV:'production',SUPABASE_URL:'https://qjrpxuatsnvrqxhzklzq.supabase.co'}).site).toBe('https://ifosse.netlify.app')
  })
  it('rejects browser/member credentials and methods before privileged reads',async()=>{
-  const app=setup();expect((await app.request('member-jwt')).status).toBe(401);expect((await app.request(undefined,'GET')).status).toBe(405);expect(app.serviceClient).not.toHaveBeenCalled()
+  const app=setup();expect((await app.request('member-jwt')).status).toBe(401);expect((await app.request(undefined,'PUT')).status).toBe(405);expect(app.serviceClient).not.toHaveBeenCalled()
  })
  it.each(['welcome','deactivated','reactivated','admin_granted','admin_revoked','presidency_received','presidency_departed'])('renders %s as text, with fixed site and no Auth/medical payload',kind=>{
   const message=notificationMessage({...row,kind},notificationConfig(env));expect(message.subject).toBeTruthy();expect(message.textContent).toContain('https://ifosse-staging.netlify.app');expect(message.textContent).not.toMatch(/token_hash|\/auth\/confirm|CACI|mot de passe :/);expect(message.htmlContent).toBeUndefined();expect(message.headers).toEqual({idempotencyKey:row.id})
@@ -56,4 +56,42 @@ describe('internal notification dispatcher',()=>{
   app.rpc.mockResolvedValueOnce({data:[row],error:null}).mockResolvedValueOnce({data:false,error:null})
   expect((await app.request()).status).toBe(503);expect(app.fetcher).toHaveBeenCalledOnce()
  })
+})
+
+
+describe('explicit registered-member staging audience',()=>{
+ const vars={...env,NOTIFICATION_RECIPIENT_MODE:'registered',NOTIFICATION_STAGING_RECIPIENTS:''}
+ it('sends account mail to an eligible row claimed by SQL outside the test allowlist',async()=>{
+  const app=setup({vars,rows:[{...row,recipient_email:'new-member@club-fictif.fr'}]})
+  expect((await (await app.request()).json()).accepted).toBe(1)
+  expect(JSON.parse(app.fetcher.mock.calls[0][1].body).to).toEqual([{email:'new-member@club-fictif.fr'}])
+ })
+ it.each(['fake@ifosse-seed.invalid','fake@example.test','fake@example.com'])('still excludes reserved address %s',async recipient_email=>{
+  const app=setup({vars,rows:[{...row,recipient_email}]})
+  expect((await (await app.request()).json()).suppressed).toBe(1)
+  expect(app.fetcher).not.toHaveBeenCalled()
+ })
+ it.each([{NOTIFICATION_RECIPIENT_MODE:''},{NOTIFICATION_RECIPIENT_MODE:'all'},{NOTIFICATION_STAGING_RECIPIENTS:'*'},{NOTIFICATION_STAGING_RECIPIENTS:'allowed@club-fictif.fr'},{NOTIFICATION_ENV:'production',SUPABASE_URL:'https://qjrpxuatsnvrqxhzklzq.supabase.co'}])('fails closed for invalid or production registered-mode configuration %j',async patch=>{
+  const app=setup({vars:{...vars,...patch}})
+  expect((await app.request()).status).toBe(503)
+  expect(app.serviceClient).not.toHaveBeenCalled()
+  expect(app.fetcher).not.toHaveBeenCalled()
+ })
+ it('does not send mail to arbitrary request-body targets',async()=>{
+  const rpc=vi.fn(async name=>name==='claim_member_notifications' ? {data:[],error:null} : {data:true,error:null})
+  const fetcher=vi.fn()
+  const handler=notificationHandler({env:vars,serviceClient:()=>({rpc}),fetcher})
+  await handler(new Request('https://edge.example.test',{method:'POST',headers:{Authorization:`Bearer ${vars.NOTIFICATION_DISPATCH_SECRET}`},body:JSON.stringify({to:'arbitrary@club-fictif.fr'})}))
+  expect(fetcher).not.toHaveBeenCalled()
+ })
+})
+
+
+it('readiness is authenticated and checks mode without claiming or sending emails',async()=>{
+ const app=setup({vars:{...env,NOTIFICATION_RECIPIENT_MODE:'registered',NOTIFICATION_STAGING_RECIPIENTS:''}})
+ expect((await app.request('wrong-secret','GET')).status).toBe(401)
+ const result=await app.request(undefined,'GET')
+ expect(await result.json()).toEqual({code:'READY',environment:'preview',recipient_mode:'registered'})
+ expect(app.serviceClient).not.toHaveBeenCalled()
+ expect(app.fetcher).not.toHaveBeenCalled()
 })

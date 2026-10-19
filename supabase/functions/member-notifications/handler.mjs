@@ -6,8 +6,10 @@ export function notificationConfig(env){
   if(!env.BREVO_API_KEY || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.NOTIFICATION_SENDER_EMAIL ?? '') || fake(env.NOTIFICATION_SENDER_EMAIL))throw new Error('NOTIFICATION_CONFIGURATION')
   if(!env.NOTIFICATION_DISPATCH_SECRET || env.NOTIFICATION_DISPATCH_SECRET.length<32)throw new Error('NOTIFICATION_CONFIGURATION')
   const allowed=(env.NOTIFICATION_STAGING_RECIPIENTS ?? '').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean)
-  if(env.NOTIFICATION_ENV==='preview' && (!allowed.length || allowed.some(email=>fake(email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))))throw new Error('NOTIFICATION_CONFIGURATION')
-  return {...pin,environment:env.NOTIFICATION_ENV,allowed,key:env.BREVO_API_KEY,secret:env.NOTIFICATION_DISPATCH_SECRET,sender:env.NOTIFICATION_SENDER_EMAIL}
+  const recipientMode=env.NOTIFICATION_RECIPIENT_MODE ?? 'allowlist'
+  if(!['allowlist','registered'].includes(recipientMode) || (recipientMode==='registered' && (env.NOTIFICATION_ENV!=='preview' || allowed.length)))throw new Error('NOTIFICATION_CONFIGURATION')
+  if(env.NOTIFICATION_ENV==='preview' && recipientMode==='allowlist' && (!allowed.length || allowed.some(email=>fake(email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))))throw new Error('NOTIFICATION_CONFIGURATION')
+  return {...pin,environment:env.NOTIFICATION_ENV,recipientMode,allowed,key:env.BREVO_API_KEY,secret:env.NOTIFICATION_DISPATCH_SECRET,sender:env.NOTIFICATION_SENDER_EMAIL}
 }
 const templates={
  welcome:['Bienvenue sur iFosse','Votre compte adhérent a été créé. Pour vous connecter, ouvrez iFosse, saisissez votre adresse email et demandez votre lien de connexion. Aucun mot de passe n’est nécessaire.'],
@@ -28,10 +30,12 @@ export function notificationMessage(row,config){
 const response=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})
 export function notificationHandler({env,serviceClient,fetcher=fetch}){
  return async request=>{
-  if(request.method!=='POST')return response(405,{code:'METHOD_NOT_ALLOWED'})
+  if(!['POST','GET'].includes(request.method))return response(405,{code:'METHOD_NOT_ALLOWED'})
   let config
   try{config=notificationConfig(env)}catch{return response(503,{code:'NOTIFICATION_CONFIGURATION'})}
   if(request.headers.get('Authorization')!==`Bearer ${config.secret}`)return response(401,{code:'UNAUTHORIZED'})
+  // Authenticated readiness never claims queue rows or contacts the provider.
+  if(request.method==='GET')return response(200,{code:'READY',environment:config.environment,recipient_mode:config.recipientMode})
   try{
    const db=serviceClient()
    const claimed=await db.rpc('claim_member_notifications',{p_environment:config.environment,p_project_ref:config.ref,p_limit:10})
@@ -39,7 +43,7 @@ export function notificationHandler({env,serviceClient,fetcher=fetch}){
    const counts={processed:0,accepted:0,suppressed:0,retry:0,failed:0,uncertain:0}
    for(const row of claimed.data ?? []){
     let outcome='uncertain',code='provider_uncertain',messageId=null
-    if(!Object.hasOwn(templates,row.kind) || fake(row.recipient_email) || (config.environment==='preview' && !config.allowed.includes(row.recipient_email))){outcome='suppressed';code='recipient_blocked'}
+    if(!Object.hasOwn(templates,row.kind) || fake(row.recipient_email) || (config.environment==='preview' && config.recipientMode==='allowlist' && !config.allowed.includes(row.recipient_email))){outcome='suppressed';code='recipient_blocked'}
     else{
      try{
       const result=await fetcher('https://api.brevo.com/v3/smtp/email',{method:'POST',headers:{'api-key':config.key,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(notificationMessage(row,config)),signal:AbortSignal.timeout(10000)})

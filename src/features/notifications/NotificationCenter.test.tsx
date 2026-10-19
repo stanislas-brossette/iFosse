@@ -35,11 +35,16 @@ it('opens own notices, marks read by ID and navigates only to an internal sessio
   fireEvent.click(await screen.findByRole('button',{name:'Notifications : 1 non lues'}))
   expect(screen.getByRole('dialog',{name:'Mes notifications'})).toBeTruthy()
   await act(async()=>{})
-  rpc.mockResolvedValueOnce({data:null,error:null})
+  let acknowledge!:(result:{data:null,error:null})=>void
+  const pendingRead=new Promise<{data:null,error:null}>(resolve=>{acknowledge=resolve})
+  rpc.mockReturnValueOnce(pendingRead)
   fireEvent.click(screen.getByRole('button',{name:'Voir la séance'}))
-  await waitFor(()=>expect(rpc).toHaveBeenCalledWith('mark_app_notifications_read',{p_ids:[notice.id]}))
+  expect(rpc).toHaveBeenCalledWith('mark_app_notifications_read',{p_ids:[notice.id]})
   expect(navigate).toHaveBeenCalledWith({area:'sessions',tab:'overview',view:'all',sessionId:notice.session_id})
   expect(screen.queryByRole('dialog')).toBeNull()
+  // Navigation/closure is immediate; unread changes only after server acknowledgement.
+  expect(screen.getByRole('button',{name:'Notifications : 1 non lues'})).toBeTruthy()
+  await act(async()=>{acknowledge({data:null,error:null})})
   expect(screen.getByRole('button',{name:'Notifications'})).toBeTruthy()
 })
 it('preserves unread on failure, supports retry and returns focus on Escape',async()=>{

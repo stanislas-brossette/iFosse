@@ -1,12 +1,12 @@
 // @vitest-environment node
 import { expect,it,vi } from 'vitest'
 import { PassThrough,Writable } from 'node:stream'
-import { installNotifications,installationSources,sqlFailureDiagnostic,createHiddenPrompt,preflightSql,settingsSql,settingsPrivacySql,extensionSql,jobsSql,scheduleSql,enableSql,disableSql,cronCommand,JOB_NAME,VAULT_NAME,trackedMigration } from './install-staging-notifications.mjs'
+import { installNotifications,installationSources,sqlFailureDiagnostic,createHiddenPrompt,preflightSql,settingsSql,settingsPrivacySql,extensionSql,jobsSql,scheduleSql,enableSql,enableRegisteredSql,disableSql,cronCommand,JOB_NAME,VAULT_NAME,trackedMigration } from './install-staging-notifications.mjs'
 import {STAGING_REF} from './staging-seed.mjs'
 const env={SUPABASE_ACCESS_TOKEN:'sbp_fixture_private',BREVO_API_KEY:'fixture_private_brevo',NOTIFICATION_SENDER_EMAIL:'Sender@club-fictif.fr',NOTIFICATION_STAGING_RECIPIENTS:'Tester@club-fictif.fr,tester@club-fictif.fr'}
-function setup({existing=false,project={},senderActive=true,jobs=[],failure,shutdownFailure=false,restrictedReads=false}={}){
- const calls=[],log=vi.fn(),state={outbox:existing,settings:existing,caci:false,account_only:existing,prerequisites:true},extensions=['pg_cron','pg_net','supabase_vault'].map(name=>({name,installed_version:existing?'1':null}))
- let savedDispatch=existing?'a'.repeat(64):null,failed=false
+function setup({existing=false,project={},senderActive=true,jobs=[],failure,shutdownFailure=false,restrictedReads=false,healthStatus=200,healthMode}={}){
+ const calls=[],log=vi.fn(),state={outbox:existing,settings:existing,caci:false,account_only:existing,registered_audience:existing,prerequisites:true},extensions=['pg_cron','pg_net','supabase_vault'].map(name=>({name,installed_version:existing?'1':null}))
+ let savedDispatch=existing?'a'.repeat(64):null,failed=false,workerMode='allowlist'
  const fetcher=vi.fn(async(url,options={})=>{
   const body=options.body instanceof FormData ? options.body : options.body ? JSON.parse(options.body) : null
   const call={url,options,body};calls.push(call)
@@ -15,7 +15,8 @@ function setup({existing=false,project={},senderActive=true,jobs=[],failure,shut
   let data
   if(url==='https://api.brevo.com/v3/senders')data={senders:[{email:'sender@club-fictif.fr',active:senderActive}]}
   else if(url.endsWith(STAGING_REF))data={ref:STAGING_REF,name:'ifosse-staging',status:'ACTIVE_HEALTHY',...project}
-  else if(url.endsWith('/secrets'))data=[]
+  else if(url.endsWith('/secrets')){workerMode=body.find(s=>s.name==='NOTIFICATION_RECIPIENT_MODE')?.value ?? workerMode;data=[]}
+  else if(url.endsWith('/functions/v1/member-notifications'))return new Response(JSON.stringify({code:healthStatus===200 ? 'READY' : 'NOTIFICATION_CONFIGURATION',environment:'preview',recipient_mode:healthMode ?? workerMode}),{status:healthStatus})
   else if(url.includes('/functions/deploy'))data={slug:'member-notifications',verify_jwt:false,status:'ACTIVE'}
   else {
    const q=body.query
@@ -26,7 +27,8 @@ function setup({existing=false,project={},senderActive=true,jobs=[],failure,shut
    else if(q===jobsSql)data=jobs
    else if(q.startsWith('select decrypted_secret'))data=savedDispatch?[{decrypted_secret:savedDispatch}]:[]
    else if(q.startsWith('select vault.create_secret')){savedDispatch=body.parameters[0];data=[]}
-   else if(q===enableSql)data=[{enabled:true}]
+   else if(q===enableSql || q===enableRegisteredSql)data=[{enabled:true}]
+   else if(q.includes('add column staging_recipient_mode')){state.registered_audience=true;data=[]}
    else if(q.includes('create table public.member_notification_settings')){state.outbox=state.settings=true;data=[]}
    else if(q.includes('create function public.queue_caci_audit_notification')){state.caci=true;data=[]}
    else if(q.includes('create function public.member_notification_email_kind')){state.account_only=true;state.caci=false;data=[]}
@@ -35,7 +37,7 @@ function setup({existing=false,project={},senderActive=true,jobs=[],failure,shut
   }
   return new Response(JSON.stringify(data),{status:200})
  })
- const run=options=>installNotifications({env,fetcher,log,...options})
+ const run=options=>installNotifications({env,fetcher,log,pause:async()=>{},...options})
  const writes=()=>calls.filter(c=>c.url.endsWith('/secrets') || c.body instanceof FormData || c.body?.read_only===false)
  return {calls,run,writes,log,state,jobs,getDispatch:()=>savedDispatch}
 }
@@ -131,4 +133,68 @@ it('apply reuses existing Vault with privileged reads after pausing email gates'
  expect(s.getDispatch()).toBe('a'.repeat(64))
  expect(s.calls.some(c=>c.body?.query?.includes('vault.create_secret'))).toBe(false)
  expect(s.log.mock.calls.join()).not.toContain(s.getDispatch())
+})
+
+
+it('all-members is explicit, does not ask for recipient addresses and dry-run never writes',async()=>{
+ const s=setup({existing:true,restrictedReads:true})
+ const ask=vi.fn()
+ await s.run({args:['--all-members'],env:{...env,NOTIFICATION_STAGING_RECIPIENTS:''},ask})
+ expect(ask).not.toHaveBeenCalled()
+ expect(s.writes()).toHaveLength(0)
+ expect(s.log.mock.calls.join()).toContain('tous les adhérents réels enregistrés')
+})
+it('installs registered-member mode in both worker and SQL only after explicit apply',async()=>{
+ const s=setup({existing:true});s.state.registered_audience=false
+ const options={args:['--all-members','--apply'],env:{...env,NOTIFICATION_STAGING_RECIPIENTS:''}}
+ await s.run(options)
+ expect(s.writes().some(c=>c.body?.query?.includes('add column staging_recipient_mode'))).toBe(true)
+ const configured=s.calls.filter(c=>c.url.endsWith('/secrets')).flatMap(c=>c.body)
+ expect(configured).toContainEqual({name:'NOTIFICATION_RECIPIENT_MODE',value:'registered'})
+ expect(configured).toContainEqual({name:'NOTIFICATION_STAGING_RECIPIENTS',value:''})
+ expect(s.writes().at(-1).body).toEqual({query:enableRegisteredSql,parameters:[[]],read_only:false})
+ await s.run(options)
+ expect(s.calls.filter(c=>c.body?.query?.includes('add column staging_recipient_mode'))).toHaveLength(1)
+ expect(s.getDispatch()).toBe('a'.repeat(64))
+ expect(s.jobs).toHaveLength(1)
+})
+it('refuses ambiguous all-members configuration and production before any request',async()=>{
+ for(const patch of [{},{SUPABASE_PROJECT_ENV:'production',NOTIFICATION_STAGING_RECIPIENTS:''}]){
+  const s=setup()
+  await expect(s.run({args:['--all-members','--apply'],env:{...env,...patch}})).rejects.toThrow()
+  expect(s.calls).toHaveLength(0)
+ }
+})
+
+
+it('checks authenticated deployed readiness after enabling worker but before enabling SQL',async()=>{
+ const s=setup({existing:true})
+ await s.run({args:['--all-members','--apply'],env:{...env,NOTIFICATION_STAGING_RECIPIENTS:''}})
+ const health=s.calls.findIndex(c=>c.url.endsWith('/functions/v1/member-notifications'))
+ expect(s.calls[health].options.method).toBe('GET')
+ expect(s.calls[health].options.headers.Authorization).toBe('Bearer '+s.getDispatch())
+ expect(s.calls.slice(0,health).some(c=>c.body?.query===enableRegisteredSql)).toBe(false)
+ expect(s.calls.at(-1).body.query).toBe(enableRegisteredSql)
+ expect(s.calls.some(c=>c.url.endsWith('/functions/v1/member-notifications') && c.options.method==='POST')).toBe(false)
+})
+it.each([{healthStatus:503},{healthStatus:401},{healthMode:'allowlist'}])('does not report success or activate SQL if deployed worker is unavailable or wrong-mode %j',async patch=>{
+ const s=setup({existing:true,...patch})
+ await expect(s.run({args:['--all-members','--apply'],env:{...env,NOTIFICATION_STAGING_RECIPIENTS:''}})).rejects.toThrow('envoi désactivé')
+ expect(s.calls.some(c=>c.body?.query===enableRegisteredSql)).toBe(false)
+ expect(s.calls.filter(c=>c.url.endsWith('/functions/v1/member-notifications'))).toHaveLength(3)
+ expect(s.calls.filter(c=>c.url.endsWith('/secrets')).at(-1).body).toEqual([{name:'NOTIFICATION_ENABLED',value:'false'}])
+ expect(s.calls.at(-1).body.query).toBe(disableSql)
+ expect(s.log.mock.calls.join()).not.toContain('Installation staging terminée')
+})
+
+it('tolerates one transient readiness failure without retrying a dispatch or duplicating schedules',async()=>{
+ let first=true
+ const s=setup({existing:true,failure:c=>{
+  if(first && c.url.endsWith('/functions/v1/member-notifications')){first=false;return true}
+  return false
+ }})
+ await s.run({args:['--all-members','--apply'],env:{...env,NOTIFICATION_STAGING_RECIPIENTS:''}})
+ expect(s.calls.filter(c=>c.url.endsWith('/functions/v1/member-notifications'))).toHaveLength(2)
+ expect(s.calls.at(-1).body.query).toBe(enableRegisteredSql)
+ expect(s.jobs).toHaveLength(1)
 })

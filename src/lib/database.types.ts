@@ -144,13 +144,13 @@ isOneToOne: true
                   ]
                 },"member_notification_settings": {
                   Row: {
-                    "enabled": boolean,"environment": string | null,"project_ref": string | null,"singleton": boolean,"staging_recipients": (string)[]
+                    "enabled": boolean,"environment": string | null,"project_ref": string | null,"singleton": boolean,"staging_recipient_mode": string,"staging_recipients": (string)[]
                   }
                   Insert: {
-                    "enabled"?: boolean,"environment"?: string | null,"project_ref"?: string | null,"singleton"?: boolean,"staging_recipients"?: (string)[]
+                    "enabled"?: boolean,"environment"?: string | null,"project_ref"?: string | null,"singleton"?: boolean,"staging_recipient_mode"?: string,"staging_recipients"?: (string)[]
                   }
                   Update: {
-                    "enabled"?: boolean,"environment"?: string | null,"project_ref"?: string | null,"singleton"?: boolean,"staging_recipients"?: (string)[]
+                    "enabled"?: boolean,"environment"?: string | null,"project_ref"?: string | null,"singleton"?: boolean,"staging_recipient_mode"?: string,"staging_recipients"?: (string)[]
                   }
                   Relationships: [
 
