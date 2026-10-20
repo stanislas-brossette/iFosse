@@ -28,6 +28,7 @@ for (const width of [1440, 390, 320]) {
     await expect(page.getByRole('heading', { name: 'Connexion à iFosse' })).toBeVisible()
     const logo = page.locator('.app-brand .club-logo')
     await expect(logo).toBeVisible()
+    expect(await logo.evaluate(image => getComputedStyle(image).backgroundColor)).toBe('rgba(0, 0, 0, 0)')
     expect(await logo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth === 1240 && image.naturalHeight === 1336)).toBe(true)
     await expect(page.getByRole('textbox', { name: 'Adresse email' })).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)

@@ -62,7 +62,7 @@ form + .mt { border-top: 1px solid var(--line); padding-top: 22px; }
 .app-brand p { color: var(--muted); margin: 0; }
 .shell:has(.app-layout) > .app-brand { display: none; }
 .brand { display: flex; align-items: center; gap: 11px; font-size: 29px; font-weight: 800; letter-spacing: -1.5px; color: var(--ink); }
-.club-logo { display: block; width: 68px; height: auto; flex-shrink: 0; object-fit: contain; background: white; }
+.club-logo { display: block; width: 68px; height: auto; flex-shrink: 0; object-fit: contain; }
 .mobile-club-logo { display: none; }
 .brand-accent { color: var(--teal); }
 .sidebar { position: fixed; inset: 0 auto 0 0; width: var(--sidebar); padding: 32px 20px 24px; background: white; border-right: 1px solid var(--line); display: flex; flex-direction: column; z-index: 30; }
