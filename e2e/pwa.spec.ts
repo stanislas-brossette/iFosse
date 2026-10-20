@@ -48,7 +48,7 @@ test('public manifest/icons cover install and callback routes without service-wo
     const result = await request.get(icon.src)
     expect(result.ok()).toBe(true); expect(result.headers()['content-type']).toContain('image/png')
   }
-  expect((await request.get('/icons/apple-touch-icon.png')).ok()).toBe(true)
+  expect((await request.get('/icons/ifosse-dolphin-apple-180.png')).ok()).toBe(true)
   for (const path of ['/seances','/profil','/auth/confirm']) expect((await request.get(path)).ok()).toBe(true)
   expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0)
   expect(await page.evaluate(async () => await caches.keys())).toEqual([])

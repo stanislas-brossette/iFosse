@@ -9,7 +9,7 @@ import { AuthGate } from './features/auth/AuthGate'
 import { Profile } from './features/profiles/Profile'
 import { Directory } from './features/profiles/Directory'
 import { Sessions } from './features/sessions/Sessions'
-import { Brand, Icon } from './components/Visual'
+import { Brand, ClubLogo, Icon } from './components/Visual'
 import { SurpriseBubbles } from './components/SurpriseBubbles'
 import { seasonOf, todayParis } from './lib/dates'
 
@@ -27,7 +27,7 @@ function MemberApp({ client, member, refresh }: { client: SupabaseClient<Databas
   function navigate(next:Area) { navigateRoute(next === 'sessions' ? allowedRoute(lastSessionRoute,member.role !== 'member') : {area:next,tab:'overview',view:'upcoming'}) }
   return <div className="app-layout">
     <SurpriseBubbles /><aside className="sidebar"><Brand /><p className="club-label">APSAP · Plongée</p><p className="nav-label">Votre club</p>
-      <nav className="main-navigation" aria-label="Navigation principale">
+      <nav className="main-navigation" aria-label="Navigation principale"><ClubLogo className="mobile-club-logo" />
         <button data-bubbles aria-current={active === 'sessions' ? 'page' : undefined} onClick={() => navigate('sessions')}><Icon name="calendar" /><span>Séances</span></button>
         <button data-bubbles aria-current={active === 'profile' ? 'page' : undefined} onClick={() => navigate('profile')}><Icon name="profile" /><span>Mon profil</span></button>
         {member.role !== 'member' && <button aria-current={active === 'admin' ? 'page' : undefined} onClick={() => navigate('admin')}><Icon name="users" /><span>Administration</span></button>}

@@ -353,3 +353,22 @@ l’effet. La préférence de réduction des animations le désactive immédiate
 L’effet ne lit ni n’écrit dans le stockage navigateur et ne synchronise rien
 avec le serveur. Les anciens témoins éventuels sont ignorés. Aucun changement
 de données métier, migration ou configuration hébergée.
+
+## D034 — Identité APSAP Plongée et icônes dauphin
+
+**Décision (demande explicite du propriétaire)** : afficher le logo complet
+« APSAP Plongée 2025 » fourni par le club sur la page de connexion et dans la
+navigation. Conserver ses couleurs et proportions, ainsi que le nom iFosse et
+les boutons turquoise. Sur téléphone, le logo accompagne la navigation basse.
+
+Le propriétaire retient l’emblème simplifié tour Eiffel–dauphin généré dans cette
+conversation, plutôt que la variante nudibranche, pour les icônes du navigateur
+et de l’application installée : PNG 16/32, Android 192/512, maskable 512 et
+Apple 180. Les exports opaques blancs préservent le contraste ; une marge dédiée
+protège l’emblème lors du recadrage maskable. Les sources sont conservées pour
+une régénération déterministe, sans nouvelle génération d’image au build.
+
+Le nom, l’identité du manifest, le scope, les parcours Auth et le fonctionnement
+PWA en ligne de D031 restent identiques. L’apparition de la nouvelle icône sur
+une installation existante dépend du navigateur et du système ; elle ne constitue
+pas une preuve de recette sur un téléphone réel. Voir [le guide PWA](pwa.md).
