@@ -372,3 +372,20 @@ Le nom, l’identité du manifest, le scope, les parcours Auth et le fonctionnem
 PWA en ligne de D031 restent identiques. L’apparition de la nouvelle icône sur
 une installation existante dépend du navigateur et du système ; elle ne constitue
 pas une preuve de recette sur un téléphone réel. Voir [le guide PWA](pwa.md).
+
+## D035 — Une séance avec historique ne se supprime plus
+
+**Décision (revue de code du 2026-10-24, issue #72)** : `delete_session` refuse
+la suppression dès qu’une séance a un historique : bilan clôturé, au moins une
+sélection publiée, ou une présence renseignée (`attendance_status` différent de
+`unknown`). Message : « Cette séance a un historique (sélection publiée ou
+présences). Elle ne peut plus être supprimée. »
+
+La suppression reste possible pour une séance créée par erreur (aucune
+publication, aucune présence, bilan ouvert) et reste auditée. L’interface
+n’affiche pas « Supprimer la séance » pour une séance publiée ou clôturée et
+explique pourquoi ; le serveur reste la seule garantie. Cela applique le critère
+V1 « l’historique des séances et les présences sont durables » (roadmap).
+
+Un éventuel état « annulée » remplaçant la suppression nécessite une décision
+produit séparée et n’est pas implémenté.

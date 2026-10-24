@@ -1,3 +1,4 @@
+import { removeSession } from './helpers/sessions.js'
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
 import { formatDate, todayParis } from '../src/lib/dates.js'
@@ -76,7 +77,7 @@ test('fictitious organizer completes the session lifecycle through a phone viewp
     await page.screenshot({ path: 'test-results/rollout-phone.png', fullPage: true })
   } finally {
     if (!id && client) id = (await client.from('sessions').select('id').eq('title', title).maybeSingle()).data?.id
-    if (id && client) await client.rpc('delete_session', { p_session_id: id })
+    if (id && client) await removeSession(id)
     await context.close(); await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })

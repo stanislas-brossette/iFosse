@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 import { anonymousClient, createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession } from './helpers/sessions.js'
+import { createSession, removeSession } from './helpers/sessions.js'
 
 function enableLocalInbox(enabled:boolean) {
   anonymousClient() // Existing helper rejects any non-local Supabase before SQL.
@@ -61,7 +61,7 @@ test('private inbox works on desktop/mobile, respects unsaved forms and keeps re
     await expect(page.getByRole('button',{name:/Notifications/})).toHaveCount(0)
   } finally {
     enableLocalInbox(false)
-    if(sessionId)await client.rpc('delete_session',{p_session_id:sessionId})
+    if(sessionId)await removeSession(sessionId)
     await removeMemberFixture(member);await removeMemberFixture(admin)
   }
 })

@@ -205,6 +205,8 @@ Attendance is the source of truth for the season counter.
 
 The administrator can close the session bilan, and may reopen it later to correct an error.
 
+A session with history — closed bilan, any published selection, or any recorded attendance — can no longer be deleted (D035). Deletion remains available only for a session created by mistake, and is audited.
+
 ## 10. Palanquees
 
 The MVP may include simple manual grouping into palanquees.

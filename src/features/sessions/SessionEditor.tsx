@@ -6,7 +6,7 @@ import { useUnsavedChanges } from '../../lib/navigation'
 import { businessError } from '../../lib/businessErrors'
 import { todayParis } from '../../lib/dates'
 export type Session = Tables<'sessions'>
-export function SessionEditor({ client, session, onSaved, onCancel }: { client: SupabaseClient<Database>; session?: Session; onSaved: (id: string | null) => Promise<void>; onCancel: () => void }) {
+export function SessionEditor({ client, session, published = false, onSaved, onCancel }: { client: SupabaseClient<Database>; session?: Session; published?: boolean; onSaved: (id: string | null) => Promise<void>; onCancel: () => void }) {
   const [values, setValues] = useState({ date: session?.date ?? todayParis(), start_time: session?.start_time.slice(0, 5) ?? '21:00', end_time: session?.end_time.slice(0, 5) ?? '22:00', title: session?.title ?? 'Séance de fosse', venue: session?.venue ?? '', address: session?.address ?? '', notes: session?.notes ?? '', capacity: session?.capacity ?? 20, registration_open: session?.registration_open ?? true, school_holiday: session?.school_holiday ?? false, end_time_estimated: session?.end_time_estimated ?? false })
   const [baseline] = useState(() => JSON.stringify(values))
   const guard = useUnsavedChanges(JSON.stringify(values) !== baseline, next => next.area === 'sessions' && (!next.editing || next.sessionId !== session?.id))
@@ -29,7 +29,7 @@ export function SessionEditor({ client, session, onSaved, onCancel }: { client: 
     setBusy(true)
     const { error } = await client.rpc('delete_session', { p_session_id: session.id })
     setMessageError(!!error)
-    if (error) setMessage('Suppression refusée. Réessayez après actualisation.')
+    if (error) setMessage(businessError(error,'Suppression refusée. Réessayez après actualisation.'))
     else await onSaved(null)
     setBusy(false)
   }
@@ -42,6 +42,6 @@ export function SessionEditor({ client, session, onSaved, onCancel }: { client: 
     {([['registration_open', 'Ouvrir les inscriptions'], ['school_holiday', 'Vacances scolaires'], ['end_time_estimated', 'Heure de fin à confirmer']] as const).map(([key, label]) => <label className="check" key={key}><input type="checkbox" disabled={key === 'registration_open' && session?.status === 'closed'} checked={values[key]} onChange={event => setValues({ ...values, [key]: event.target.checked })} />{label}</label>)}
     <p>La capacité limite la sélection finale, pas le nombre de réponses Oui. Encadrants compris.</p>
     <div className="actions"><button disabled={busy}>Enregistrer la séance</button><button type="button" disabled={busy} onClick={()=>guard.protect(()=>{guard.markClean();onCancel()})}>Annuler</button></div>
-    {message && <p id={errorId} role={messageError?'alert':'status'}>{message}</p>}</form>{session && <div className="mt">{confirmDelete ? <><p>Supprimer définitivement cette séance et ses participations ?</p><div className="actions"><button className="danger" disabled={busy} onClick={() => void remove()}>Confirmer la suppression</button><button onClick={() => setConfirmDelete(false)}>Conserver la séance</button></div></> : <button className="danger" onClick={() => setConfirmDelete(true)}>Supprimer la séance</button>}</div>}
+    {message && <p id={errorId} role={messageError?'alert':'status'}>{message}</p>}</form>{session && (published || session.status === 'closed') && <p className="mt">Cette séance a un historique (sélection publiée ou bilan clôturé) : elle reste dans le calendrier et ne peut plus être supprimée.</p>}{session && !published && session.status !== 'closed' && <div className="mt">{confirmDelete ? <><p>Supprimer définitivement cette séance et ses participations ?</p><div className="actions"><button className="danger" disabled={busy} onClick={() => void remove()}>Confirmer la suppression</button><button onClick={() => setConfirmDelete(false)}>Conserver la séance</button></div></> : <button className="danger" onClick={() => setConfirmDelete(true)}>Supprimer la séance</button>}</div>}
   </section>
 }

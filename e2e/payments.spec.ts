@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession, testSessionDate } from './helpers/sessions.js'
+import { createSession, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('administrator changes private payment and live readiness while member only reads own payment', async ({ page, browser }) => {
@@ -61,7 +61,7 @@ test('administrator changes private payment and live readiness while member only
     await page.getByText(`Détails et paiement de ${member.firstName} Fictif`,{exact:true}).click()
     await summary.screenshot({ path: 'test-results/payment-readiness-mobile.png' })
   } finally {
-    if (id && client) await client.rpc('delete_session', { p_session_id: id })
+    if (id && client) await removeSession(id)
     await context.close(); await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })
