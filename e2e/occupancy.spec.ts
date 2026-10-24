@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
 import { seasonOf, todayParis } from '../src/lib/dates.js'
-import { createSession } from './helpers/sessions.js'
+import { createSession, removeSession } from './helpers/sessions.js'
 
 test('member and admin cards show only effective published occupancy across draft, republication and withdrawal', async ({ page, browser }) => {
   test.setTimeout(90000)
@@ -35,7 +35,7 @@ test('member and admin cards show only effective published occupancy across draf
     await check('1 confirmés / 2 places')
     for (const card of cards) await expect(card.getByRole('progressbar')).toHaveAttribute('value', '1')
   } finally {
-    if (id && a) await a.rpc('delete_session', { p_session_id: id })
+    if (id && a) await removeSession(id)
     await context.close(); await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })

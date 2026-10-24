@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession, setCapacity, testSessionDate } from './helpers/sessions.js'
+import { createSession, setCapacity, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('concurrent final-place selection and capacity changes cannot overbook', async () => {
@@ -43,7 +43,7 @@ test('concurrent final-place selection and capacity changes cannot overbook', as
     const current = await client.rpc('get_current_selection', { p_session_id: id })
     expect(current.data!.filter(person => person.state === 'selected').length).toBeLessThanOrEqual(session.data!.capacity)
   } finally {
-    if (id) await client.rpc('delete_session', { p_session_id: id })
+    if (id) await removeSession(id)
     await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })
@@ -100,7 +100,7 @@ test('member sees the previous selection while admin drafts and then sees explic
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
     await page.screenshot({ path: 'test-results/selection-admin-mobile.png', fullPage: true })
   } finally {
-    if (id && client) await client.rpc('delete_session', { p_session_id: id })
+    if (id && client) await removeSession(id)
     await context.close()
     await removeMemberFixture(member); await removeMemberFixture(admin)
   }

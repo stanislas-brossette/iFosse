@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession, testSessionDate } from './helpers/sessions.js'
+import { createSession, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('withdrawal confirmation preserves cancellations and participant tabs exclude withdrawals', async ({ page, browser }) => {
@@ -86,7 +86,7 @@ test('withdrawal confirmation preserves cancellations and participant tabs exclu
     expect(await other.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
     await other.screenshot({ path: 'test-results/session-review-mobile.png', fullPage: true })
   } finally {
-    if (id && client) await client.rpc('delete_session', { p_session_id: id })
+    if (id && client) await removeSession(id)
     await context.close(); await removeMemberFixture(passenger); await removeMemberFixture(driver)
   }
 })

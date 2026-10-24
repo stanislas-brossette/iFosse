@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession, testSessionDate } from './helpers/sessions.js'
+import { createSession, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('parallel group publications are versioned and reject a draft after selection republication', async () => {
@@ -23,7 +23,7 @@ test('parallel group publications are versioned and reject a draft after selecti
     const latest = await other.rpc('get_current_palanquees', { p_session_id: id })
     expect(latest.data?.[0]?.group_number).toBe(1); expect(latest.data?.[0]?.needs_review).toBe(true)
   } finally {
-    if (id) await client.rpc('delete_session', { p_session_id: id })
+    if (id) await removeSession(id)
     await removeMemberFixture(admin)
   }
 })
@@ -89,7 +89,7 @@ test('published palanquées survive private editing, update live levels and repu
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
     await page.locator('.palanquees').screenshot({ path: 'test-results/palanquees-mobile.png' })
   } finally {
-    if (id && client) await client.rpc('delete_session', { p_session_id: id })
+    if (id && client) await removeSession(id)
     await context.close(); await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })

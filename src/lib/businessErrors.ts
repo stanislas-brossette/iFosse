@@ -13,6 +13,7 @@ const messages:Record<string,string>={
   'Les présences se renseignent après la séance.':'Les présences se renseignent après l’heure de fin de la séance (heure de Paris).',
   'La séance n’est pas encore terminée.':'La séance n’est pas encore terminée (heure de Paris).',
   'Renseignez la présence de chaque participant confirmé.':'Renseignez toutes les présences des confirmés avant de clôturer.',
+  'Cette séance a un historique (sélection publiée ou présences). Elle ne peut plus être supprimée.':'Cette séance a un historique (sélection publiée ou présences). Elle ne peut plus être supprimée.',
   'Le nombre de plongeurs dépasse la capacité.':'Le nombre de personnes ayant plongé dépasse la capacité. Corrigez les présences ou la capacité.',
 }
 export function businessError(error:Failure,fallback:string){

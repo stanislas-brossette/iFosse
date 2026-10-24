@@ -101,8 +101,11 @@ select throws_ok($$select public.discard_palanquee_draft((select id from group_s
 reset role;
 update public.members set role='admin' where email='groups.admin@example.test';
 set local role authenticated;
-select lives_ok($$select public.delete_session((select id from group_sessions where label='main'))$$,'Session deletion cascades all group history');
-select is((select count(*) from public.palanquee_publications),0::bigint,'Whole-session deletion removes snapshots');
+select throws_ok($$select public.delete_session((select id from group_sessions where label='main'))$$,'22023','Cette séance a un historique (sélection publiée ou présences). Elle ne peut plus être supprimée.','Session with published groups cannot be deleted');
+reset role;
+delete from public.sessions where id=(select id from group_sessions where label='main');
+set local role authenticated;
+select is((select count(*) from public.palanquee_publications),0::bigint,'Trusted whole-session cascade removes snapshots');
 select public.publish_palanquees((select id from group_sessions where label='other'));
 reset role;
 select lives_ok($$delete from public.members where id=(select id from group_members where email='groups.admin@example.test')$$,'Trusted actor erasure can anonymize historical headers');

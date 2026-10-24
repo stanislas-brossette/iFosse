@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession, testSessionDate } from './helpers/sessions.js'
+import { createSession, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('organizer compares a private equal-count swap, filters independently and reconfirms concurrent changes', async ({ page }) => {
@@ -53,7 +53,7 @@ test('organizer compares a private equal-count swap, filters independently and r
     const results=await Promise.all([1,2].map(()=>client.rpc('publish_selection_checked',{p_session_id:id!,p_expected_fingerprint:preview.fingerprint})))
     expect(results.filter(r=>!r.error)).toHaveLength(1);expect(results.find(r=>r.error)?.error?.code).toBe('40001')
   } finally {
-    if(id) await client.rpc('delete_session',{p_session_id:id})
+    if(id) await removeSession(id)
     for(const f of fixtures.reverse()) await removeMemberFixture(f)
   }
 })
