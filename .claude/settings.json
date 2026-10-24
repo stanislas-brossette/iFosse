@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run build)",
+      "Bash(npm run db:start)",
+      "Bash(npm run db:reset)",
+      "Bash(npm run db:test)",
+      "Bash(npm run db:types:*)",
+      "Bash(npm run db:restore-check)",
+      "Bash(npx playwright test:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)"
+    ],
+    "deny": [
+      "Read(./.private/**)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./supabase/.temp/**)",
+      "Bash(npm run staging:*)",
+      "Bash(node scripts/staging-seed.mjs:*)",
+      "Bash(node scripts/install-staging-notifications.mjs:*)",
+      "Bash(node scripts/configure-notifications.mjs:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(supabase db push:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(supabase functions deploy:*)",
+      "Bash(git push --force:*)"
+    ]
+  }
+}
