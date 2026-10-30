@@ -63,7 +63,7 @@ An administrator can do everything a member can, plus:
 - validate actual attendance;
 - close/reopen a session bilan;
 - create and publish simple palanquee groups;
-- manage member data required by the application.
+- manage member data required by the application: first name, last name, phone, current diving level and level being prepared, from the Administration directory (including free-text level labels). Profile edits are audited and reject stale revisions; login email, roles and access retain their separate procedures.
 
 Xavier and TitO are representative administrator users / DP for the current workflow.
 

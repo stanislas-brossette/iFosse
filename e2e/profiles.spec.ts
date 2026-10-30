@@ -56,3 +56,29 @@ test('administrator maintains CACI for self and another member in the private di
     await expect(directory.getByLabel('Fin de validité CACI')).toHaveValue('2027-11-30')
   } finally { await removeMemberFixture(other); await removeMemberFixture(admin) }
 })
+
+test('administrator edits another member profile and sees persisted levels on mobile', async ({ page }) => {
+  const admin = await createMemberFixture()
+  const other = await createMemberFixture()
+  try {
+    makeFixtureAdmin(admin)
+    await openConfirmation(page, await requestMagicLink(page, admin))
+    await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
+    await page.getByRole('button', { name: 'Administration', exact: true }).click()
+    await page.getByRole('button', { name: `Modifier le profil de ${other.firstName} Fictif`, exact: true }).click()
+    const form = page.getByRole('form', { name: `Profil de ${other.firstName} Fictif`, exact: true })
+    await form.getByLabel('Niveau actuel').fill('N3')
+    await form.getByLabel('Niveau préparé').fill('Qualification libre')
+    await form.getByLabel('Téléphone').fill('0612345678')
+    await form.getByRole('button', { name: 'Enregistrer le profil', exact: true }).click()
+    await expect(form.getByRole('status')).toHaveText('Profil enregistré.')
+    await page.reload()
+    await page.getByRole('button', { name: `Modifier le profil de ${other.firstName} Fictif`, exact: true }).click()
+    await expect(form.getByLabel('Niveau actuel')).toHaveValue('N3')
+    await expect(form.getByLabel('Niveau préparé')).toHaveValue('Qualification libre')
+    await expect(form.getByLabel('Téléphone')).toHaveValue('0612345678')
+    await page.setViewportSize({ width: 390, height: 844 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
+    await expect(form.getByRole('button', { name: 'Enregistrer le profil', exact: true })).toBeVisible()
+  } finally { await removeMemberFixture(other); await removeMemberFixture(admin) }
+})
