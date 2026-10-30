@@ -713,6 +713,9 @@ isOneToOne: false
 "transport_eligible":
 { Args: { "p_member_id": string,"p_session_id": string }; Returns: boolean
                            },
+"update_member_profile_if_current":
+{ Args: { "p_current_level": string,"p_expected_updated_at": string,"p_first_name": string,"p_last_name": string,"p_member_id": string,"p_phone": string,"p_preparing_level": string }; Returns: undefined
+                           },
 "update_own_profile":
 { Args: { "p_current_level": string,"p_first_name": string,"p_has_usual_car": boolean,"p_last_name": string,"p_phone": string,"p_preparing_level": string,"p_usual_meeting_point": string,"p_usual_passenger_seats": number }; Returns: undefined
                            }

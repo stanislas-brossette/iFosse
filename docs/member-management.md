@@ -69,3 +69,11 @@ Précaution de transfert : les adresses fictives en `.invalid` sont exclues des 
 ### Notifications de compte
 
 D030 ajoute une notification informative après les opérations applicatives Président, via une file serveur et Brevo. Les mentions antérieures « aucun email » décrivent l’absence d’invitation Supabase Auth et le comportement avant activation : aucun magic link n’est généré par création/transfert. Les imports/bootstrap/récupération restent sans email. [Activation staging, reprise et limites](member-notifications.md).
+
+## Modifier le profil d’un adhérent
+
+Dans **Administration**, un administrateur ou le président recherche la personne puis clique sur **Modifier le profil de …**. Il peut modifier prénom, nom, téléphone, niveau actuel et niveau préparé, puis **Enregistrer le profil**. Les niveaux proposés restent indicatifs et acceptent un libellé libre. Le CACI conserve son bouton dédié. Email de connexion, droits, accès et habitudes de voiture ne sont pas modifiés par ce formulaire.
+
+La RPC `update_member_profile_if_current` vérifie le rôle actif côté serveur, verrouille la fiche et compare sa révision avant d’écrire. Une modification concurrente conserve la saisie et exige **Recharger le profil enregistré**. Les modifications non enregistrées sont protégées lors d’un changement de fiche ou de page ; la fiche en cours reste visible si les filtres ne correspondent plus. L’audit `member_profile_changed` conserve acteur, cible et liste des champs du formulaire sans copier les coordonnées personnelles. Aucun email ou notification n’est envoyé pour cette correction.
+
+Déploiement : appliquer `20261030120000_admin_member_profiles.sql` avant le frontend. Aucun nouveau secret ni Edge Function n’est nécessaire. Les tests SQL couvrent autorisations, conservation des champs réservés, validation, conflit et audit ; les tests d’interface et navigateur couvrent saisie, persistance et édition sur mobile. Le développement local n’applique pas cette migration au staging ni à la production.
