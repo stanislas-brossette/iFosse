@@ -102,9 +102,12 @@ update public.sessions set status='closed',registration_open=false where id=(sel
 set local role authenticated;
 select throws_ok($$select public.set_own_transport((select id from second_session_fixture),'own')$$,'22023',null,'Closed bilan prevents transport mutations');
 select set_config('request.jwt.claim.sub','40000000-0000-4000-8000-000000000001',true);
-select public.delete_session((select id from second_session_fixture));
-select lives_ok($$select public.delete_session((select id from sessions_fixture))$$,'Session deletion cascades cars and seats');
-select is((select count(*) from public.car_offers),0::bigint,'Deleted session has no offers');
+select throws_ok($$select public.delete_session((select id from second_session_fixture))$$,'22023','Cette séance a un historique (sélection publiée ou présences). Elle ne peut plus être supprimée.','Closed session with carpool history cannot be deleted');
+select throws_ok($$select public.delete_session((select id from sessions_fixture))$$,'22023','Cette séance a un historique (sélection publiée ou présences). Elle ne peut plus être supprimée.','Session with a published selection cannot be deleted');
+reset role;
+delete from public.sessions where id=(select id from sessions_fixture);
+set local role authenticated;
+select is((select count(*) from public.car_offers),0::bigint,'Trusted session cascade removes cars and seats');
 reset role;
 select * from finish();
 rollback;

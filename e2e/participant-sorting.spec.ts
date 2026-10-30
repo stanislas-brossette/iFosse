@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession, testSessionDate } from './helpers/sessions.js'
+import { createSession, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('participant sorting uses response/name/publication, survives navigation, and fits 390px', async ({ page }) => {
@@ -63,7 +63,7 @@ test('participant sorting uses response/name/publication, survives navigation, a
     await page.evaluate(()=>window.scrollTo(0,0))
     await page.screenshot({path:'test-results/visual-acceptance/participant-sort-phone.png',fullPage:true})
   } finally {
-    if (id && client) await client.rpc('delete_session',{p_session_id:id})
+    if (id && client) await removeSession(id)
     for (const fixture of fixtures.reverse()) await removeMemberFixture(fixture)
   }
 })

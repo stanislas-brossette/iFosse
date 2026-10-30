@@ -1,3 +1,4 @@
+import { removeSession } from './helpers/sessions.js'
 import {mkdir} from 'node:fs/promises'
 import {expect,test} from '@playwright/test'
 import {createMemberFixture,fixtureClient,makeFixtureAdmin,openConfirmation,removeMemberFixture,requestMagicLink} from './helpers/local-supabase.js'
@@ -37,7 +38,7 @@ test('batch attendance previews only unknown published confirmations, cancels an
   expect((await client.rpc('get_season_counts',{p_start_year:seasonOf(pastDate)})).data?.find(row=>row.member_id===people[5].memberId)?.completed_count).toBe(0)
   await page.getByRole('button',{name:'Clôturer le bilan',exact:true}).click();await page.getByRole('button',{name:'Confirmer la clôture',exact:true}).click();await expect(page.getByRole('button',{name:'Rouvrir le bilan',exact:true})).toBeVisible()
   expect((await client.rpc('get_season_counts',{p_start_year:seasonOf(pastDate)})).data?.find(row=>row.member_id===people[5].memberId)?.completed_count).toBe(1)
- }finally{if(id&&client)await client.rpc('delete_session',{p_session_id:id});for(const fixture of people.reverse())await removeMemberFixture(fixture)}
+ }finally{if(id&&client)await removeSession(id);for(const fixture of people.reverse())await removeMemberFixture(fixture)}
 })
 test('atomic batch serializes with closure and replay cannot update a closed bilan',async()=>{
  const admin=await createMemberFixture();const member=await createMemberFixture();makeFixtureAdmin(admin);const client=await fixtureClient(admin);const other=await fixtureClient(admin);let id:string|undefined
@@ -48,5 +49,5 @@ test('atomic batch serializes with closure and replay cannot update a closed bil
   ok(batch);expect(batch.data).toBe(1);if(closure.error){expect(closure.error.code).toBe('22023');ok(await client.rpc('close_session_bilan',{p_session_id:id}))}
   expect((await other.rpc('mark_confirmed_attendance',{p_session_id:id,p_expected_fingerprint:fingerprint})).error?.code).toBe('22023')
   expect((await client.rpc('get_session_attendance',{p_session_id:id})).data?.[0].attendance_status).toBe('dived')
- }finally{if(id)await client.rpc('delete_session',{p_session_id:id});await removeMemberFixture(member);await removeMemberFixture(admin)}
+ }finally{if(id)await removeSession(id);await removeMemberFixture(member);await removeMemberFixture(admin)}
 })

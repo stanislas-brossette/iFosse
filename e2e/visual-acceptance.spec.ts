@@ -1,3 +1,4 @@
+import { removeSession } from './helpers/sessions.js'
 import { execFileSync } from 'node:child_process'
 import { mkdir } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
@@ -182,7 +183,7 @@ test('realistic club volumes retain desktop/mobile layout, keyboard tabs and rol
     await capture(page, 'phone-admin-gestion', false, '.selection-group.selected')
     await capture(page, 'phone-admin-gestion-full', true)
     await page.getByRole('button', { name: 'Modifier la séance', exact: true }).click()
-    const lastAction = page.getByRole('button', { name: 'Supprimer la séance', exact: true })
+    const lastAction = page.getByText('ne peut plus être supprimée', { exact: false })
     await lastAction.scrollIntoViewIfNeeded()
     const bounds = await lastAction.boundingBox(); const nav = await page.getByRole('navigation', { name: 'Navigation principale' }).boundingBox()
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(nav!.y)
@@ -197,7 +198,7 @@ test('realistic club volumes retain desktop/mobile layout, keyboard tabs and rol
       await memberPage.evaluate(() => document.querySelectorAll('style').forEach(style => { if (style.textContent?.includes(':root { font-size: 20px; }')) style.remove() }))
     }
   } finally {
-    if (admin) for (const id of sessions) await admin.rpc('delete_session', { p_session_id: id })
+    if (admin) for (const id of sessions) await removeSession(id)
     await context.close()
     if (fixtures.length) makeFixtureAdmin(fixtures[0]) // Disposable test president must leave presidency before erasure.
     for (const fixture of fixtures.reverse()) await removeMemberFixture(fixture)

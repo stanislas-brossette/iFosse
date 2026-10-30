@@ -73,7 +73,17 @@ select is((select count(*) from public.session_participations),1::bigint,'Revoca
 reset role;
 update public.members set role='admin' where email='sessions.admin@example.test';
 set local role authenticated;
-select lives_ok($$select public.delete_session((select id from session_fixture))$$,'Admin deletes the session');
+select throws_ok($$select public.delete_session((select id from session_fixture))$$,'22023','Cette séance a un historique (sélection publiée ou présences). Elle ne peut plus être supprimée.','Closed session cannot be deleted');
+reset role;
+update public.sessions set status='open' where id=(select id from session_fixture);
+update public.session_participations set attendance_status='absent' where session_id=(select id from session_fixture) and member_id=(select id from fixture where email='sessions.other@example.test');
+set local role authenticated;
+select throws_ok($$select public.delete_session((select id from session_fixture))$$,'22023','Cette séance a un historique (sélection publiée ou présences). Elle ne peut plus être supprimée.','Session with recorded attendance cannot be deleted');
+select is((select count(*) from public.sessions where id=(select id from session_fixture)),1::bigint,'Refused deletion keeps the session');
+reset role;
+update public.session_participations set attendance_status='unknown' where session_id=(select id from session_fixture);
+set local role authenticated;
+select lives_ok($$select public.delete_session((select id from session_fixture))$$,'Admin deletes a session created by mistake');
 select is((select count(*) from public.session_participations),0::bigint,'Session deletion cascades participations');
 select is((select count(*) from public.audit_events where event_type='session_deleted' and payload->>'session_id'=(select id::text from session_fixture)),1::bigint,'Session deletion audit survives');
 select is((select payload->>'session_id' from public.audit_events where event_type='session_deleted' and payload->>'session_id'=(select id::text from session_fixture)),(select id::text from session_fixture),'Deletion audit preserves original session identity');

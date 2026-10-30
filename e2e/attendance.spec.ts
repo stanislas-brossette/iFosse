@@ -1,3 +1,4 @@
+import { removeSession } from './helpers/sessions.js'
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
 import { formatDate, seasonOf, todayParis } from '../src/lib/dates.js'
@@ -38,7 +39,7 @@ test('closure serializes with attendance and corrections never bypass a closed b
     const finalTotal = await client.rpc('get_season_counts', { p_start_year: pastSeason })
     expect(finalTotal.data?.find(row => row.member_id === member.memberId)?.completed_count).toBe(stored.data?.attendance_status === 'dived' ? 1 : 0)
   } finally {
-    if (id) await client.rpc('delete_session', { p_session_id: id })
+    if (id) await removeSession(id)
     await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })
@@ -104,7 +105,7 @@ test('admin validates actual attendance and reopens for correction; member sees 
     expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
     await page.locator('.attendance').screenshot({ path: 'test-results/attendance-mobile.png' })
   } finally {
-    if (id && client) await client.rpc('delete_session', { p_session_id: id })
+    if (id && client) await removeSession(id)
     await context.close(); await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })

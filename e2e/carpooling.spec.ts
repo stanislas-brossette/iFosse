@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
-import { createSession, testSessionDate } from './helpers/sessions.js'
+import { createSession, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('concurrent last-seat joins and driver withdrawal preserve capacity and passenger registrations', async () => {
@@ -40,7 +40,7 @@ test('concurrent last-seat joins and driver withdrawal preserve capacity and pas
     expect(registered.data?.map(person => person.rsvp)).toEqual(['yes', 'yes'])
     expect((await admin.rpc('get_car_offers', { p_session_id: id })).data).toEqual([])
   } finally {
-    if (id) await admin.rpc('delete_session', { p_session_id: id })
+    if (id) await removeSession(id)
     await removeMemberFixture(second); await removeMemberFixture(first); await removeMemberFixture(driver)
   }
 })
@@ -104,7 +104,7 @@ test('profile defaults only prefill an explicit offer; passenger reassigns after
     expect(await other.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false)
     await passengerPanel.screenshot({ path: 'test-results/carpool-mobile.png' })
   } finally {
-    if (id && client) await client.rpc('delete_session', { p_session_id: id })
+    if (id && client) await removeSession(id)
     await context.close()
     await removeMemberFixture(passenger); await removeMemberFixture(driver)
   }

@@ -1,3 +1,4 @@
+import { removeSession } from './helpers/sessions.js'
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
 import { todayParis } from '../src/lib/dates.js'
@@ -67,7 +68,7 @@ test('personal calendar follows publication and transport across devices without
     await expect(other.getByText('Calendrier fictif passé non clôturé', { exact: true })).toBeVisible()
     expect(await other.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
   } finally {
-    if (client) for (const id of ids) await client.rpc('delete_session', { p_session_id: id })
+    if (client) for (const id of ids) await removeSession(id)
     await context.close(); await removeMemberFixture(member); await removeMemberFixture(admin)
   }
 })

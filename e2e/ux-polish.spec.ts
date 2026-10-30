@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import type { Page } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink, serviceClient } from './helpers/local-supabase.js'
-import { createSession, testSessionDate } from './helpers/sessions.js'
+import { createSession, testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 async function layout(page: Page, name: string) {
@@ -165,7 +165,7 @@ test('usual car prefills only an explicit offer; session summary reopens, retain
     await expect(usual.getByLabel('Places passagers habituelles')).toHaveValue('2')
     await expect(usual.getByLabel('Point de rendez-vous habituel')).toHaveValue('Parking habituel')
   } finally {
-    if (id) await organizer.rpc('delete_session', { p_session_id: id })
+    if (id) await removeSession(id)
     for (const passenger of passengers) await removeMemberFixture(passenger)
     await removeMemberFixture(driver); await removeMemberFixture(admin)
   }

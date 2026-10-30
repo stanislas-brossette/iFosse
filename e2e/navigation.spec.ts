@@ -1,6 +1,6 @@
 import { expect,test } from '@playwright/test'
 import { createMemberFixture,fixtureClient,makeFixtureAdmin,openConfirmation,removeMemberFixture,requestMagicLink } from './helpers/local-supabase.js'
-import { createSession,testSessionDate } from './helpers/sessions.js'
+import { createSession,testSessionDate, removeSession } from './helpers/sessions.js'
 import { formatDate } from '../src/lib/dates.js'
 
 test('safe deep links resume after login, preserve history/reload and reject member-only private routes',async({page,browser})=>{
@@ -29,7 +29,7 @@ test('safe deep links resume after login, preserve history/reload and reject mem
     }finally{await removeMemberFixture(separate)}
     await page.getByRole('button',{name:'Se déconnecter',exact:true}).click();await page.getByRole('dialog').getByRole('button',{name:'Se déconnecter',exact:true}).click()
     await expect(page.getByRole('heading',{name:'Connexion à iFosse'})).toBeVisible();expect(await page.evaluate(()=>sessionStorage.getItem('ifosse:return-path'))).toBeNull()
-  }finally{if(id)await adminClient.rpc('delete_session',{p_session_id:id});await otherContext.close();await removeMemberFixture(member);await removeMemberFixture(admin)}
+  }finally{if(id)await removeSession(id);await otherContext.close();await removeMemberFixture(member);await removeMemberFixture(admin)}
 })
 
 test('unsaved exits and draft abandonment are explicit, cancellable, focused and preserve publications',async({page})=>{
@@ -67,5 +67,5 @@ test('unsaved exits and draft abandonment are explicit, cancellable, focused and
     await page.getByRole('tab',{name:'Covoiturage',exact:true}).click();await page.getByRole('button',{name:'Proposer une voiture',exact:true}).click();await page.getByLabel('Point de rendez-vous',{exact:true}).fill('Parking non enregistré')
     await page.getByRole('tab',{name:'Participants',exact:true}).click();await expect(warning).toBeVisible();await warning.getByRole('button',{name:'Rester',exact:true}).click();await expect(page.getByLabel('Point de rendez-vous',{exact:true})).toHaveValue('Parking non enregistré')
     await page.getByRole('tab',{name:'Participants',exact:true}).click();await warning.getByRole('button',{name:'Quitter sans enregistrer',exact:true}).click();await expect(page.getByRole('tab',{name:'Participants',exact:true})).toHaveAttribute('aria-selected','true')
-  }finally{if(id&&client)await client.rpc('delete_session',{p_session_id:id});await removeMemberFixture(other);await removeMemberFixture(admin)}
+  }finally{if(id&&client)await removeSession(id);await removeMemberFixture(other);await removeMemberFixture(admin)}
 })

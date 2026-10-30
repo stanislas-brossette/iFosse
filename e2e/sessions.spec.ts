@@ -1,3 +1,4 @@
+import { removeSession } from './helpers/sessions.js'
 import { expect, test } from '@playwright/test'
 import { createMemberFixture, fixtureClient, makeFixtureAdmin, openConfirmation, removeMemberFixture, requestMagicLink } from './helpers/local-supabase.js'
 import { formatDate, seasonOf, todayParis } from '../src/lib/dates.js'
@@ -71,7 +72,7 @@ test('two accounts share sessions and responses, with advisory CACI and private 
   } finally {
     if (client) {
       const remaining = await client.from('sessions').select('id').eq('title', `Fosse ${admin.firstName}`)
-      for (const row of remaining.data ?? []) await client.rpc('delete_session', { p_session_id: row.id })
+      for (const row of remaining.data ?? []) await removeSession(row.id)
     }
     await context.close()
     await removeMemberFixture(member); await removeMemberFixture(admin)
